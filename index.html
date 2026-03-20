@@ -1,0 +1,1404 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>MYL Milk Intelligence Suite v4</title>
+<link href="https://fonts.googleapis.com/css2?family=Google+Sans:wght@400;500;700&family=Google+Sans+Mono:wght@400;500&family=Roboto:wght@300;400;500;700&family=Roboto+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/maplibre-gl@4.7.1/dist/maplibre-gl.css">
+<script src="https://cdn.jsdelivr.net/npm/maplibre-gl@4.7.1/dist/maplibre-gl.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+:root{
+  --bg:#f8f9fa;--bg2:#ffffff;--bg3:#f1f3f4;--surface:#ffffff;--s2:#e8eaed;
+  --brd:rgba(0,0,0,0.08);--brd2:rgba(0,0,0,0.15);
+  --txt:#202124;--txt2:#5f6368;--txt3:#9aa0a6;
+  --blue:#1a73e8;--b2:#1557b0;--bdim:rgba(26,115,232,0.10);
+  --green:#1e8e3e;--gdim:rgba(30,142,62,0.10);
+  --amber:#f9ab00;--adim:rgba(249,171,0,0.12);
+  --red:#d93025;--rdim:rgba(217,48,37,0.10);
+  --purple:#8430ce;--teal:#129eaf;--orange:#e8710a;
+  --sw:240px;--sc:60px;
+  --font:'Google Sans','Roboto',sans-serif;--mono:'Roboto Mono','Google Sans Mono',monospace;
+  --r:8px;--r2:16px;
+  --elev1:0 1px 2px rgba(60,64,67,.3),0 1px 3px 1px rgba(60,64,67,.15);
+  --elev2:0 1px 2px rgba(60,64,67,.3),0 2px 6px 2px rgba(60,64,67,.15);
+  --elev3:0 4px 8px 3px rgba(60,64,67,.15),0 1px 3px rgba(60,64,67,.3);
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{background:var(--bg);color:var(--txt);font-family:var(--font);font-size:13px;line-height:1.5;display:flex;min-height:100vh;overflow-x:hidden;letter-spacing:.01em;}
+
+/* LOADING */
+#loader{position:fixed;inset:0;background:#fff;z-index:9999;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;}
+.ld-logo{font-size:22px;font-weight:500;color:var(--txt);letter-spacing:-.02em;} .ld-logo span{color:var(--blue);}
+.ld-bar{width:200px;height:3px;background:var(--s2);border-radius:100px;overflow:hidden;}
+.ld-fill{height:100%;background:linear-gradient(90deg,#4285f4 0%,#0f9d58 33%,#f4b400 66%,#db4437 100%);background-size:200%;animation:lf 1.8s ease-in-out infinite;}
+@keyframes lf{0%{background-position:0% 50%}50%{background-position:100% 50%}100%{background-position:0% 50%}}
+.ld-txt{font-size:11px;color:var(--txt2);font-family:var(--mono);}
+
+/* SIDEBAR */
+#sb{width:var(--sw);height:100vh;background:var(--bg2);border-right:1px solid var(--brd);
+    display:flex;flex-direction:column;position:fixed;top:0;left:0;z-index:200;
+    transition:width .25s cubic-bezier(.4,0,.2,1);overflow-x:hidden;overflow-y:hidden;}
+#sb.col{width:var(--sc);}
+.sb-head{padding:14px 16px;display:flex;align-items:center;gap:10px;border-bottom:1px solid var(--brd);height:64px;flex-shrink:0;}
+.sb-logo{font-weight:500;font-size:15px;white-space:nowrap;overflow:hidden;transition:opacity .2s;color:var(--txt);letter-spacing:-.01em;}
+.sb-logo span{color:var(--blue);}
+#sb.col .sb-logo{opacity:0;width:0;}
+.sb-tog{width:36px;height:36px;border-radius:50%;background:transparent;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--txt2);font-size:18px;flex-shrink:0;margin-left:auto;transition:background .15s;}
+.sb-tog:hover{background:rgba(60,64,67,.08);}
+#sb.col .sb-tog{margin-left:0;}
+.sb-nav{flex:1;overflow-y:auto;overflow-x:hidden;padding:6px 0 24px 0;scroll-behavior:smooth;min-height:0;}
+.sb-nav::-webkit-scrollbar{width:4px;}
+.sb-nav::-webkit-scrollbar-thumb{background:var(--s2);border-radius:4px;}
+.sb-sec{font-family:var(--font);font-size:11px;font-weight:500;color:var(--txt2);letter-spacing:.03em;text-transform:none;padding:16px 16px 4px;white-space:nowrap;overflow:hidden;transition:opacity .2s;}
+#sb.col .sb-sec{opacity:0;}
+.sb-item{display:flex;align-items:center;gap:12px;padding:8px 16px;cursor:pointer;color:var(--txt2);transition:all .2s cubic-bezier(.4,0,.2,1);white-space:nowrap;overflow:hidden;border-radius:0 100px 100px 0;margin-right:16px;border-left:none;}
+.sb-item:hover{background:rgba(60,64,67,.08);color:var(--txt);}
+.sb-item.act{background:#e8f0fe;color:var(--blue);font-weight:500;}
+.sb-ico{font-size:14px;flex-shrink:0;width:20px;text-align:center;}
+.sb-lbl{font-size:13px;font-weight:400;transition:opacity .2s;}
+#sb.col .sb-lbl{opacity:0;width:0;}
+.sb-bdg{margin-left:auto;padding:2px 8px;border-radius:100px;font-size:11px;font-family:var(--font);font-weight:500;flex-shrink:0;transition:opacity .2s;}
+#sb.col .sb-bdg{opacity:0;}
+.bdg-r{background:#fce8e6;color:#c5221f;}
+.bdg-g{background:#e6f4ea;color:#137333;}
+.bdg-a{background:#fef7e0;color:#b06000;}
+.sb-foot{padding:12px 16px;border-top:1px solid var(--brd);font-size:11px;color:var(--txt2);white-space:nowrap;overflow:hidden;transition:opacity .2s;font-family:var(--font);}
+#sb.col .sb-foot{opacity:0;}
+
+/* MAIN */
+#main{margin-left:var(--sw);flex:1;display:flex;flex-direction:column;transition:margin-left .25s cubic-bezier(.4,0,.2,1);min-width:0;}
+#main.exp{margin-left:var(--sc);}
+.topbar{background:var(--bg2);border-bottom:1px solid var(--brd);padding:0 24px;display:flex;align-items:center;gap:12px;height:64px;position:sticky;top:0;z-index:100;box-shadow:0 1px 3px rgba(60,64,67,.15);}
+.pg-title{font-size:16px;font-weight:400;color:var(--txt);letter-spacing:-.01em;}
+.pg-sub{font-size:12px;color:var(--txt2);font-family:var(--font);}
+.tb-chips{display:flex;gap:5px;margin-left:auto;}
+.chip{padding:4px 12px;border-radius:100px;font-size:11px;font-weight:500;font-family:var(--font);border:1px solid;}
+.ch-b{background:#e8f0fe;color:#174ea6;border-color:rgba(26,115,232,.25);}
+.ch-g{background:#e6f4ea;color:#137333;border-color:rgba(30,142,62,.25);}
+.ch-r{background:#fce8e6;color:#c5221f;border-color:rgba(217,48,37,.25);}
+.ch-a{background:#fef7e0;color:#b06000;border-color:rgba(249,171,0,.25);}
+.content{padding:20px 24px;max-width:1500px;}
+.tab-panel{display:none;}
+.tab-panel.act{display:block;animation:fi .2s ease;}
+@keyframes fi{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:translateY(0)}}
+
+/* LAYOUT */
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+.g3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;}
+.g4{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;}
+.g6{display:grid;grid-template-columns:repeat(6,1fr);gap:9px;margin-bottom:12px;}
+
+/* CARDS */
+.card{background:var(--surface);border:1px solid var(--brd);border-radius:var(--r2);padding:16px;box-shadow:var(--elev1);transition:box-shadow .2s cubic-bezier(.4,0,.2,1);}
+.card:hover{box-shadow:var(--elev2);}
+.card-t{font-size:14px;font-weight:500;color:var(--txt);margin-bottom:12px;display:flex;align-items:center;gap:8px;}
+
+/* KPI CARDS */
+.kcard{background:var(--surface);border:1px solid var(--brd);border-radius:var(--r2);padding:14px 16px;cursor:pointer;position:relative;overflow:hidden;transition:all .2s cubic-bezier(.4,0,.2,1);box-shadow:var(--elev1);}
+.kcard:hover,.kcard.filt{border-color:var(--blue);box-shadow:var(--elev2);}
+.kcard::before{content:'';position:absolute;inset:0 0 auto 0;height:3px;border-radius:var(--r2) var(--r2) 0 0;}
+.kc-b::before{background:var(--blue)}.kc-g::before{background:var(--green)}.kc-r::before{background:var(--red)}.kc-a::before{background:var(--amber)}.kc-t::before{background:var(--teal)}.kc-p::before{background:var(--purple)}
+.kc-lbl{font-size:11px;color:var(--txt2);font-family:var(--font);text-transform:none;letter-spacing:.01em;margin-bottom:6px;}
+.kc-val{font-size:24px;font-weight:400;line-height:1;margin-bottom:4px;}
+.kv-b{color:var(--blue)}.kv-g{color:var(--green)}.kv-r{color:var(--red)}.kv-a{color:var(--amber)}.kv-t{color:var(--teal)}.kv-p{color:var(--purple)}
+.kc-sub{font-size:11px;color:var(--txt2);}
+
+/* TABLE */
+.tw{overflow-x:auto;border-radius:var(--r2);border:1px solid var(--brd);box-shadow:var(--elev1);}
+.tbl{width:100%;border-collapse:collapse;background:var(--surface);border-radius:var(--r2);}
+.tbl th{padding:11px 12px;text-align:left;font-size:11px;font-weight:500;color:var(--txt2);background:var(--bg3);border-bottom:1px solid var(--brd);white-space:nowrap;cursor:pointer;font-family:var(--font);text-transform:none;letter-spacing:.01em;user-select:none;}
+.tbl td{padding:10px 12px;border-bottom:1px solid var(--brd);font-size:13px;vertical-align:middle;}
+.tbl tr:last-child td{border-bottom:none;}
+.tbl tr:hover td{background:rgba(26,115,232,.04);}
+
+/* BADGES */
+.bdg{display:inline-flex;align-items:center;padding:3px 8px;border-radius:100px;font-size:11px;font-weight:500;font-family:var(--font);}
+.b-b{background:#e8f0fe;color:#174ea6;}
+.b-g{background:#e6f4ea;color:#137333;}
+.b-r{background:#fce8e6;color:#c5221f;}
+.b-a{background:#fef7e0;color:#b06000;}
+.b-p{background:#f3e8fd;color:#6200ea;}
+.p1{background:#fce8e6;color:#c5221f;border:none;}
+.p2{background:#fef3e2;color:#b06000;border:none;}
+.p3{background:#fef7e0;color:#856400;border:none;}
+.p4{background:#e6f4ea;color:#137333;border:none;}
+.nddb-A{background:#e6f4ea;color:#137333;padding:3px 8px;border-radius:100px;font-size:11px;font-weight:500;}
+.nddb-B{background:#e8f0fe;color:#174ea6;padding:3px 8px;border-radius:100px;font-size:11px;font-weight:500;}
+.nddb-C{background:#fef7e0;color:#b06000;padding:3px 8px;border-radius:100px;font-size:11px;font-weight:500;}
+.nddb-D{background:#fce8e6;color:#c5221f;padding:3px 8px;border-radius:100px;font-size:11px;font-weight:500;}
+
+/* CONTROLS */
+.ctrl{background:var(--bg3);border:1px solid var(--s2);border-radius:8px;padding:8px 12px;font-family:var(--font);font-size:13px;color:var(--txt);outline:none;transition:all .15s;}
+.ctrl:focus{border-color:var(--blue);border-width:2px;background:var(--surface);}
+.pill{background:var(--surface);border:1px solid var(--s2);color:var(--txt2);border-radius:100px;padding:6px 16px;font-size:12px;font-weight:500;cursor:pointer;transition:all .2s;font-family:var(--font);}
+.pill:hover{border-color:var(--blue);color:var(--blue);background:#e8f0fe;}
+.pill.act{background:#e8f0fe;border-color:var(--blue);color:var(--blue);}
+.btn-p{padding:8px 20px;border-radius:100px;font-family:var(--font);font-size:13px;font-weight:500;cursor:pointer;border:none;background:var(--blue);color:#fff;transition:all .2s;box-shadow:0 1px 2px rgba(26,115,232,.4);}
+.btn-p:hover{background:#1557b0;box-shadow:0 2px 6px rgba(26,115,232,.4);}
+.btn-o{padding:8px 20px;border-radius:100px;font-family:var(--font);font-size:13px;font-weight:500;cursor:pointer;background:var(--surface);border:1px solid var(--s2);color:var(--blue);}
+.btn-o:hover{border-color:var(--blue);background:#e8f0fe;}
+
+/* MISC */
+.pbar{background:var(--s2);border-radius:100px;overflow:hidden;}
+.pfill{height:100%;border-radius:100px;transition:width 1.2s cubic-bezier(.4,0,.2,1);}
+.frow{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:14px;}
+.sec-lbl{font-size:12px;font-family:var(--font);text-transform:none;letter-spacing:.01em;color:var(--txt2);margin-bottom:10px;padding-bottom:8px;border-bottom:1px solid var(--brd);}
+.ibox{background:#e8f0fe;border:1px solid rgba(26,115,232,.2);border-radius:var(--r2);padding:16px;margin-bottom:12px;}
+.ib-t{font-size:14px;font-weight:500;color:var(--blue);margin-bottom:6px;}
+.ib-b{font-size:13px;color:#174ea6;line-height:1.7;}
+.ib-b b{color:var(--green);} .ib-b em{color:#b06000;font-style:normal;}
+.acard{background:var(--surface);border:1px solid var(--brd);border-left:4px solid;border-radius:var(--r);padding:12px 14px;margin-bottom:8px;display:flex;gap:10px;}
+.acard.r{border-left-color:var(--red);}.acard.a{border-left-color:var(--amber);}.acard.g{border-left-color:var(--green);}.acard.b{border-left-color:var(--blue);}
+.ac-t{font-size:13px;font-weight:500;color:var(--txt);margin-bottom:2px;}
+.ac-d{font-size:12px;color:var(--txt2);line-height:1.6;}
+.ac-a{font-size:10px;color:var(--blue);margin-top:3px;font-weight:500;}
+.spark{display:block;}
+
+/* MAP */
+#leafmap,.rmap{height:480px;border-radius:var(--r2);border:1px solid var(--brd);overflow:hidden;box-shadow:var(--elev1);}
+.rmap{height:440px;}
+.maplibregl-popup-content{font-family:var(--font);font-size:13px;border-radius:8px;padding:10px 14px;box-shadow:var(--elev2);}
+.maplibregl-popup-tip{filter:drop-shadow(0 1px 2px rgba(60,64,67,.2));}
+.maplibregl-ctrl-attrib{font-size:10px;}
+.map-leg{background:var(--surface);border:1px solid var(--brd);border-radius:100px;padding:10px 16px;display:flex;gap:16px;flex-wrap:wrap;margin-top:8px;box-shadow:var(--elev1);}
+.mli{display:flex;align-items:center;gap:6px;font-size:10px;color:var(--txt2);}
+.mldot{width:10px;height:10px;border-radius:50%;flex-shrink:0;}
+
+/* ROUTE */
+.rpanel{background:var(--surface);border:1px solid var(--brd);border-radius:var(--r2);padding:12px;height:440px;overflow-y:auto;box-shadow:var(--elev1);}
+.rstep{display:flex;align-items:center;gap:9px;padding:8px 10px;border-radius:var(--r);margin-bottom:4px;background:var(--bg);transition:background .2s;}
+.rstep:hover{background:#e8f0fe;}
+.rnum{width:24px;height:24px;border-radius:50%;background:#e8f0fe;color:var(--blue);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:500;flex-shrink:0;}
+.rname{font-size:13px;font-weight:500;color:var(--txt);}
+.rdist{font-size:10px;color:var(--txt2);font-family:var(--mono);}
+.rstats{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:10px;}
+.rscard{background:var(--bg);border-radius:var(--r);padding:10px;text-align:center;border:1px solid var(--brd);}
+.rsv{font-size:18px;font-weight:400;font-family:var(--font);}
+.rsl{font-size:11px;color:var(--txt2);font-family:var(--font);text-transform:none;margin-top:2px;}
+
+/* TARGETS */
+.tcard{background:var(--surface);border:1px solid var(--brd);border-radius:var(--r);padding:12px;margin-bottom:8px;box-shadow:var(--elev1);}
+.tsum{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:12px;}
+.tscard{background:var(--bg);border:1px solid var(--brd);border-radius:var(--r);padding:12px;text-align:center;}
+.tsv{font-size:22px;font-weight:400;}.tsl{font-size:11px;color:var(--txt2);margin-top:2px;}
+input[type=range]{accent-color:var(--blue);cursor:pointer;width:100%;height:4px;}
+
+/* KANBAN */
+.kanban{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;}
+.kcol{background:var(--bg3);border-radius:var(--r2);padding:12px;border:1px solid var(--brd);}
+.khdr{font-size:12px;font-weight:500;padding:6px 12px;border-radius:100px;margin-bottom:10px;display:flex;justify-content:space-between;align-items:center;}
+.kh-todo{background:#fef7e0;color:#b06000;}
+.kh-do{background:#e8f0fe;color:var(--blue);}
+.kh-done{background:#e6f4ea;color:var(--green);}
+.kcard2{background:var(--surface);border:1px solid var(--brd);border-radius:var(--r);padding:10px;margin-bottom:6px;cursor:pointer;transition:all .2s cubic-bezier(.4,0,.2,1);box-shadow:var(--elev1);}
+.kcard2:hover{border-color:var(--blue);box-shadow:var(--elev2);}
+.kc-soc{font-size:11px;font-family:var(--font);color:var(--txt2);margin-bottom:4px;}
+.kc-act{font-size:12px;font-weight:500;color:var(--txt);margin-bottom:6px;line-height:1.5;}
+.kc-ft{display:flex;align-items:center;justify-content:space-between;}
+.kc-ph{font-size:10px;font-weight:500;font-family:var(--font);padding:2px 8px;border-radius:100px;}
+.kc-hi{background:#fce8e6;color:#c5221f;}
+.kc-mi{background:#fef7e0;color:#856400;}
+.kc-lo{background:#e6f4ea;color:#137333;}
+.kb-add{width:100%;padding:8px;background:none;border:1px dashed var(--s2);border-radius:100px;color:var(--txt2);font-size:12px;cursor:pointer;transition:all .2s;font-family:var(--font);}
+.kb-add:hover{border-color:var(--blue);color:var(--blue);background:#e8f0fe;}
+
+/* MGMT */
+.mgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;}
+.pcard{background:var(--surface);border:1px solid var(--brd);border-radius:var(--r2);padding:16px;position:relative;overflow:hidden;box-shadow:var(--elev1);}
+.pcard::before{content:'';position:absolute;inset:0 0 auto 0;height:3px;border-radius:var(--r2) var(--r2) 0 0;}
+.pc-b::before{background:var(--blue)}.pc-g::before{background:var(--green)}.pc-a::before{background:var(--amber)}.pc-r::before{background:var(--red)}.pc-t::before{background:var(--teal)}.pc-p::before{background:var(--purple)}
+.pc-ic{font-size:20px;margin-bottom:6px;}
+.pc-t{font-size:14px;font-weight:500;color:var(--txt);margin-bottom:4px;}
+.pc-b{font-size:12px;color:var(--txt2);line-height:1.6;}
+.pc-tgt{font-size:10px;color:var(--amber);margin-top:5px;font-family:var(--mono);}
+.pdca{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px;}
+.pdq{background:var(--surface);border:1px solid var(--brd);border-radius:var(--r);padding:14px;border-left:4px solid;}
+.pdP{border-left-color:var(--blue);}.pdD{border-left-color:var(--green);}.pdC{border-left-color:var(--amber);}.pdA{border-left-color:var(--purple);}
+.pdl{font-size:12px;font-weight:500;font-family:var(--font);text-transform:none;letter-spacing:.01em;margin-bottom:6px;}
+.bcov{background:var(--surface);border:1px solid var(--brd);border-radius:var(--r);padding:12px;margin-bottom:8px;position:relative;padding-left:14px;box-shadow:var(--elev1);}
+.toast{position:fixed;bottom:24px;right:24px;background:#323232;border:none;border-radius:var(--r);padding:12px 18px;font-size:13px;color:#fff;z-index:9999;box-shadow:0 3px 8px rgba(0,0,0,.3);transition:opacity .4s;}
+
+@media(max-width:1100px){.g6{grid-template-columns:repeat(3,1fr);}.kanban,.mgrid{grid-template-columns:1fr 1fr;}}
+@media(max-width:768px){#sb{width:var(--sc);}.sb-logo,.sb-lbl,.sb-sec,.sb-bdg,.sb-foot{opacity:0;width:0;}#main{margin-left:var(--sc)!important;}.g2,.g3,.g4,.g6{grid-template-columns:1fr 1fr;}}
+</style>
+</head>
+<body>
+
+<div id="loader">
+  <div style="width:56px;height:56px;border-radius:14px;background:linear-gradient(135deg,#e8f0fe,#fff);border:1.5px solid rgba(26,115,232,.2);display:flex;align-items:center;justify-content:center;font-size:26px;margin-bottom:4px;box-shadow:0 2px 8px rgba(26,115,232,.15);">🥛</div>
+  <div class="ld-logo"><span style="color:#4285f4;">M</span><span style="color:#db4437;">Y</span><span style="color:#f4b400;">L</span> <span>Milk Intel</span></div>
+  <div class="ld-bar"><div class="ld-fill"></div></div>
+  <div class="ld-txt" id="ldtxt" style="letter-spacing:.02em;">Initialising data…</div>
+</div>
+
+<div id="sb">
+  <div class="sb-head" style="border-top:3px solid transparent;background-image:linear-gradient(var(--bg2),var(--bg2)),linear-gradient(90deg,#4285f4,#0f9d58,#f4b400,#db4437);background-origin:border-box;background-clip:padding-box,border-box;border-top-width:3px;">
+    <div class="sb-logo"><span style="color:var(--blue);">M</span><span style="color:var(--red);">Y</span><span style="color:var(--amber);">L</span> <span style="color:var(--txt);">Milk Intel</span></div>
+    <div class="sb-tog" onclick="togSB()" title="Toggle sidebar">☰</div>
+  </div>
+  <div class="sb-nav">
+    <div class="sb-sec">PROCUREMENT</div>
+    <div class="sb-item act" onclick="goTab('overview',this)"><div class="sb-ico">📊</div><div class="sb-lbl">Overview</div></div>
+    <div class="sb-item" onclick="goTab('nddb',this)"><div class="sb-ico">🏛</div><div class="sb-lbl">NDDB Metrics</div></div>
+    <div class="sb-item" onclick="goTab('societies',this)"><div class="sb-ico">🏘</div><div class="sb-lbl">Society Tracker</div></div>
+    <div class="sb-item" onclick="goTab('comparison',this)"><div class="sb-ico">📈</div><div class="sb-lbl">District Compare</div></div>
+    <div class="sb-item" onclick="goTab('inactive',this)"><div class="sb-ico">⚠️</div><div class="sb-lbl">Inactive Centres</div><div class="sb-bdg bdg-r">13</div></div>
+    <div class="sb-item" onclick="goTab('insights',this)"><div class="sb-ico">💡</div><div class="sb-lbl">AI Insights</div></div>
+    <div class="sb-sec">EXPANSION</div>
+    <div class="sb-item" onclick="goTab('expansion',this)"><div class="sb-ico">🌱</div><div class="sb-lbl">Expansion Plan</div></div>
+    <div class="sb-item" onclick="goTab('unserved',this)"><div class="sb-ico">🚨</div><div class="sb-lbl">Unserved Villages</div><div class="sb-bdg bdg-r">238</div></div>
+    <div class="sb-item" onclick="goTab('newsoc',this)"><div class="sb-ico">🏗</div><div class="sb-lbl">New Societies</div><div class="sb-bdg bdg-a">50</div></div>
+    <div class="sb-item" onclick="goTab('blocks',this)"><div class="sb-ico">📍</div><div class="sb-lbl">Block Analysis</div></div>
+    <div class="sb-sec">INTELLIGENCE</div>
+    <div class="sb-item" onclick="goTab('mapview',this)"><div class="sb-ico">🗺️</div><div class="sb-lbl">Geocoded Map</div><div class="sb-bdg bdg-g">Live</div></div>
+    <div class="sb-item" onclick="goTab('routes',this)"><div class="sb-ico">🚛</div><div class="sb-lbl">Route Planner</div><div class="sb-bdg bdg-g">New</div></div>
+    <div class="sb-sec">FIELD OPS</div>
+    <div class="sb-item" onclick="goTab('targets',this)"><div class="sb-ico">🎯</div><div class="sb-lbl">Target Manager</div></div>
+    <div class="sb-item" onclick="goTab('actions',this)"><div class="sb-ico">📋</div><div class="sb-lbl">Action Board</div></div>
+    <div class="sb-item" onclick="goTab('mgmt',this)"><div class="sb-ico">🏭</div><div class="sb-lbl">Management Hub</div></div>
+    <div class="sb-sec">STRATEGY</div>
+    <div class="sb-item" onclick="goTab('actionplan',this)"><div class="sb-ico">🗓️</div><div class="sb-lbl">1-Year Action Plan</div><div class="sb-bdg bdg-g">New</div></div>
+  </div>
+  <div class="sb-foot">Thanjavur DCMPU · NDDB Anand<br>Feb 2026 + 20th Livestock Census</div>
+</div>
+
+<div id="main">
+  <div class="topbar">
+    <div style="display:flex;align-items:center;gap:12px;"><div style="width:1.5px;height:28px;background:var(--s2);"></div><div><div class="pg-title" id="pgtitle">Overview — Feb 2026</div><div class="pg-sub">Mayiladuthurai District Milk Procurement</div></div></div>
+    <div class="tb-chips">
+      <span class="chip ch-b">Feb 2026</span>
+      <span class="chip ch-g" id="chip-act">50 Active</span>
+      <span class="chip ch-r" id="chip-inact">13 Inactive</span>
+      <span class="chip ch-a">238 Unserved</span>
+    </div>
+    <button class="btn-o" onclick="exportCSV()" style="margin-left:8px;">⬇ Export</button>
+    <button class="btn-p" onclick="document.getElementById('finp').click()">⬆ Import</button>
+    <input type="file" id="finp" accept=".csv" style="display:none" onchange="importCSV(this)">
+  </div>
+  <div class="content">
+<!-- OVERVIEW -->
+<div id="tab-overview" class="tab-panel act">
+  <div id="filtbar" style="display:none;background:#e8f0fe;border:1px solid rgba(26,115,232,.2);border-radius:var(--r);padding:8px 14px;margin-bottom:10px;align-items:center;gap:8px;font-size:11px;color:var(--blue);">
+    <span>🔍</span><span id="filtdesc">Filtered</span>
+    <button onclick="clrFilt()" style="margin-left:auto;background:none;border:none;color:var(--blue);font-size:12px;font-weight:500;cursor:pointer;">✕ Clear</button>
+  </div>
+  <div class="g6">
+    <div class="kcard kc-b" onclick="tgFilt('all','kc-total')" id="kc-total"><div class="kc-lbl">Monthly Total</div><div class="kc-val kv-b" id="kv-total">—</div><div class="kc-sub">litres · Feb 2026</div></div>
+    <div class="kcard kc-g" onclick="tgFilt('active','kc-active')" id="kc-active"><div class="kc-lbl">Active Centres</div><div class="kc-val kv-g" id="kv-active">—</div><div class="kc-sub">of 63 · click to filter</div></div>
+    <div class="kcard kc-r" onclick="tgFilt('inactive','kc-inactive')" id="kc-inactive"><div class="kc-lbl">Inactive Centres</div><div class="kc-val kv-r" id="kv-inactive">—</div><div class="kc-sub">zero production</div></div>
+    <div class="kcard kc-a" onclick="tgFilt('partial','kc-partial')" id="kc-partial"><div class="kc-lbl">Partial (&lt;80%)</div><div class="kc-val kv-a" id="kv-partial">—</div><div class="kc-sub">inconsistent</div></div>
+    <div class="kcard kc-t" onclick="tgFilt('growing','kc-growing')" id="kc-growing"><div class="kc-lbl">Growing Trend</div><div class="kc-val kv-t" id="kv-growing">—</div><div class="kc-sub">upward trajectory</div></div>
+    <div class="kcard kc-p" onclick="tgFilt('top10','kc-avg')" id="kc-avg"><div class="kc-lbl">Avg / Society</div><div class="kc-val kv-p" id="kv-avg">—</div><div class="kc-sub">L/month · top 10</div></div>
+  </div>
+  <div class="g4" style="margin-bottom:12px;">
+    <div class="kcard kc-b"><div class="kc-lbl">Collection Efficiency</div><div class="kc-val kv-b" id="kv-eff">—</div><div class="pbar" style="height:4px;margin-top:5px;"><div class="pfill" id="peff" style="background:var(--blue);height:4px;width:0%"></div></div><div class="kc-sub" style="margin-top:3px;">Target ≥85%</div></div>
+    <div class="kcard kc-t"><div class="kc-lbl">Morning:Evening</div><div class="kc-val kv-t" id="kv-ratio">—</div><div class="kc-sub">NDDB target 55:45</div></div>
+    <div class="kcard kc-a"><div class="kc-lbl">Peak Day</div><div class="kc-val kv-a" id="kv-peak">—</div><div class="kc-sub" id="kv-peaksub">highest single day</div></div>
+    <div class="kcard kc-g"><div class="kc-lbl">Intra-Month Growth</div><div class="kc-val kv-g" id="kv-growth">—</div><div class="kc-sub">2nd half vs 1st half</div></div>
+  </div>
+  <div class="g2" style="margin-bottom:12px;">
+    <div class="card"><div class="card-t">Daily Procurement Trend — MYL</div><div style="height:180px;"><canvas id="dailyChart"></canvas></div></div>
+    <div class="card"><div class="card-t">MYL vs Nagapattinam (Scale Peer)</div><div style="height:180px;"><canvas id="distChart"></canvas></div></div>
+  </div>
+  <div class="g3">
+    <div class="card"><div class="card-t">Top 10 Societies</div><div id="top10bars"></div></div>
+    <div class="card"><div class="card-t">Consistency Distribution</div><div style="height:170px;"><canvas id="conChart"></canvas></div></div>
+    <div class="card"><div class="card-t">Production Status</div><div style="height:170px;"><canvas id="statChart"></canvas></div></div>
+  </div>
+</div>
+
+<!-- NDDB -->
+<div id="tab-nddb" class="tab-panel">
+  <div class="ibox"><div class="ib-t">🏛 NDDB Anand Pattern — Industry Benchmarks</div><div class="ib-b">Fat ≥3.0% cow, SNF ≥8.5%. Two-axis fat+SNF payment. Collection efficiency target <b>≥85%</b>. Pouring rate <b>≥75%</b>. Stability CV <b>&lt;15%</b>.</div></div>
+  <div class="g4" style="margin-bottom:12px;">
+    <div class="card"><div class="card-t">Collection Efficiency</div><div class="kc-val kv-p" id="ne-eff">—</div><div class="pbar" style="height:5px;margin:7px 0;"><div class="pfill" id="ne-eff-bar" style="background:var(--purple);height:5px;width:0%"></div></div><div class="kc-sub">Target ≥85% <span id="ne-effs"></span></div></div>
+    <div class="card"><div class="card-t">Dropout Risk Index</div><div class="kc-val kv-r" id="ne-risk">—</div><div class="kc-sub" style="margin-top:5px;">Declining societies</div></div>
+    <div class="card"><div class="card-t">Recovery Potential</div><div class="kc-val kv-g" id="ne-rec">—</div><div class="kc-sub" style="margin-top:5px;">L/month if reactivated</div></div>
+    <div class="card"><div class="card-t">Procurement Stability</div><div class="kc-val kv-t" id="ne-stab">—</div><div class="kc-sub" style="margin-top:5px;">CV — target &lt;15%</div></div>
+  </div>
+  <div class="g2" style="margin-bottom:12px;">
+    <div class="card"><div class="card-t">Society Grade Distribution (NDDB)</div><div style="font-size:11px;color:var(--txt2);margin-bottom:8px;">A:≥90%+up · B:70-89%+stable · C:50-69% · D:&lt;50%/zero</div><div style="height:180px;"><canvas id="gradeChart"></canvas></div></div>
+    <div class="card"><div class="card-t">Morning vs Evening Collection</div><div id="meinfo" style="font-size:12px;color:var(--txt2);margin-bottom:8px;"></div><div style="height:180px;"><canvas id="meChart"></canvas></div></div>
+  </div>
+  <div class="card" style="margin-bottom:12px;"><div class="card-t">NDDB Benchmark Scorecard</div><div id="nddb-benchmarks"></div></div>
+  <div class="card"><div class="card-t">Society Grade Card — All 63</div><div class="tw"><table class="tbl" style="min-width:680px;"><thead><tr><th>Society</th><th>Monthly L</th><th>Consistency</th><th>Trend</th><th>Grade</th><th>Risk</th><th>Action</th></tr></thead><tbody id="gradeBody"></tbody></table></div></div>
+</div>
+
+<!-- SOCIETIES -->
+<div id="tab-societies" class="tab-panel">
+  <div class="frow">
+    <input id="soc-search" class="ctrl" type="text" placeholder="🔍 Search society…" style="width:180px;" oninput="renderTbl()">
+    <select id="soc-sort" class="ctrl" onchange="renderTbl()"><option value="total">Sort: Volume</option><option value="consistency">Consistency</option><option value="daily_avg">Daily Avg</option><option value="active_days">Active Days</option><option value="trend">Trend</option><option value="risk">Risk</option></select>
+    <select id="soc-dir" class="ctrl" onchange="renderTbl()"><option value="desc">↓ Desc</option><option value="asc">↑ Asc</option></select>
+    <select id="soc-filt" class="ctrl" onchange="renderTbl()"><option value="all">All</option><option value="active">Active</option><option value="inactive">Inactive</option><option value="partial">Partial &lt;80%</option><option value="growing">Growing</option><option value="declining">Declining</option></select>
+    <span id="rowct" style="font-size:12px;color:var(--txt2);"></span>
+  </div>
+  <div class="tw"><table class="tbl"><thead><tr><th onclick="thSort('idx')">#</th><th onclick="thSort('name')">Society</th><th onclick="thSort('total')">Monthly L ↓</th><th onclick="thSort('daily_avg')">Daily Avg</th><th onclick="thSort('active_days')">Active Days</th><th onclick="thSort('consistency')">Consistency</th><th onclick="thSort('trend')">Trend</th><th onclick="thSort('risk')">Risk</th><th>Sparkline</th><th onclick="thSort('grade')">Grade</th></tr></thead><tbody id="socBody"></tbody></table></div>
+</div>
+
+<!-- COMPARISON -->
+<div id="tab-comparison" class="tab-panel">
+  <div class="g4" style="margin-bottom:12px;">
+    <div class="kcard kc-b"><div class="kc-lbl">Mayiladuthurai</div><div class="kc-val kv-b" id="comp-myl">—</div><div class="kc-sub">63 societies</div></div>
+    <div class="kcard kc-a"><div class="kc-lbl">Thanjavur</div><div class="kc-val kv-a">7,27,578</div><div class="kc-sub">319 soc · 296 active</div></div>
+    <div class="kcard kc-g"><div class="kc-lbl">Tiruvarur</div><div class="kc-val kv-g">4,78,558</div><div class="kc-sub">68 soc · 45 active</div></div>
+    <div class="kcard kc-r"><div class="kc-lbl">Nagapattinam</div><div class="kc-val kv-r">19,159</div><div class="kc-sub">53 soc · 32 active</div></div>
+  </div>
+  <div class="g2">
+    <div class="card"><div class="card-t">Daily Trend — All Districts</div><div style="height:220px;"><canvas id="allDistChart"></canvas></div></div>
+    <div class="card"><div class="card-t">Per-Active-Society Avg (L/month)</div><div id="perSocBars"></div><div style="margin-top:10px;"><div class="sec-lbl">MYL Gap Analysis</div><div id="gapAnalysis"></div></div></div>
+  </div>
+  <div class="card" style="margin-top:0;"><div class="card-t">MYL vs Tiruvarur — Normalised per Active Society/Day</div><div style="height:180px;"><canvas id="h2hChart"></canvas></div><div id="compNote" style="margin-top:8px;padding:9px 11px;background:var(--bdim);border-radius:var(--r);font-size:11px;line-height:1.7;color:var(--txt2);"></div></div>
+</div>
+
+<!-- INACTIVE -->
+<div id="tab-inactive" class="tab-panel">
+  <div class="ibox"><div class="ib-t">⚠️ 13 Inactive Centres — Zero Collection Feb 2026</div><div class="ib-b">These enrolled societies produced <b>0 litres</b>. Combined reactivation potential: <em>10,000–15,000 L/month</em> within 60 days of field intervention.</div></div>
+  <div id="inactiveList"></div>
+</div>
+
+<!-- INSIGHTS -->
+<div id="tab-insights" class="tab-panel">
+  <div class="ibox"><div class="ib-t">💡 AI-Computed Procurement Insights — Feb 2026</div><div class="ib-b">Auto-derived from 63 society records using NDDB benchmarks, trend analysis, and 20th Livestock Census cross-reference.</div></div>
+  <div id="insightsPanel"></div>
+</div>
+
+<!-- EXPANSION -->
+<div id="tab-expansion" class="tab-panel">
+  <div class="ibox"><div class="ib-t">🌱 Strategic Expansion Intelligence — Livestock Census × Procurement Cross-Reference</div><div class="ib-b"><b>238 of 264 villages (90%) are completely unserved</b> despite 1.20 lakh milch animals. Top 15 villages alone could <em>triple district collection</em>.</div></div>
+  <div class="g6" style="grid-template-columns:repeat(auto-fit,minmax(140px,1fr));">
+    <div class="kcard kc-b"><div class="kc-lbl">Total Milch Animals</div><div class="kc-val kv-b">1.20L</div><div class="kc-sub">female cattle + buffalo</div></div>
+    <div class="kcard kc-r"><div class="kc-lbl">Unserved Villages</div><div class="kc-val kv-r">238</div><div class="kc-sub">90% of all villages</div></div>
+    <div class="kcard kc-a"><div class="kc-lbl">Inactive Societies</div><div class="kc-val kv-a">13</div><div class="kc-sub">reactivation ready</div></div>
+    <div class="kcard kc-g"><div class="kc-lbl">Top Village</div><div class="kc-val kv-g">3,112</div><div class="kc-sub">Koothiyampettai</div></div>
+    <div class="kcard kc-t"><div class="kc-lbl">Best Block Coverage</div><div class="kc-val kv-t">21%</div><div class="kc-sub">Sirkali — 9/42 villages</div></div>
+    <div class="kcard kc-p"><div class="kc-lbl">Expansion Potential</div><div class="kc-val kv-p">~3.5L</div><div class="kc-sub">additional L/month</div></div>
+  </div>
+  <div class="g2">
+    <div>
+      <div class="sec-lbl">Priority Action Matrix</div>
+      <div class="acard r"><div>🔴</div><div><div class="ac-t">Immediate: New Societies in High-Milch Villages</div><div class="ac-d">Koothiyampettai (3,112), Eduthukkatti (2,755), Thandavankulam (2,620), Alakkudy (2,387). 13 villages with 1,000+ milch animals currently unserved.</div><div class="ac-a">→ See New Societies tab</div></div></div>
+      <div class="acard a"><div>🟡</div><div><div class="ac-t">Short-term: Reactivate 13 Inactive Societies</div><div class="ac-d">ALAKUDI, MANALMEDU, THILLAIVIDANGAN and 10 others — existing infrastructure, zero collection. 30–60 day reactivation timeline.</div><div class="ac-a">→ See Inactive Centres tab</div></div></div>
+      <div class="acard g"><div>🟢</div><div><div class="ac-t">Ongoing: Boost 14 Declining Societies</div><div class="ac-d">KATHIRUPPU, SITHAMALLI, KEELAMOOLAI and 11 others show downward trends. Vet support + member enrollment drives needed.</div><div class="ac-a">→ Society Tracker → Declining filter</div></div></div>
+      <div class="acard b"><div>🔵</div><div><div class="ac-t">Strategic: Sembanarkoil Block — 15+ New Societies</div><div class="ac-d">67 villages, 31,085 milch animals, only 3 active (4% coverage). Cluster approach via Thalachankadu + Poraiyar vet zones.</div><div class="ac-a">→ Block Analysis tab</div></div></div>
+    </div>
+    <div><div class="sec-lbl">Block Coverage Gap</div><div id="blockCovCards"></div></div>
+  </div>
+</div>
+
+<!-- UNSERVED -->
+<div id="tab-unserved" class="tab-panel">
+  <div class="ibox"><div class="ib-t">🚨 238 Unserved Villages — No Milk Society</div><div class="ib-b">Villages with <b>≥500 milch animals</b> can sustain independent MPCS. 300–499 may federate. Est. = milch animals × 35% participation × 1.8 L/animal/day.</div></div>
+  <div class="frow">
+    <input class="ctrl" type="text" id="uvsearch" placeholder="🔍 Search village…" style="width:200px;" oninput="filtUV()">
+    <button class="pill act" onclick="filtUVBlk('all',this)">All</button>
+    <button class="pill" onclick="filtUVBlk('Kollidam',this)">Kollidam</button>
+    <button class="pill" onclick="filtUVBlk('Sembanarkoil',this)">Sembanarkoil</button>
+    <button class="pill" onclick="filtUVBlk('Mayiladuthurai',this)">Mayiladuthurai</button>
+    <button class="pill" onclick="filtUVBlk('Sirkali',this)">Sirkali</button>
+    <button class="pill" onclick="filtUVBlk('Kuthalam',this)">Kuthalam</button>
+    <span id="uvct" style="font-size:12px;color:var(--txt2);margin-left:auto;"></span>
+  </div>
+  <div class="tw"><table class="tbl" style="min-width:740px;"><thead><tr><th>#</th><th>Village</th><th>Block</th><th>Female Cattle</th><th>Buffalo (F)</th><th>Total Milch</th><th>Vet Dispensary</th><th>Est. Monthly (L)</th><th>Priority</th></tr></thead><tbody id="uvBody"></tbody></table></div>
+</div>
+
+<!-- NEW SOC -->
+<div id="tab-newsoc" class="tab-panel">
+  <div class="ibox"><div class="ib-t">🏗 Top 50 Villages for New MPCS Formation</div><div class="ib-b"><b>P1 ≥1,500 animals</b> = immediate. <b>P2 800–1,499</b> = 6 months. <b>P3 500–799</b> = 1 year. Est. daily = milch animals × 35% × 1.8 L/day.</div></div>
+  <div class="tw"><table class="tbl" style="min-width:780px;"><thead><tr><th>#</th><th>Village</th><th>Block</th><th>Milch Animals</th><th>Vet Centre</th><th>Daily Potential</th><th>Monthly Est.</th><th>Priority</th></tr></thead><tbody id="nsBody"></tbody></table></div>
+</div>
+
+<!-- BLOCKS -->
+<div id="tab-blocks" class="tab-panel">
+  <div class="frow">
+    <button class="pill act" onclick="showBlk('Kollidam',this)">📍 Kollidam</button>
+    <button class="pill" onclick="showBlk('Sembanarkoil',this)">📍 Sembanarkoil</button>
+    <button class="pill" onclick="showBlk('Mayiladuthurai',this)">📍 Mayiladuthurai</button>
+    <button class="pill" onclick="showBlk('Sirkali',this)">📍 Sirkali</button>
+    <button class="pill" onclick="showBlk('Kuthalam',this)">📍 Kuthalam</button>
+  </div>
+  <div id="blkPanel"></div>
+</div>
+
+<!-- MAP -->
+<div id="tab-mapview" class="tab-panel">
+  <div class="ibox"><div class="ib-t">🗺️ Geocoded Village & Society Map — Mayiladuthurai District</div><div class="ib-b">All 63 enrolled societies + top 50 unserved villages plotted from 20th Livestock Census coordinates. Toggle layers. Click any marker for details.</div></div>
+  <div class="frow">
+    <button class="pill act" id="ml-act" onclick="togLayer('act',this)">🟢 Active</button>
+    <button class="pill act" id="ml-inact" onclick="togLayer('inact',this)">🔴 Inactive</button>
+    <button class="pill act" id="ml-p1" onclick="togLayer('p1',this)">🟠 Unserved ≥800</button>
+    <button class="pill act" id="ml-p3" onclick="togLayer('p3',this)">🟡 Unserved &lt;800</button>
+    <button class="pill act" id="ml-depot" onclick="togLayer('depot',this)">🔵 Depots</button>
+    <button class="pill" onclick="fitMap()">⊕ Fit All</button>
+    <button class="btn-o" onclick="reGeocode()" id="geocode-btn" style="margin-left:auto;">📍 Re-geocode All</button>
+  </div>
+  <div id="geocode-status" style="display:none;background:#e8f0fe;border:1px solid rgba(26,115,232,.2);border-radius:8px;padding:8px 14px;margin-bottom:8px;font-size:12px;color:#1a73e8;" id="geocode-status"></div>
+  <div id="leafmap"></div>
+  <div class="map-leg">
+    <div class="mli"><div class="mldot" style="background:#1e8e3e;"></div>Active Society</div>
+    <div class="mli"><div class="mldot" style="background:#d93025;"></div>Inactive Society</div>
+    <div class="mli"><div class="mldot" style="background:#e8710a;"></div>Unserved P1/P2 (≥800 milch)</div>
+    <div class="mli"><div class="mldot" style="background:#f9ab00;"></div>Unserved P3/P4</div>
+    <div class="mli"><div class="mldot" style="background:#1a73e8;border-radius:3px;"></div>Chilling Depot</div>
+  </div>
+</div>
+
+<!-- ROUTES -->
+<div id="tab-routes" class="tab-panel">
+  <div class="ibox"><div class="ib-t">🚛 Optimal Milk Collection Route Planner</div><div class="ib-b">Nearest-neighbor + 2-opt optimisation finds shortest daily collection route per block. Assumes 40 km/h avg speed + 15 min/stop. Milk must reach chilling center within 4 hours.</div></div>
+  <div class="frow">
+    <select class="ctrl" id="rBlk" onchange="planRoute()"><option value="Kollidam">Kollidam Block</option><option value="Sembanarkoil">Sembanarkoil</option><option value="Mayiladuthurai">Mayiladuthurai</option><option value="Sirkali">Sirkali</option><option value="Kuthalam">Kuthalam</option></select>
+    <select class="ctrl" id="rDepot" onchange="planRoute()"><option value="0">Depot: MYL Chilling Center</option><option value="1">Depot: Kollidam Sub-Center</option><option value="2">Depot: Sirkali Sub-Center</option><option value="3">Depot: Sembanarkoil Sub-Center</option></select>
+    <select class="ctrl" id="rMode" onchange="planRoute()"><option value="active">Active Societies Only</option><option value="all">Include Top Unserved</option></select>
+    <button class="btn-p" onclick="planRoute()">🔄 Recalculate</button>
+    <button class="btn-o" onclick="exportRoute()">⬇ Export Route</button>
+  </div>
+  <div class="rstats" id="rstats"></div>
+  <div class="g2" style="margin-top:10px;">
+    <div id="routemap" class="rmap"></div>
+    <div class="rpanel" id="rsteplist"></div>
+  </div>
+</div>
+
+<!-- TARGETS -->
+<div id="tab-targets" class="tab-panel">
+  <div class="ibox"><div class="ib-t">🎯 Monthly Target Manager</div><div class="ib-b">Set procurement targets per society. 🟢 ≥90% achieved · 🟡 70–89% · 🔴 &lt;70%. Targets saved locally.</div></div>
+  <div class="tsum" id="tgtSum"></div>
+  <div class="frow">
+    <button class="pill act" onclick="filtTgt('all',this)">All</button>
+    <button class="pill" onclick="filtTgt('below',this)">🔴 Below</button>
+    <button class="pill" onclick="filtTgt('near',this)">🟡 Near</button>
+    <button class="pill" onclick="filtTgt('met',this)">🟢 Met</button>
+    <button class="pill" onclick="filtTgt('inactive',this)">⚠️ Inactive</button>
+    <div style="margin-left:auto;display:flex;align-items:center;gap:8px;">
+      <span style="font-size:12px;color:var(--txt2);">Bulk multiplier:</span>
+      <input type="range" id="bulk" min="100" max="250" value="120" style="width:90px;" oninput="document.getElementById('bulkpct').textContent=this.value+'%'">
+      <span id="bulkpct" style="font-size:12px;color:var(--amber);font-weight:500;">120%</span>
+      <button class="btn-o" onclick="applyBulk()">Apply All</button>
+    </div>
+  </div>
+  <div id="tgtCards"></div>
+</div>
+
+<!-- ACTIONS -->
+<div id="tab-actions" class="tab-panel">
+  <div class="ibox"><div class="ib-t">📋 Field Operations Action Board — Kanban</div><div class="ib-b">Click any card to advance it. Auto-generated from AI insights. Add custom tasks anytime.</div></div>
+  <div style="display:flex;justify-content:space-between;margin-bottom:10px;">
+    <div class="frow" style="margin-bottom:0;gap:6px;">
+      <button class="pill act" onclick="filtKB('all',this)">All</button>
+      <button class="pill" onclick="filtKB('high',this)">🔴 Urgent</button>
+      <button class="pill" onclick="filtKB('medium',this)">🟡 Medium</button>
+    </div>
+    <button class="btn-p" onclick="addAction()">+ Add Action</button>
+  </div>
+  <div class="kanban">
+    <div class="kcol"><div class="khdr kh-todo"><span>⏳ Pending</span><span id="kbtodo">0</span></div><div id="col-todo"></div><button class="kb-add" onclick="addToCol('todo')">+ Add task</button></div>
+    <div class="kcol"><div class="khdr kh-do"><span>⚡ In Progress</span><span id="kbdo">0</span></div><div id="col-doing"></div></div>
+    <div class="kcol"><div class="khdr kh-done"><span>✅ Completed</span><span id="kbdone">0</span></div><div id="col-done"></div></div>
+  </div>
+</div>
+
+<!-- MGMT HUB -->
+<div id="tab-mgmt" class="tab-panel">
+  <div class="ibox"><div class="ib-t">🏭 Management Hub — NDDB Best Practices & 12 Improvement Pillars</div><div class="ib-b">Evidence-based management framework for dairy cooperative improvement, aligned with NDDB Anand Pattern.</div></div>
+  <div class="sec-lbl">PDCA Improvement Cycle — District Procurement</div>
+  <div class="pdca">
+    <div class="pdq pdP"><div class="pdl" style="color:var(--blue);">P — Plan</div><ul style="font-size:12px;color:var(--txt2);line-height:1.9;padding-left:16px;"><li>Set block-wise monthly targets</li><li>Identify top 10 unserved villages/block</li><li>Schedule vet dispensary coordination calls</li><li>Plan farmer enrollment drives for declining societies</li><li>Design first-purchase guarantee incentive structure</li></ul></div>
+    <div class="pdq pdD"><div class="pdl" style="color:var(--green);">D — Do</div><ul style="font-size:12px;color:var(--txt2);line-height:1.9;padding-left:16px;"><li>Deploy field officers to inactive societies</li><li>Conduct gram sabha in priority villages</li><li>Register new members in underperforming societies</li><li>Optimise collection routes (see Route Planner)</li><li>Issue Aadhaar-linked onboarding kits to new members</li></ul></div>
+    <div class="pdq pdC"><div class="pdl" style="color:var(--amber);">C — Check</div><ul style="font-size:12px;color:var(--txt2);line-height:1.9;padding-left:16px;"><li>Weekly review: daily collection vs target</li><li>Monitor consistency scores (flag below 80%)</li><li>Track dropout rate (societies going inactive)</li><li>Compare morning/evening split vs 55:45 target</li><li>Audit new society formation progress monthly</li></ul></div>
+    <div class="pdq pdA"><div class="pdl" style="color:var(--purple);">A — Act</div><ul style="font-size:12px;color:var(--txt2);line-height:1.9;padding-left:16px;"><li>Escalate critical dropouts to district manager</li><li>Adjust route plans if variance &gt;20%</li><li>Revise targets for seasonal factors</li><li>Replicate Grade A society best practices</li><li>Document lessons for next cycle</li></ul></div>
+  </div>
+  <div class="sec-lbl">12 Management Pillars</div>
+  <div class="mgrid" style="margin-bottom:14px;">
+    <div class="pcard pc-b"><div class="pc-ic">🐄</div><div class="pc-t">Animal Productivity</div><div class="pc-b">Avg lactation 3–5 L/day. Target 35% farmer participation min. Vet extension monthly for all active villages. Link to fodder subsidy schemes.</div><div class="pc-tgt">TARGET: ≥1.8 L/enrolled animal/day</div></div>
+    <div class="pcard pc-g"><div class="pc-ic">👥</div><div class="pc-t">Member Enrollment</div><div class="pc-b">Minimum 50 members per MPCS. Low-volume high-consistency societies are under-enrolled. Doorstep Aadhaar-linked onboarding reduces friction by 40%.</div><div class="pc-tgt">TARGET: 20% member growth in 15 societies by Q2</div></div>
+    <div class="pcard pc-a"><div class="pc-ic">📅</div><div class="pc-t">Collection Consistency</div><div class="pc-b">NDDB target: ≥90% collection days/month (≥24 of 27). Below 80% signals operator absence, transport failure, or member dropout.</div><div class="pc-tgt">TARGET: 45 of 50 active societies ≥90% consistency</div></div>
+    <div class="pcard pc-r"><div class="pc-ic">🌡️</div><div class="pc-t">Cold Chain Integrity</div><div class="pc-b">Milk must reach chilling center within 4 hours. Route optimisation (Route Planner tab) reduces transit. BMC installation recommended for high-volume routes.</div><div class="pc-tgt">TARGET: Zero warm-milk rejections at depots</div></div>
+    <div class="pcard pc-t"><div class="pc-ic">💰</div><div class="pc-t">Transparent Pricing</div><div class="pc-b">Two-axis fat+SNF payment. Display price board at every society. WhatsApp/SMS payment slip prevents disputes and is top reason for reactivating inactive societies.</div><div class="pc-tgt">TARGET: 100% digital payment slips by June 2026</div></div>
+    <div class="pcard pc-p"><div class="pc-ic">📱</div><div class="pc-t">Digital Farmer Linkage</div><div class="pc-b">WhatsApp groups per society for daily alerts. Missed-collection auto-SMS to farmer. Monthly performance report to society chairman. ePashuhaat market linkage.</div><div class="pc-tgt">TARGET: 80% farmer mobile enrollment by Sep 2026</div></div>
+    <div class="pcard pc-b"><div class="pc-ic">🔄</div><div class="pc-t">Route Efficiency</div><div class="pc-b">Optimised routes reduce fuel cost 15–30%. Kollidam 8 active societies can be covered in &lt;4h. Add new societies to existing routes where proximity allows.</div><div class="pc-tgt">TARGET: &lt;4h route time per block per shift</div></div>
+    <div class="pcard pc-g"><div class="pc-ic">🧪</div><div class="pc-t">Quality Assurance</div><div class="pc-b">Fat ≥3.0%, SNF ≥8.5%. Adulteration check at chilling center. Seasonal fat dip of 0.3–0.5% in summer. Breed improvement (Jersey/HF crossing) for better yield.</div><div class="pc-tgt">TARGET: Zero adulteration; fat avg ≥3.2%</div></div>
+    <div class="pcard pc-a"><div class="pc-ic">🌾</div><div class="pc-t">Seasonal Planning</div><div class="pc-b">Delta region dip during Samba harvest (Oct–Dec) when agricultural labor peaks. Pre-season farmer engagement essential. Identify year-round vs seasonal lactators.</div><div class="pc-tgt">TARGET: &lt;10% seasonal variance in monthly collection</div></div>
+    <div class="pcard pc-r"><div class="pc-ic">🏆</div><div class="pc-t">Society Grading & Incentives</div><div class="pc-b">Grade A societies: ₹0.20/L extra bonus. Grade D: 3-month improvement plan or merger. Public display of society grade at panchayat builds healthy competition.</div><div class="pc-tgt">TARGET: 30 Grade A societies by March 2027</div></div>
+    <div class="pcard pc-t"><div class="pc-ic">🗺️</div><div class="pc-t">White Zone Coverage</div><div class="pc-b">238 unserved villages. New society formation avg 90 days from identification to first collection. Sembanarkoil (4% coverage) is highest urgency block.</div><div class="pc-tgt">TARGET: 15 new societies formed FY 2026-27</div></div>
+    <div class="pcard pc-p"><div class="pc-ic">📊</div><div class="pc-t">Data-Driven Management</div><div class="pc-b">Weekly dashboard review by all block officers. Flag: any society missing 3 consecutive days triggers field visit SOP within 24 hours.</div><div class="pc-tgt">TARGET: Weekly review by all block officers</div></div>
+  </div>
+  <div class="sec-lbl">Field Officer KPI Scorecard</div>
+  <div class="tw"><table class="tbl"><thead><tr><th>KPI</th><th>Current</th><th>Target</th><th>Review Frequency</th><th>Owner</th><th>Status</th></tr></thead><tbody id="kpiSC"></tbody></table></div>
+</div>
+
+
+<!-- ACTION PLAN -->
+<div id="tab-actionplan" class="tab-panel">
+
+<div class="ibox"><div class="ib-t">🗓️ 12-Month Action Plan — March 2025 to February 2026</div><div class="ib-b">All targets derived from 20th Livestock Census milch animal data and Feb 2025 procurement actuals. Growth levers: <b>reactivate 13 inactive centres</b>, <b>reverse 14 declining societies</b>, <b>commission 22 new MPCS</b> from top unserved villages. Baseline: 72,238 L/mo → Target: <em>1,80,000 L/mo (2.49×)</em>.</div></div>
+
+<!-- SUMMARY KPI ROW -->
+<div class="g4" style="margin-bottom:14px;" id="ap-kpis">
+  <div class="kcard kc-b"><div class="kc-lbl">Baseline (Feb 2025)</div><div class="kc-val kv-b">72,238 L</div><div class="kc-sub">50 active · 2,675 L/day</div></div>
+  <div class="kcard kc-g"><div class="kc-lbl">Year-End Target (Feb 2026)</div><div class="kc-val kv-g">1,80,000 L</div><div class="kc-sub">85 active · 6,667 L/day</div></div>
+  <div class="kcard kc-a"><div class="kc-lbl">New MPCS to Commission</div><div class="kc-val kv-a">22</div><div class="kc-sub">from 50 unserved villages</div></div>
+  <div class="kcard kc-r"><div class="kc-lbl">Inactive to Reactivate</div><div class="kc-val kv-r">13</div><div class="kc-sub">by Month 3</div></div>
+</div>
+
+<!-- PROGRESS CHART + GROWTH LADDER -->
+<div class="g2" style="margin-bottom:14px;">
+  <div class="card"><div class="card-t">📈 Monthly Procurement Targets — Growth Ladder</div><div style="height:220px;"><canvas id="apLadderChart"></canvas></div></div>
+  <div class="card"><div class="card-t">📊 Lever Breakdown — What Drives Growth</div><div style="height:220px;"><canvas id="apLeverChart"></canvas></div></div>
+</div>
+
+<!-- MONTH SELECTOR + DETAIL -->
+<div class="card" style="margin-bottom:14px;">
+  <div class="card-t">📅 Month-by-Month Detail</div>
+  <div class="frow" id="ap-month-pills" style="margin-bottom:14px;flex-wrap:wrap;gap:6px;"></div>
+  <div id="ap-month-detail"></div>
+</div>
+
+<!-- NEW MPCS PIPELINE TABLE -->
+<div class="card" style="margin-bottom:14px;">
+  <div class="card-t">🏗 New MPCS Formation Pipeline — Top 22 Villages</div>
+  <div class="sec-lbl" style="margin-bottom:8px;">Selection based on milch animal count · Daily potential = milch × 0.35 × 1.8 L/animal/day</div>
+  <div class="tw"><table class="tbl" id="ap-pipeline-tbl" style="min-width:820px;">
+    <thead><tr>
+      <th>Month</th><th>Village</th><th>Block</th><th>Milch Animals</th><th>Daily Potential</th><th>Monthly Potential</th><th>Priority</th>
+    </tr></thead>
+    <tbody id="ap-pipeline-body"></tbody>
+  </table></div>
+</div>
+
+<!-- DECLINING SOCIETIES TABLE -->
+<div class="g2" style="margin-bottom:14px;">
+  <div class="card">
+    <div class="card-t">⬇️ Declining Societies — Turnaround Targets</div>
+    <div class="tw"><table class="tbl" style="min-width:360px;">
+      <thead><tr><th>Society</th><th>Current L/mo</th><th>Target L/mo</th><th>Intervention</th></tr></thead>
+      <tbody id="ap-declining-body"></tbody>
+    </table></div>
+  </div>
+  <div class="card">
+    <div class="card-t">⚠️ Inactive Centres — Reactivation Schedule</div>
+    <div class="tw"><table class="tbl" style="min-width:360px;">
+      <thead><tr><th>Society</th><th>Month</th><th>Action</th></tr></thead>
+      <tbody id="ap-inactive-body"></tbody>
+    </table></div>
+  </div>
+</div>
+
+<!-- RISK REGISTER -->
+<div class="card" style="margin-bottom:14px;">
+  <div class="card-t">⚡ Risk Register</div>
+  <div id="ap-risks"></div>
+</div>
+
+</div>
+
+  </div><!-- /content -->
+</div><!-- /main -->
+<script>
+const DAYS=Array.from({length:27},(_,i)=>'Feb '+(i+1));
+const LSK='myl_v4';
+const SEED=[
+{name:"KAVERIPOOMPATTINAM",total:11540.2,active_days:27,daily_avg:427.4,trend:"up",consistency:100,daily:[270,398.4,368.3,358.7,424.7,361.2,373.5,404,431,466.5,507.8,465.3,420.5,363.1,197.2,430.3,433.8,444.5,421.9,476.5,507.6,566.5,572.8,481.2,473.2,497.2,424.5]},
+{name:"KOORAINADU",total:11277.9,active_days:27,daily_avg:417.7,trend:"up",consistency:100,daily:[399.3,433.2,434.5,447.3,410.3,392.4,429.6,413.2,394.2,357,398.4,415,360.6,374.3,292.2,288.3,389.4,503.3,364.6,484.2,445.8,517.8,531.1,490.3,399.5,439,473.1]},
+{name:"VAITHEESWARANKOVIL",total:6800.2,active_days:27,daily_avg:251.9,trend:"up",consistency:100,daily:[84.8,224.5,247.4,252.7,248.7,235.4,248.6,259.4,239.5,223,256.2,239,269.5,160,151.7,190.5,257.2,295.7,269,336.4,303.3,328.1,375.8,324.1,277.4,147.1,355.2]},
+{name:"AACHALPURAM",total:3110.4,active_days:27,daily_avg:115.2,trend:"stable",consistency:100,daily:[47.2,101.8,117.7,116.4,117.4,117.5,119.3,147,100.5,132,135.6,138.7,120.5,93,80.4,107,108.1,116.8,119.1,119.2,111.4,135.3,96.7,122.9,139.8,127.2,121.9]},
+{name:"SITHAMALLI",total:2482.4,active_days:27,daily_avg:91.9,trend:"down",consistency:100,daily:[103.4,101.3,103.3,107.9,105.7,93.2,117,121.6,113.6,94.4,97.1,103,88.5,68.5,44.3,104.5,85,96,97.3,91.6,93.1,78,81,46.9,87.4,85.6,73.2]},
+{name:"NALLAVUR",total:2228.4,active_days:27,daily_avg:82.5,trend:"up",consistency:100,daily:[71.8,73.2,70.4,73.1,75.4,80,78.7,74.4,78.9,77.1,83.4,84.9,84.1,87.9,89.4,85.4,86.5,89.2,84.9,91.1,89.3,87.5,83.4,84.9,90.9,84.2,88.4]},
+{name:"ATHIYUR",total:1680.6,active_days:27,daily_avg:62.2,trend:"up",consistency:100,daily:[77.3,51.5,53.2,47.4,58.6,53,81,56.6,61.5,55,57.2,58.5,62.4,92.4,50.2,55.3,61,59.6,58.9,63.8,57.8,57.2,65.9,61.2,75.6,66.9,81.6]},
+{name:"KATHIRUPPU",total:1610.1,active_days:27,daily_avg:59.6,trend:"down",consistency:100,daily:[70.7,69.4,70.9,71.2,68.7,77.7,73.7,74.8,70.5,69,72.5,65.6,74.6,72.6,69.4,70.4,72.9,78,19.7,30.9,38.6,40.9,39.5,37.8,36,37.9,36.2]},
+{name:"CHIDAMBARANATHAPURAM",total:1584.3,active_days:27,daily_avg:58.7,trend:"up",consistency:100,daily:[47.8,52,53.4,54.9,58.1,55.5,58.1,56.5,58.8,60.6,57.9,60.5,61.5,57.1,33.9,62.5,66.1,68.3,70.6,58,63.1,57.9,55.8,59.3,65.6,64.1,66.4]},
+{name:"KARAIKANDAM",total:1551.8,active_days:23,daily_avg:67.5,trend:"up",consistency:85,daily:[57.4,66.9,61.8,62.9,60.3,61.7,0,0,0,0,72.1,74.1,72,70.9,65.4,39.7,76.6,71.7,74.9,80.4,73.5,75,77.2,73.9,32.7,72.4,78.3]},
+{name:"KUNNAM",total:1528.9,active_days:27,daily_avg:56.6,trend:"stable",consistency:100,daily:[42.7,58.7,58.3,56.4,55.3,59.2,55.2,57.7,58.1,57,60.3,63.3,61.8,63.2,44.4,59.2,60.5,53.9,59.8,54.9,56.9,58.8,58.8,53.8,50.7,54,56]},
+{name:"GOPALASAMUTHIRAM",total:1523,active_days:27,daily_avg:56.4,trend:"stable",consistency:100,daily:[49.5,58.2,52.5,52.3,56.3,53.8,54.8,57.5,55.5,54.9,56.5,57.7,58,57.2,36.5,54.2,58.7,60,64.8,56.2,59.4,65.5,60.8,58.1,57.5,61.2,55.4]},
+{name:"MUTHALAIMEDU THITTU",total:1412.3,active_days:27,daily_avg:52.3,trend:"up",consistency:100,daily:[40.8,48.2,52.6,52.7,47.4,46.3,53.5,46.7,53.4,53.9,51.3,52,53,51.5,44.7,45.7,52.8,53.2,48.2,58.8,57.3,57.6,56.1,55.9,57.8,59,61.9]},
+{name:"KEELAMOOLAI",total:1156.6,active_days:27,daily_avg:42.8,trend:"down",consistency:100,daily:[42,43.2,42.6,45,42.7,46.4,46.4,43.5,45.8,46,44.8,46.1,44.6,43.8,42.3,41.9,42.4,40.3,41.9,38.5,39.1,40.8,40.4,41.2,42.6,41.6,40.7]},
+{name:"MATHIRIVELLUR",total:1126,active_days:27,daily_avg:41.7,trend:"down",consistency:100,daily:[29.5,63,50.4,50.6,43,27.6,50.9,43,48.1,31.3,40.2,45.9,40.9,27.6,36.1,29.3,39.4,40.8,43.2,39.3,39.9,29.6,46.3,50.9,48.5,48.3,42.4]},
+{name:"NALLUR",total:1101.9,active_days:27,daily_avg:40.8,trend:"up",consistency:100,daily:[24.4,32.6,29.9,30.8,35.1,38.8,38.8,30.9,36.6,38.5,39.3,42.7,35.4,38.1,41.5,45.3,45.3,49.2,47.7,47.2,48.7,46.8,51.3,46.4,47.4,45.5,47.7]},
+{name:"JOTHIYAKUDI",total:1090.3,active_days:27,daily_avg:40.4,trend:"down",consistency:100,daily:[12,46.4,46.8,48.6,40.3,51.2,41.3,43.8,43.8,45,43.6,48.2,31.2,35.1,4.8,27.9,25.7,43.7,38,49.5,47.8,51.2,49.4,44.4,45.7,45.8,39.1]},
+{name:"KADALANKUDI",total:1055.8,active_days:27,daily_avg:39.1,trend:"up",consistency:100,daily:[35.9,25.2,25,36,42.2,33.9,34.5,37.3,41.4,37.5,36.7,37.5,31.8,35.8,40.5,45.3,45,53.2,45.1,38.4,18.7,43.3,45.9,50.1,50.9,45.4,43.3]},
+{name:"KADAVASAL",total:1020.1,active_days:24,daily_avg:42.5,trend:"up",consistency:89,daily:[0,0,0,31.4,30.8,5.2,37.5,7.9,29.4,30.3,63.7,47.5,45,29.1,7.5,11.4,65.2,56.8,85.1,42.6,52.2,79.6,64.4,41.4,58.4,65.5,32.2]},
+{name:"KURAVALUR MPCS",total:1008.6,active_days:27,daily_avg:37.4,trend:"up",consistency:100,daily:[13.8,43,24.7,38,42,34.1,36.6,32,40.5,29.9,39.5,38.9,37.4,19.2,11.9,49.3,43,48.1,45.8,48.8,40.8,39.8,47.2,39.7,39.7,38,46.9]},
+{name:"NEPPATHUR",total:1006.4,active_days:27,daily_avg:37.3,trend:"up",consistency:100,daily:[22.5,34.8,27.2,27,37.5,30.3,51.8,22,44,33.5,17,60.1,46,44.8,22,46.5,48.4,49.3,43.7,39.6,34.2,35.5,42.8,40.8,37.5,41.6,26]},
+{name:"VADARENGAM",total:974.9,active_days:26,daily_avg:37.5,trend:"down",consistency:96,daily:[17.5,43.6,38.5,46,41.6,39.6,46.7,30.4,34.7,40.1,45.5,44.3,50.7,26.7,0,39.9,23,34.6,48,45.1,29.9,31.6,35,27.4,42.5,45.4,26.6]},
+{name:"PACHAIPERUMALNALLUR",total:914.9,active_days:27,daily_avg:33.9,trend:"up",consistency:100,daily:[4,22.1,25,26.7,23,23.9,21.9,15.5,21.2,25.7,40,40.3,37,25.8,23.7,29.5,44.2,51.8,49,44.6,32,38.8,45.9,43.2,51.9,53,55.2]},
+{name:"KEELMATHUR",total:908.6,active_days:27,daily_avg:33.7,trend:"up",consistency:100,daily:[15.5,33.6,34.6,35.4,31.7,31.2,35.1,39.1,27.4,33.7,34.6,35,20.5,29.3,19.9,24,28.5,36.4,39.6,39.2,36.7,43.4,39.7,38,45,44.9,36.6]},
+{name:"KONDAL",total:825.5,active_days:23,daily_avg:35.9,trend:"up",consistency:85,daily:[0,34.8,32.6,33.4,33.3,35.4,33.8,0,0,0,36.4,39.7,36.5,38.5,30.3,35,34,36.9,37.6,36.1,32.2,39,37.2,36.4,42.7,37.4,36.3]},
+{name:"KURICHI",total:823.5,active_days:25,daily_avg:32.9,trend:"up",consistency:93,daily:[30.8,39.6,34.6,34.7,35.7,31.5,36.4,0,0,34.6,30.2,31.6,35,21.6,22.6,32,32.3,39.1,36,34.5,35.4,35.5,33.5,27.9,33.8,29.9,34.7]},
+{name:"MELAYUR",total:793.6,active_days:27,daily_avg:29.4,trend:"up",consistency:100,daily:[20,8,19.4,25.4,27.6,23.5,28.8,48.6,29.1,24.3,35.5,12,15.4,25.1,15.4,26.8,24.5,23.2,31.3,66.4,38.6,45.6,35.2,37.7,37.5,39.3,29.4]},
+{name:"PULIYANTHURAI",total:731.6,active_days:26,daily_avg:28.1,trend:"up",consistency:96,daily:[26.8,28.1,29.1,27.1,29.8,30.3,27,23.4,28.9,30.2,27.7,0,23.5,22,20.8,34.3,24.4,34.3,35.7,31.5,23.4,28.8,18.6,31.3,32,32.3,30.3]},
+{name:"VILANTHIDASAMUTHIRAM",total:712.4,active_days:25,daily_avg:28.5,trend:"up",consistency:93,daily:[0,14.8,35.8,20.9,12,15.2,17.5,2,9.5,15.5,36.6,29.5,22.6,20.9,0,13.9,11.1,25.5,40.7,30.8,30.6,34,73.1,37.3,49.5,46.3,66.8]},
+{name:"THIRUMULLAIVASAL",total:706.1,active_days:27,daily_avg:26.2,trend:"down",consistency:100,daily:[30.3,28.5,28.2,26.4,27,24.5,29.5,27.1,26.4,26.3,25.8,25.1,24.1,26.1,25,24.9,27.4,28.3,27.1,25.9,25.7,26.4,22.5,21.9,24.9,24,26.8]},
+{name:"MUDIKANDANALLUR",total:692.2,active_days:27,daily_avg:25.6,trend:"up",consistency:100,daily:[27,25.9,25.1,27.3,25.2,23.5,25.9,24.4,24.9,24.2,24.2,21.5,23.4,26.6,22.7,29,19,25.1,24,27.7,28.1,27.5,29.3,27.9,28.2,26.3,28.3]},
+{name:"KONARIRAJAPURAM",total:662.8,active_days:25,daily_avg:26.5,trend:"down",consistency:93,daily:[31.9,29.2,29.6,29.3,32,26,17.2,27.1,27.2,38.4,36.4,42.1,22.6,11.2,20.3,0,0,7.4,10.4,14,14.4,34,24.8,47.6,11.9,39.6,38.2]},
+{name:"MANGAIMADAM",total:599.3,active_days:27,daily_avg:22.2,trend:"up",consistency:100,daily:[10.3,4,5.7,11.6,13,15.1,12.2,13,19.5,19.6,19.2,25.5,25.8,23.2,17.3,24.5,29.7,32.3,30.5,32.6,22.7,36.8,33.9,32.5,34.3,20.8,33.7]},
+{name:"THIRUVAVADUTHURAI",total:594.5,active_days:27,daily_avg:22,trend:"up",consistency:100,daily:[10.7,23.2,21,15,25.1,19.5,18.7,14.5,16.9,15.5,20.6,27.8,29.8,26.5,24.6,18.2,22.9,26.6,24,28.8,23.4,19.5,25.7,23.2,26,24.4,22.4]},
+{name:"THIRUVALI",total:569.7,active_days:25,daily_avg:22.8,trend:"down",consistency:93,daily:[0,26.7,24,28.4,32.1,29,22.7,32.9,26,26.2,35,30.4,12.7,30.6,7.3,0,24,23.1,18.1,20,12,19.8,15.5,19.9,17.8,17.8,17.7]},
+{name:"KEELSATANATHAPURAM",total:539.2,active_days:26,daily_avg:20.7,trend:"up",consistency:96,daily:[0,19.2,15.6,15.7,19,17.8,20,12.1,22.8,24.9,18,29.6,19.8,22.2,12.7,22.2,18,27.9,25,25.8,20.8,22.1,19.6,18,26.2,26.8,17.4]},
+{name:"PANAMANGALAM",total:536.2,active_days:27,daily_avg:19.9,trend:"down",consistency:100,daily:[20,25.3,26.5,26.5,23.5,24.1,25.5,22.7,17.5,11.1,18,18,16.9,16.8,25.3,6.6,22.8,27.1,23.7,21.7,24.8,17.8,21.6,13.3,7.6,12.9,18.6]},
+{name:"KEERANKUDI",total:474.8,active_days:27,daily_avg:17.6,trend:"up",consistency:100,daily:[12,15.6,18.5,19,17.3,16.4,17.5,13.8,17,17.4,14,17.2,14.4,17.1,15.9,16.5,16.5,18.5,18.6,17.7,19.4,20.3,22,20.2,20.9,20.6,20.5]},
+{name:"THALAICHANGADU",total:463.4,active_days:27,daily_avg:17.2,trend:"up",consistency:100,daily:[9.2,21.5,11.8,10.4,10.4,11.8,23,15.9,17.3,16.5,17.5,14.8,13.6,11.2,11.5,9.6,15.2,12.6,13.3,22.5,18,21.3,26.3,6.7,36,36.3,29.2]},
+{name:"OTHAVANTHANKUDI",total:429.4,active_days:27,daily_avg:15.9,trend:"up",consistency:100,daily:[11.2,14.5,10.3,12.9,15.7,16.8,17.6,16.4,16.6,16,10.9,18.1,15.2,18,19.6,12,14.3,21.5,19.2,16.2,18.4,15.5,18.9,19.2,13.5,15.3,15.6]},
+{name:"EURUKKUR",total:423.9,active_days:27,daily_avg:15.7,trend:"down",consistency:100,daily:[17.9,16.3,24.1,21.2,25.2,24.6,24.2,14,21.4,20.4,28.8,14.7,18.6,7.9,10.7,11.4,11.6,5.2,15,15.3,15.4,10,8,10.1,14.4,10.2,7.3]},
+{name:"KEEZHAIYUR",total:392.3,active_days:14,daily_avg:28,trend:"down",consistency:52,daily:[12.2,50.5,36.1,40.8,49,19.6,44.2,50,24.3,16.3,5,19.9,0,0,0,0,0,0,0,0,0,0,7.9,16.5,0,0,0]},
+{name:"ARASUR",total:358.7,active_days:23,daily_avg:15.6,trend:"up",consistency:85,daily:[13.2,19,18.5,19.5,16.3,13.8,0,0,0,0,16.2,16.9,14.8,14.4,12.5,14.1,13.9,13.8,14.5,13.4,13.1,14.2,16.6,14.6,18,18.3,19.1]},
+{name:"POOTHANGUDI",total:288.1,active_days:25,daily_avg:11.5,trend:"up",consistency:93,daily:[0,12.4,9.5,0,9.8,8.5,9.6,8,8.7,10.5,8.8,10,8,7,42.4,7.1,9.4,10.2,12.1,12.3,10.7,10.6,13,12.3,13.5,13.5,10.2]},
+{name:"MUTHALAIMEDU",total:230.8,active_days:27,daily_avg:8.5,trend:"stable",consistency:100,daily:[8.7,8.5,8.1,8.5,9.2,6.8,10.3,9,7.8,9.1,9.8,8,9.1,9,8,6.5,4,6.4,8.9,8.1,9.3,8.1,8,9,11.5,11.5,9.6]},
+{name:"SATTANATHAPURAM",total:184.6,active_days:20,daily_avg:9.2,trend:"up",consistency:74,daily:[0,0,0,6,5.4,6,6,5.1,5.8,0,7.1,11.7,6,7.3,0,10.6,6.3,10.6,15.3,25.6,7.4,0,14.8,0,9.1,9.1,9.4]},
+{name:"UMAIYALPATHI",total:174.5,active_days:22,daily_avg:7.9,trend:"up",consistency:81,daily:[0,0,5.6,6.4,7,6.5,7.5,5,6,6.8,7,7.5,7.5,5.5,6.5,5.6,0,7.9,6.1,9.5,0,16.5,0,16.2,8,9.2,10.7]},
+{name:"KUCHIPALAYAM",total:148.5,active_days:18,daily_avg:8.2,trend:"up",consistency:67,daily:[0,5.3,6.4,5.3,4.4,0,0,0,0,9.9,4.3,8.7,5.5,7,6.4,0,0,13,9.1,9.1,10.6,9.8,11.2,11.3,0,0,11.2]},
+{name:"ELAYAMATHUKOODAM",total:111.3,active_days:10,daily_avg:11.1,trend:"down",consistency:37,daily:[0,11,6,6.7,2.7,17.1,8.6,18,24.6,5.2,11.4,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]},
+{name:"ARAPALLAM",total:76.5,active_days:13,daily_avg:5.9,trend:"down",consistency:48,daily:[6,6,6.4,6,0,6.2,5.6,6,5.5,5.2,5,5.8,6.6,6.2,0,0,0,0,0,0,0,0,0,0,0,0,0]},
+{name:"MADAPURAM",total:0,active_days:0,daily_avg:0,trend:"stable",consistency:0,daily:Array(27).fill(0)},
+{name:"PERUNTHOTTAM",total:0,active_days:0,daily_avg:0,trend:"stable",consistency:0,daily:Array(27).fill(0)},
+{name:"THENNAMPATTINAM",total:0,active_days:0,daily_avg:0,trend:"stable",consistency:0,daily:Array(27).fill(0)},
+{name:"RADHANALLUR",total:0,active_days:0,daily_avg:0,trend:"stable",consistency:0,daily:Array(27).fill(0)},
+{name:"THILLAIVIDANGAN",total:0,active_days:0,daily_avg:0,trend:"stable",consistency:0,daily:Array(27).fill(0)},
+{name:"MANALMEDU",total:0,active_days:0,daily_avg:0,trend:"stable",consistency:0,daily:Array(27).fill(0)},
+{name:"ALAKUDI",total:0,active_days:0,daily_avg:0,trend:"stable",consistency:0,daily:Array(27).fill(0)},
+{name:"SEEYALAM",total:0,active_days:0,daily_avg:0,trend:"stable",consistency:0,daily:Array(27).fill(0)},
+{name:"KATTUR",total:0,active_days:0,daily_avg:0,trend:"stable",consistency:0,daily:Array(27).fill(0)},
+{name:"NAGAMBADI",total:0,active_days:0,daily_avg:0,trend:"stable",consistency:0,daily:Array(27).fill(0)},
+{name:"THIRUVALANGADU",total:0,active_days:0,daily_avg:0,trend:"stable",consistency:0,daily:Array(27).fill(0)},
+{name:"KADALANGUDI",total:0,active_days:0,daily_avg:0,trend:"stable",consistency:0,daily:Array(27).fill(0)},
+{name:"SENNIYANALLUR",total:0,active_days:0,daily_avg:0,trend:"stable",consistency:0,daily:Array(27).fill(0)}
+];
+const META={
+  myl:[1878,2612.7,2577.5,2653.8,2704.5,2518.6,2673.8,2523.8,2532.1,2516,2860.6,2850.2,2634.9,2388.9,1827.7,2344.1,2640,2970.9,2777,3020.3,2831.5,3119.6,3200.4,2924.8,2871.5,2832.6,2952.2],
+  tvr:[11898.7,17624.3,17552.8,18572.5,17623.1,17246.9,17913.8,17831.7,17605,17850.4,18265.6,18590.2,18235.5,16971.3,12809.6,18227,18289.8,18872.8,18933.3,18779,18562.7,19133.5,17503.2,18270.8,18677.5,18800.3,17916.8],
+  tnj:[22859.3,26282.3,26477.6,27101.7,26509.6,26780,26495.7,27438.6,26854.5,26804,27401.1,27649.3,27694.4,25854.6,22759,27302,27413.5,27436.6,28039,28576.9,27768.3,28116.6,27621.9,27662.3,27792.9,27780.5,27106.3],
+  nag:[510,760,720,750,730,670,710,640,700,720,770,730,670,610,570,700,710,780,760,780,740,810,790,730,720,710,740],
+  morPct:58
+};
+const UNSERVED=[
+{v:"Koothiyampettai",b:"Kollidam",fc:3112,fb:0,ma:3112,vet:"Mathanam",lat:11.368,lng:79.848},
+{v:"Eduthukkatti",b:"Sembanarkoil",fc:2755,fb:0,ma:2755,vet:"Thillaiyadi",lat:11.018,lng:79.912},
+{v:"Thandavankulam",b:"Kollidam",fc:2620,fb:0,ma:2620,vet:"Mathanm",lat:11.352,lng:79.861},
+{v:"Alakkudy",b:"Kollidam",fc:2320,fb:67,ma:2387,vet:"Muthalaimedu",lat:11.339,lng:79.843},
+{v:"Mudhalaimedu",b:"Kollidam",fc:1934,fb:84,ma:2018,vet:"Muthalaimedu",lat:11.321,lng:79.828},
+{v:"Melaiyur",b:"Sirkali",fc:1633,fb:108,ma:1741,vet:"Poombuhar",lat:11.219,lng:79.763},
+{v:"Thirukkalacheri",b:"Sembanarkoil",fc:1552,fb:164,ma:1716,vet:"Poraiyar",lat:11.036,lng:79.903},
+{v:"Palayapalayam",b:"Kollidam",fc:1694,fb:0,ma:1694,vet:"Mathanm",lat:11.341,lng:79.851},
+{v:"Mahendrapalli",b:"Kollidam",fc:1680,fb:0,ma:1680,vet:"Muthalaimedu",lat:11.331,lng:79.831},
+{v:"Thalaiyudaiyarar Koil Pathy",b:"Sembanarkoil",fc:1426,fb:52,ma:1478,vet:"Thalachankadu",lat:11.024,lng:79.893},
+{v:"Manikkapangu",b:"Sembanarkoil",fc:1459,fb:0,ma:1459,vet:"Poraiyar",lat:11.029,lng:79.908},
+{v:"Kalamanallur",b:"Sembanarkoil",fc:1456,fb:0,ma:1456,vet:"Thillaiyadi",lat:11.022,lng:79.898},
+{v:"Kesingan",b:"Mayiladuthurai",fc:1425,fb:15,ma:1440,vet:"Kadalangudi",lat:11.118,lng:79.668},
+{v:"Alalasundram",b:"Kollidam",fc:1278,fb:33,ma:1311,vet:"Muthalaimedu",lat:11.308,lng:79.821},
+{v:"Thiruvalaputhur",b:"Mayiladuthurai",fc:1196,fb:0,ma:1196,vet:"Kilay",lat:11.131,lng:79.671},
+{v:"Kidarankondan",b:"Sembanarkoil",fc:1190,fb:0,ma:1190,vet:"Thalachankadu",lat:11.012,lng:79.886},
+{v:"Pillaiperumalnallur",b:"Sembanarkoil",fc:1123,fb:0,ma:1123,vet:"Poraiyar",lat:11.033,lng:79.913},
+{v:"Mamakudi",b:"Sembanarkoil",fc:1091,fb:9,ma:1100,vet:"Thalachankadu",lat:11.027,lng:79.899},
+{v:"Kaduvangudi",b:"Mayiladuthurai",fc:1059,fb:32,ma:1091,vet:"Thalainayaru",lat:11.112,lng:79.658},
+{v:"Melaperumpallam",b:"Sembanarkoil",fc:1022,fb:30,ma:1052,vet:"Thalachankadu",lat:11.021,lng:79.895},
+{v:"Talainayar",b:"Mayiladuthurai",fc:1047,fb:0,ma:1047,vet:"Thalainayaru",lat:11.104,lng:79.656},
+{v:"Varadampattu",b:"Mayiladuthurai",fc:986,fb:0,ma:986,vet:"Kilay",lat:11.139,lng:79.677},
+{v:"Tiruvaduthurai",b:"Kuthalam",fc:976,fb:7,ma:983,vet:"Thiruvaduthurai",lat:11.071,lng:79.574},
+{v:"Kizhaperumpallam",b:"Sembanarkoil",fc:914,fb:62,ma:976,vet:"Thalachankadu",lat:11.017,lng:79.891},
+{v:"Madhanam",b:"Kollidam",fc:973,fb:0,ma:973,vet:"Mathanam",lat:11.362,lng:79.841},
+{v:"Komal - East",b:"Kuthalam",fc:918,fb:0,ma:918,vet:"Komal",lat:11.082,lng:79.558},
+{v:"Elanthoppu",b:"Mayiladuthurai",fc:915,fb:0,ma:915,vet:"Thalainayaru",lat:11.108,lng:79.661},
+{v:"Keelamathur",b:"Kollidam",fc:910,fb:4,ma:914,vet:"Kollidam",lat:11.347,lng:79.837},
+{v:"Attur",b:"Mayiladuthurai",fc:899,fb:8,ma:907,vet:"Kadalangudi",lat:11.115,lng:79.667},
+{v:"Siddamalli",b:"Mayiladuthurai",fc:896,fb:4,ma:900,vet:"Thalainayaru",lat:11.098,lng:79.654},
+{v:"Perambur",b:"Sembanarkoil",fc:841,fb:0,ma:841,vet:"Perambur",lat:11.011,lng:79.879},
+{v:"Villiyanallur",b:"Kuthalam",fc:785,fb:23,ma:808,vet:"Kuthalam",lat:11.088,lng:79.547},
+{v:"Korukkai",b:"Mayiladuthurai",fc:749,fb:2,ma:751,vet:"Kilay",lat:11.127,lng:79.675},
+{v:"Vettangudy",b:"Kollidam",fc:739,fb:0,ma:739,vet:"Edamanal",lat:11.331,lng:79.857},
+{v:"Thalancheri",b:"Mayiladuthurai",fc:736,fb:0,ma:736,vet:"Kilay",lat:11.142,lng:79.681},
+{v:"Kattucheri",b:"Sembanarkoil",fc:530,fb:184,ma:714,vet:"Poraiyar",lat:11.041,lng:79.907},
+{v:"Thiruvengadu",b:"Sirkali",fc:703,fb:1,ma:704,vet:"Thiruvengadu",lat:11.201,lng:79.749},
+{v:"Pandaravadaimappadugai",b:"Mayiladuthurai",fc:690,fb:0,ma:690,vet:"Pandaravadai",lat:11.095,lng:79.661},
+{v:"Thirumailadi",b:"Kollidam",fc:648,fb:5,ma:653,vet:"Kollidam",lat:11.339,lng:79.841},
+{v:"Odhavanthangudy",b:"Kollidam",fc:646,fb:0,ma:646,vet:"Mathanam",lat:11.327,lng:79.829},
+{v:"Keelaiyur",b:"Sirkali",fc:638,fb:0,ma:638,vet:"Poombuhar",lat:11.212,lng:79.757},
+{v:"Parasalur",b:"Sembanarkoil",fc:625,fb:0,ma:625,vet:"Sembanarkoil",lat:11.008,lng:79.869},
+{v:"Kadambakkam",b:"Mayiladuthurai",fc:620,fb:0,ma:620,vet:"Kadallangudi",lat:11.098,lng:79.668},
+{v:"Vanagiri",b:"Sirkali",fc:619,fb:0,ma:619,vet:"Poombuhar",lat:11.218,lng:79.753},
+{v:"Vanathirajapuram",b:"Kuthalam",fc:588,fb:0,ma:588,vet:"Kuthalam",lat:11.078,lng:79.538},
+{v:"Sembathaniruppu",b:"Sirkali",fc:575,fb:0,ma:575,vet:"Nangoor",lat:11.224,lng:79.759},
+{v:"Sembanarkoil",b:"Sembanarkoil",fc:563,fb:4,ma:567,vet:"Sembanarkoil",lat:11.019,lng:79.893},
+{v:"Pandur",b:"Mayiladuthurai",fc:555,fb:0,ma:555,vet:"Kali",lat:11.102,lng:79.663},
+{v:"Erukkur",b:"Kollidam",fc:545,fb:9,ma:554,vet:"Kollidam",lat:11.331,lng:79.839},
+{v:"Nadukkarai Melpathi",b:"Sembanarkoil",fc:551,fb:0,ma:551,vet:"Sembanarkoil",lat:11.013,lng:79.883}
+];
+const SOC_COORDS={
+"KAVERIPOOMPATTINAM":[11.1996,79.8614],"KOORAINADU":[11.1756,79.7934],"VAITHEESWARANKOVIL":[11.1456,79.6236],
+"AACHALPURAM":[11.1089,79.6712],"SITHAMALLI":[11.1634,79.7023],"NALLAVUR":[11.0934,79.6634],
+"ATHIYUR":[11.1189,79.6812],"KATHIRUPPU":[11.0534,79.6934],"CHIDAMBARANATHAPURAM":[11.0767,79.6589],
+"KARAIKANDAM":[11.2456,79.7612],"KUNNAM":[11.1345,79.6912],"GOPALASAMUTHIRAM":[11.0923,79.6798],
+"MUTHALAIMEDU THITTU":[11.1156,79.7056],"KEELAMOOLAI":[11.0589,79.6434],"MATHIRIVELLUR":[11.0734,79.6498],
+"NALLUR":[11.0889,79.7167],"JOTHIYAKUDI":[11.0645,79.7278],"KADALANKUDI":[11.2412,79.7834],
+"KADAVASAL":[11.1012,79.7189],"KURAVALUR MPCS":[11.1278,79.6498],"NEPPATHUR":[11.1123,79.6378],
+"VADARENGAM":[11.0989,79.7278],"PACHAIPERUMALNALLUR":[11.0867,79.6934],"KEELMATHUR":[11.3145,79.8012],
+"KONDAL":[11.1998,79.7534],"KURICHI":[11.0823,79.7067],"MELAYUR":[11.2298,79.7589],
+"PULIYANTHURAI":[11.1578,79.7167],"VILANTHIDASAMUTHIRAM":[11.0712,79.7378],"THIRUMULLAIVASAL":[11.1867,79.8156],
+"MUDIKANDANALLUR":[11.0934,79.6489],"KONARIRAJAPURAM":[11.0789,79.7245],"MANGAIMADAM":[11.2198,79.7712],
+"THIRUVAVADUTHURAI":[11.0708,79.5745],"THIRUVALI":[11.2789,79.8034],"KEELSATANATHAPURAM":[11.0634,79.6812],
+"PANAMANGALAM":[11.0512,79.7134],"KEERANKUDI":[11.0389,79.6798],"THALAICHANGADU":[11.2212,79.7378],
+"OTHAVANTHANKUDI":[11.0478,79.7012],"EURUKKUR":[11.1634,79.7298],"KEEZHAIYUR":[11.2634,79.7934],
+"ARASUR":[11.1356,79.6762],"POOTHANGUDI":[11.1223,79.6634],"MUTHALAIMEDU":[11.0967,79.7112],
+"SATTANATHAPURAM":[11.0867,79.6834],"UMAIYALPATHI":[11.0745,79.6678],"KUCHIPALAYAM":[11.0645,79.6578],
+"ELAYAMATHUKOODAM":[11.0578,79.6512],"ARAPALLAM":[11.0489,79.6412],
+"MADAPURAM":[11.1412,79.6989],"PERUNTHOTTAM":[11.1034,79.6889],"THENNAMPATTINAM":[11.1923,79.8234],
+"RADHANALLUR":[11.0978,79.6978],"THILLAIVIDANGAN":[11.1567,79.7078],"MANALMEDU":[11.1312,79.6589],
+"ALAKUDI":[11.3234,79.8156],"SEEYALAM":[11.0789,79.6489],"KATTUR":[11.0689,79.7178],
+"NAGAMBADI":[11.0478,79.7278],"THIRUVALANGADU":[11.2156,79.7478],"KADALANGUDI":[11.2289,79.7867],
+"SENNIYANALLUR":[11.0589,79.6612]
+};
+const DEPOTS=[
+{name:"MYL Chilling Center",lat:11.101,lng:79.650,cap:"10,000 L/day"},
+{name:"Kollidam Sub-Center",lat:11.358,lng:79.846,cap:"5,000 L/day"},
+{name:"Sirkali Sub-Center",lat:11.228,lng:79.741,cap:"3,000 L/day"},
+{name:"Sembanarkoil Sub-Center",lat:11.019,lng:79.893,cap:"3,000 L/day"}
+];
+const BLK={
+  Kollidam:{total:33849,villages:43,served:8,avg:787,color:"#1a73e8",note:"Highest milch/village. 5+ new societies urgently needed. Koothiyampettai+Thandavankulam alone: 5,700+ animals."},
+  Sembanarkoil:{total:31085,villages:67,served:3,avg:464,color:"#d93025",note:"Largest block (67 villages), only 4% coverage. Thalachankadu vet zone cluster approach recommended."},
+  Mayiladuthurai:{total:24377,villages:59,served:3,avg:413,color:"#1e8e3e",note:"HQ block with good road access. Kesingan(1440), Thiruvalaputhur(1196), Kaduvangudi(1091) are immediate targets."},
+  Sirkali:{total:15691,villages:42,served:9,avg:374,color:"#129eaf",note:"Best coverage (21%). Melaiyur(1741) top unserved. Coastal buffalo milk premium opportunity."},
+  Kuthalam:{total:15444,villages:53,served:3,avg:291,color:"#8430ce",note:"Temple economy zone — dairy income diversification key pitch. Tiruvaduthurai(983) viable."}
+};
+const INACT_ACT={
+"MADAPURAM":"Field visit → verify active members → issue first-purchase guarantee letter",
+"PERUNTHOTTAM":"Survey milch animals → if >200 found, restart with NDDB incentives",
+"THENNAMPATTINAM":"Vet dispensary coordination → farmer contact list → gram sabha meeting",
+"RADHANALLUR":"Investigate cause (price/transport/operator) → address → restart",
+"THILLAIVIDANGAN":"Nearest active: KATHIRUPPU. If reactivation fails, merge route",
+"MANALMEDU":"Contact original members → offer 3-month procurement bonus",
+"ALAKUDI":"Critical Kollidam gap → immediate reactivation or new society",
+"SEEYALAM":"Vet visit needed → possible disease impact → verify herd",
+"KATTUR":"Transport route issue → review chilling centre logistics",
+"NAGAMBADI":"Low count → consider federation with neighboring village",
+"THIRUVALANGADU":"Investigate dropout reason → restart with price transparency drive",
+"KADALANGUDI":"HQ block gap → nearby high-potential villages → expand coverage",
+"SENNIYANALLUR":"Recent formation → assign MPCS mentor for first 3 months"
+};
+
+// ── STATE ──
+let _ALL=[],_kFilt='none',_sCol='total',_sDir='desc';
+let _sCharts={},_charts={},_lMap=null,_rMap=null;
+let _mLayers={act:null,inact:null,p1:null,p3:null,depot:null};
+let _rPoly=null,_tgts={},_kb={todo:[],doing:[],done:[]},_uvBlk='all';
+
+// ── UTILS ──
+const sv=(id,v)=>{const e=document.getElementById(id);if(e)e.textContent=v;};
+const sh=(id,v)=>{const e=document.getElementById(id);if(e)e.innerHTML=v;};
+function mc(id,cfg){if(_charts[id]){_charts[id].destroy();delete _charts[id];}const c=document.getElementById(id);if(!c)return;_charts[id]=new Chart(c,cfg);}
+function nf(n){if(n>=100000)return(n/100000).toFixed(1)+'L';if(n>=1000)return(n/1000).toFixed(1)+'K';return Math.round(n).toString();}
+function grd(s){if(!s.total||!s.active_days)return'D';if(s.consistency>=90&&s.trend==='up')return'A';if(s.consistency>=90||(s.consistency>=70&&s.trend!=='down'))return'B';if(s.consistency>=50)return'C';return'D';}
+function rsk(s){if(!s.total||!s.active_days)return'Critical';if(s.trend==='down'&&s.consistency<70)return'High';if(s.trend==='down'||s.consistency<80)return'Medium';return'Low';}
+function rkv(r){return{Critical:4,High:3,Medium:2,Low:1}[r]||0;}
+function pri(ma){if(ma>=1500)return{c:'p1',l:'P1 CRITICAL'};if(ma>=800)return{c:'p2',l:'P2 HIGH'};if(ma>=500)return{c:'p3',l:'P3 MEDIUM'};return{c:'p4',l:'P4 PLAN'};}
+function lsSave(){try{localStorage.setItem(LSK,JSON.stringify({t:_tgts,k:_kb}));}catch(e){}}
+function lsLoad(){try{const d=JSON.parse(localStorage.getItem(LSK)||'{}');if(d.t)_tgts=d.t;if(d.k)_kb=d.k;}catch(e){}}
+function toast(msg,err){const t=document.createElement('div');t.className='toast';t.textContent=msg;if(err)t.style.borderLeftColor='var(--red)';document.body.appendChild(t);setTimeout(()=>{t.style.opacity='0';setTimeout(()=>t.remove(),400);},2500);}
+const PGNAMES={overview:'Overview — Feb 2026',nddb:'NDDB Metrics',societies:'Society Tracker',comparison:'District Comparison',inactive:'Inactive Centres',insights:'AI Insights',expansion:'Expansion Plan',unserved:'Unserved Villages',newsoc:'New Societies',blocks:'Block Analysis',mapview:'Geocoded Map',routes:'Route Planner',targets:'Target Manager',actions:'Action Board',mgmt:'Management Hub',actionplan:'1-Year Action Plan'};
+
+// ── SIDEBAR ──
+function togSB(){const sb=document.getElementById('sb'),m=document.getElementById('main');sb.classList.toggle('col');m.classList.toggle('exp');setTimeout(()=>{if(_lMap)_lMap.invalidateSize();if(_rMap)_rMap.invalidateSize();},300);}
+
+function goTab(id,el){
+  document.querySelectorAll('.tab-panel').forEach(p=>p.classList.remove('act'));
+  document.querySelectorAll('.sb-item').forEach(b=>b.classList.remove('act'));
+  const panel=document.getElementById('tab-'+id);if(panel)panel.classList.add('act');
+  el.classList.add('act');sv('pgtitle',PGNAMES[id]||id);
+  if(id==='mapview'&&!_lMap)setTimeout(initMap,120);
+  if(id==='routes'&&!_rMap)setTimeout(()=>{initRMap();planRoute();},120);
+  if(id==='targets')renderTgts('all');
+  if(id==='actions')renderKB();
+  if(id==='actionplan')renderAP();
+}
+
+
+// ── CHART OPT ──
+const CO=(label,data,color)=>({label,data,borderColor:color,backgroundColor:color.replace(')',',0.06)').replace('rgb','rgba'),tension:0.35,pointRadius:2,borderWidth:2.5,fill:true});
+const CO2=(label,data,color,dash)=>({label,data,borderColor:color,tension:0.35,pointRadius:0,borderWidth:2,borderDash:dash||[]});
+const COPTS=(cb)=>({responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{ticks:{font:{size:11},autoSkip:true,maxRotation:0},grid:{display:false}},y:{ticks:{font:{size:11},callback:cb||null},grid:{color:'rgba(0,0,0,0.06)'}}}});
+
+// ── OVERVIEW ──
+function renderOV(S,AL,ZL){
+  const MYL=META.myl,totL=S.reduce((a,s)=>a+(s.total||0),0);
+  const h1=MYL.slice(0,13).reduce((a,b)=>a+b,0)/13,h2=MYL.slice(13).reduce((a,b)=>a+b,0)/14;
+  const gPct=((h2-h1)/h1*100).toFixed(1),pk=Math.max(...MYL),pkD=DAYS[MYL.indexOf(pk)];
+  const eff=Math.round(AL.length/S.length*100);
+  sv('kv-total',totL.toLocaleString('en-IN'));sv('kv-active',AL.length);sv('kv-inactive',ZL.length);
+  sv('kv-partial',S.filter(s=>s.consistency>0&&s.consistency<80).length);
+  sv('kv-growing',AL.filter(s=>s.trend==='up').length);
+  sv('kv-avg',Math.round(totL/AL.length).toLocaleString());
+  sv('kv-eff',eff+'%');document.getElementById('peff').style.width=eff+'%';
+  sv('kv-ratio',META.morPct+':'+(100-META.morPct));
+  sv('kv-peak',pk.toLocaleString()+' L');sv('kv-peaksub','on '+pkD);
+  sv('kv-growth',(parseFloat(gPct)>0?'+':'')+gPct+'%');
+  mc('dailyChart',{type:'line',data:{labels:DAYS,datasets:[CO('MYL',MYL,'#1a73e8')]},options:COPTS(v=>(v/1000).toFixed(0)+'K')});
+  mc('distChart',{type:'line',data:{labels:DAYS,datasets:[CO2('MYL',MYL,'#1a73e8'),CO2('Nagapattinam',META.nag,'#d93025',[4,3])]},options:{...COPTS(v=>(v/1000).toFixed(0)+'K'),plugins:{legend:{display:true,labels:{font:{size:11},color:'#5f6368',boxWidth:7,padding:7}}}}});
+  const bk=[S.filter(s=>s.consistency>=90&&s.active_days>0).length,S.filter(s=>s.consistency>=70&&s.consistency<90).length,S.filter(s=>s.consistency>0&&s.consistency<70).length,ZL.length];
+  mc('conChart',{type:'doughnut',data:{labels:['≥90% A','70-89% B','<70% C/D','0% Inactive'],datasets:[{data:bk,backgroundColor:['#1e8e3e','#1a73e8','#f9ab00','#d93025'],borderWidth:0,borderRadius:3}]},options:{responsive:true,maintainAspectRatio:false,cutout:'62%',plugins:{legend:{display:true,position:'bottom',labels:{font:{size:11},color:'#5f6368',boxWidth:7,padding:5}}}}});
+  mc('statChart',{type:'pie',data:{labels:['Active Full','Partial','Inactive'],datasets:[{data:[AL.filter(s=>s.consistency>=80).length,S.filter(s=>s.consistency>0&&s.consistency<80).length,ZL.length],backgroundColor:['#1e8e3e','#f9ab00','#d93025'],borderWidth:0}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:true,position:'bottom',labels:{font:{size:11},color:'#5f6368',boxWidth:7,padding:5}}}}});
+  const top=S.filter(s=>s.total>0).sort((a,b)=>b.total-a.total).slice(0,10),mx=top[0].total;
+  const cols=['#1a73e8','#1e8e3e','#d93025','#f9ab00','#8430ce','#129eaf','#e8710a','#1a73e8','#1e8e3e','#d93025'];
+  sh('top10bars',top.map((s,i)=>`<div style="display:flex;align-items:center;gap:6px;margin-bottom:6px;"><div style="font-size:11px;color:var(--txt2);width:16px;text-align:right;">${i+1}</div><div style="font-size:11px;color:var(--txt);width:115px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${s.name}</div><div style="flex:1;background:var(--bg);border-radius:100px;height:6px;overflow:hidden;"><div style="width:${Math.round(s.total/mx*100)}%;height:100%;background:${cols[i]};border-radius:100px;"></div></div><div style="font-size:12px;color:var(--txt2);font-family:var(--mono);width:52px;text-align:right;">${s.total.toLocaleString()}</div></div>`).join(''));
+}
+
+// ── NDDB ──
+function renderNDDB(S,AL,ZL,totL){
+  const eff=Math.round(AL.length/S.length*100),MYL=META.myl;
+  const mn=MYL.reduce((a,b)=>a+b,0)/MYL.length,cv=Math.round(Math.sqrt(MYL.reduce((a,b)=>a+Math.pow(b-mn,2),0)/MYL.length)/mn*100);
+  sv('ne-eff',eff+'%');document.getElementById('ne-eff-bar').style.width=eff+'%';
+  sh('ne-effs',eff>=85?'<span style="color:var(--green)">✓ Met</span>':'<span style="color:var(--red)">✗ Gap</span>');
+  sv('ne-risk',S.filter(s=>s.total>0&&s.trend==='down').length+' soc');
+  sv('ne-rec',Math.round(ZL.length*totL/AL.length*0.7).toLocaleString()+' L');
+  sv('ne-stab',cv+'% CV');
+  const morL=Math.round(totL*META.morPct/100);
+  sh('meinfo',`Morning ${META.morPct}% | Evening ${100-META.morPct}% | NDDB 55:45 | <b style="color:${Math.abs(META.morPct-55)<=5?'var(--green)':'var(--amber)'}">${Math.abs(META.morPct-55)<=5?'✓ Near':'Monitor'}</b>`);
+  const gc={A:0,B:0,C:0,D:0};S.forEach(s=>gc[grd(s)]++);
+  mc('gradeChart',{type:'bar',data:{labels:['A','B','C','D'],datasets:[{data:[gc.A,gc.B,gc.C,gc.D],backgroundColor:['#1e8e3e','#1a73e8','#f9ab00','#d93025'],borderRadius:4,borderWidth:0}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{grid:{display:false}},y:{ticks:{stepSize:1,font:{size:11}},grid:{color:'rgba(0,0,0,0.06)'}}}}});
+  mc('meChart',{type:'doughnut',data:{labels:[`Morning (${META.morPct}%)`,`Evening (${100-META.morPct}%)`],datasets:[{data:[morL,totL-morL],backgroundColor:['#1a73e8','#f9ab00'],borderWidth:0,borderRadius:3}]},options:{responsive:true,maintainAspectRatio:false,cutout:'60%',plugins:{legend:{display:true,position:'bottom',labels:{font:{size:11},color:'#5f6368',boxWidth:9,padding:7}}}}});
+  const bm=[{m:'Collection Efficiency',v:eff+'%',t:'≥85%',ok:eff>=85},{m:'Avg Consistency (Active)',v:Math.round(AL.reduce((a,s)=>a+s.consistency,0)/AL.length)+'%',t:'≥80%',ok:AL.reduce((a,s)=>a+s.consistency,0)/AL.length>=80},{m:'Procurement Stability CV',v:cv+'%',t:'<15%',ok:cv<15},{m:'Morning:Evening',v:META.morPct+':'+(100-META.morPct),t:'55:45',ok:Math.abs(META.morPct-55)<=5},{m:'Grade A Societies',v:gc.A+'/'+S.length,t:'≥25',ok:gc.A>=25},{m:'Grade D/Inactive',v:(gc.D+ZL.length)+'/'+S.length,t:'<10',ok:gc.D+ZL.length<10},{m:'Declining Societies',v:S.filter(s=>s.trend==='down'&&s.total>0).length,t:'<8',ok:S.filter(s=>s.trend==='down'&&s.total>0).length<8}];
+  sh('nddb-benchmarks','<div class="tw"><table class="tbl"><thead><tr><th>Metric</th><th>MYL Value</th><th>NDDB Target</th><th>Status</th></tr></thead><tbody>'+bm.map(b=>`<tr><td>${b.m}</td><td style="font-family:var(--mono);font-weight:500;">${b.v}</td><td style="color:var(--txt2);">${b.t}</td><td>${b.ok?'<span style="color:var(--green)">✓ Met</span>':'<span style="color:var(--red)">✗ Gap</span>'}</td></tr>`).join('')+'</tbody></table></div>');
+  const am={A:'Maintain + scale up enrollment',B:'Increase sessions; target Grade A',C:'Urgent: vet visit + farmer incentive',D:'Immediate intervention or merger'};
+  sh('gradeBody',S.map(s=>{const g=grd(s),r=rsk(s);return`<tr><td style="font-weight:500;">${s.name}</td><td style="font-family:var(--mono);">${s.total.toLocaleString()}</td><td>${s.consistency}%</td><td>${s.trend==='up'?'<span style="color:var(--green)">↑</span>':s.trend==='down'?'<span style="color:var(--red)">↓</span>':'<span style="color:var(--amber)">→</span>'}</td><td><span class="nddb-${g}">${g}</span></td><td style="color:${rkv(r)>=3?'var(--red)':rkv(r)===2?'var(--amber)':'var(--green)'};">${r}</td><td style="font-size:12px;color:var(--txt2);">${am[g]}</td></tr>`;}).join(''));
+}
+
+// ── SOCIETY TABLE ──
+function renderTbl(){
+  const q=(document.getElementById('soc-search')?.value||'').toLowerCase();
+  const col=document.getElementById('soc-sort')?.value||'total';
+  const dir=document.getElementById('soc-dir')?.value||'desc';
+  const flt=document.getElementById('soc-filt')?.value||'all';
+  let data=_ALL.map((s,i)=>({...s,_i:i+1,_g:grd(s),_r:rsk(s)}));
+  if(q)data=data.filter(s=>s.name.toLowerCase().includes(q));
+  const fm={active:s=>s.total>0&&s.active_days>0,inactive:s=>!s.total||!s.active_days,partial:s=>s.consistency>0&&s.consistency<80,growing:s=>s.trend==='up',declining:s=>s.trend==='down'};
+  if(fm[flt])data=data.filter(fm[flt]);
+  if(_kFilt!=='none'){const km={active:s=>s.total>0&&s.active_days>0,inactive:s=>!s.total||!s.active_days,partial:s=>s.consistency>0&&s.consistency<80,growing:s=>s.trend==='up'};if(_kFilt==='top10')data=data.filter(s=>s.total>0).sort((a,b)=>b.total-a.total).slice(0,10);else if(km[_kFilt])data=data.filter(km[_kFilt]);}
+  data.sort((a,b)=>{let va,vb;if(col==='name')return dir==='asc'?a.name.localeCompare(b.name):b.name.localeCompare(a.name);if(col==='risk'){va=rkv(a._r);vb=rkv(b._r);}else if(col==='grade'){va={A:4,B:3,C:2,D:1}[a._g]||0;vb={A:4,B:3,C:2,D:1}[b._g]||0;}else if(col==='trend'){va=a.trend==='up'?3:a.trend==='stable'?2:1;vb=b.trend==='up'?3:b.trend==='stable'?2:1;}else{va=a[col]||0;vb=b[col]||0;}return dir==='asc'?va-vb:vb-va;});
+  sv('rowct',data.length+'/'+_ALL.length);
+  Object.values(_sCharts).forEach(c=>{try{c.destroy();}catch(e){}});_sCharts={};
+  sh('socBody',data.map((s,i)=>`<tr><td style="font-size:11px;color:var(--txt2);">${s._i}</td><td style="font-weight:600;max-width:150px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${s.name}</td><td style="font-family:var(--mono);">${s.total.toLocaleString()}</td><td style="font-family:var(--mono);">${s.daily_avg}</td><td>${s.active_days}/27</td><td>${s.consistency}%</td><td>${s.trend==='up'?'<span style="color:var(--green)">↑</span>':s.trend==='down'?'<span style="color:var(--red)">↓</span>':'<span style="color:var(--amber)">→</span>'}</td><td style="font-size:11px;color:${rkv(s._r)>=3?'var(--red)':rkv(s._r)===2?'var(--amber)':'var(--green)'};">${s._r}</td><td><canvas id="sp${i}" class="spark" width="68" height="24"></canvas></td><td><span class="nddb-${s._g}">${s._g}</span></td></tr>`).join(''));
+  requestAnimationFrame(()=>data.forEach((s,i)=>{const c=document.getElementById('sp'+i);if(!c)return;_sCharts['s'+i]=new Chart(c,{type:'line',data:{labels:s.daily.map((_,j)=>j),datasets:[{data:s.daily,borderColor:s.trend==='up'?'#1e8e3e':s.trend==='down'?'#d93025':'#f9ab00',borderWidth:1.5,pointRadius:0,tension:0.3}]},options:{responsive:false,animation:false,plugins:{legend:{display:false},tooltip:{enabled:false}},scales:{x:{display:false},y:{display:false}}}});}));
+}
+function thSort(col){if(_sCol===col)_sDir=_sDir==='asc'?'desc':'asc';else{_sCol=col;_sDir='desc';}document.getElementById('soc-sort').value=_sCol;document.getElementById('soc-dir').value=_sDir;renderTbl();}
+
+// ── KPI FILTER ──
+function tgFilt(key,cid){
+  if(_kFilt===key){clrFilt();return;}
+  _kFilt=key;document.querySelectorAll('.kcard').forEach(c=>c.classList.remove('filt'));
+  document.getElementById(cid)?.classList.add('filt');
+  const fb=document.getElementById('filtbar');if(fb){fb.style.display='flex';}
+  const dm={all:'All',active:'Active only',inactive:'Inactive',partial:'Partial <80%',growing:'Growing',top10:'Top 10'};
+  sv('filtdesc',dm[key]||key);renderTbl();
+  document.querySelector('.sb-item:nth-child(4)')&&goTab('societies',document.querySelectorAll('.sb-item')[2]);
+}
+function clrFilt(){_kFilt='none';document.querySelectorAll('.kcard').forEach(c=>c.classList.remove('filt'));const fb=document.getElementById('filtbar');if(fb)fb.style.display='none';renderTbl();}
+
+// ── COMPARISON ──
+function renderComp(totL,ac){
+  sv('comp-myl',totL.toLocaleString('en-IN'));
+  const leg={display:true,labels:{font:{size:11},color:'#5f6368',boxWidth:7,padding:7}};
+  mc('allDistChart',{type:'line',data:{labels:DAYS,datasets:[CO2('MYL',META.myl,'#1a73e8'),CO2('Tiruvarur',META.tvr,'#1e8e3e'),CO2('Thanjavur',META.tnj,'#f9ab00',[4,3]),CO2('Nagapattinam',META.nag,'#d93025',[2,2])]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:leg},scales:{x:{ticks:{font:{size:11},autoSkip:true,maxRotation:0},grid:{display:false}},y:{ticks:{font:{size:11},callback:v=>(v/1000).toFixed(0)+'K'},grid:{color:'rgba(0,0,0,0.06)'}}}}});
+  const mp=Math.round(totL/ac),tp=Math.round(478558/45),jp=Math.round(727578/296),np=Math.round(19159/32),mx=Math.max(mp,tp,jp,np);
+  sh('perSocBars',[['MYL','#1a73e8',mp],['Tiruvarur','#1e8e3e',tp],['Thanjavur','#f9ab00',jp],['Nagapattinam','#d93025',np]].map(([n,c,v])=>`<div style="display:flex;align-items:center;gap:7px;margin-bottom:7px;"><div style="width:85px;font-size:11px;">${n}</div><div style="flex:1;background:var(--bg);border-radius:100px;height:8px;overflow:hidden;"><div style="width:${Math.round(v/mx*100)}%;height:100%;background:${c};border-radius:100px;"></div></div><div style="font-size:12px;font-family:var(--mono);width:52px;text-align:right;color:var(--txt2);">${v.toLocaleString()}</div></div>`).join(''));
+  sh('gapAnalysis',`<div style="font-size:11px;line-height:1.9;"><div>MYL/soc/month: <b>${mp.toLocaleString()} L</b></div><div style="color:var(--txt2);">Thanjavur benchmark: <span style="color:var(--amber)">${jp.toLocaleString()}</span> L — gap: <span style="color:var(--red)">${(jp-mp).toLocaleString()}</span> L/soc</div><div style="color:var(--txt2);">If matched Thanjavur: <span style="color:var(--green)">${(jp*ac).toLocaleString()}</span> L/month</div></div>`);
+  mc('h2hChart',{type:'line',data:{labels:DAYS,datasets:[CO2('MYL (÷'+ac+')',META.myl.map(d=>d/ac),'#1a73e8'),CO2('Tiruvarur (÷45)',META.tvr.map(d=>d/45),'#1e8e3e',[4,3])]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:leg},scales:{x:{ticks:{font:{size:11},autoSkip:true,maxRotation:0},grid:{display:false}},y:{ticks:{font:{size:10},callback:v=>v.toFixed(0)+' L'},grid:{color:'rgba(0,0,0,0.06)'}}}}});
+  sh('compNote',`MYL averages <b>${(totL/ac/27).toFixed(1)} L/soc/day</b> vs Tiruvarur's <b>${(478558/45/27).toFixed(1)} L</b> — a <b>${Math.round((478558/45/27)/(totL/ac/27))}× gap</b>. Reaching Thanjavur benchmark (${(727578/296/27).toFixed(1)} L/soc/day) requires expanded coverage and intensified member enrollment.`);
+}
+
+// ── INACTIVE ──
+function renderInact(ZL,avg){
+  sh('inactiveList',ZL.map(s=>`<div style="background:var(--surface);border:1px solid var(--brd);border-left:3px solid var(--amber);border-radius:var(--r);padding:11px 13px;margin-bottom:7px;display:flex;gap:9px;"><div style="font-size:17px;flex-shrink:0;">♻️</div><div style="flex:1;"><div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:3px;"><b style="font-size:12px;">${s.name}</b><span class="bdg b-r">INACTIVE · 0 L</span></div><div style="font-size:11px;color:var(--txt2);margin-bottom:4px;">${INACT_ACT[s.name]||'Field visit + member re-engagement required.'}</div><div style="font-size:12px;color:var(--blue);">→ Recovery: ~${Math.round(avg*0.7).toLocaleString()} L/month if reactivated</div></div></div>`).join(''));
+}
+
+// ── INSIGHTS ──
+function renderInsights(S,AL,ZL,totL,gPct){
+  const dec=S.filter(s=>s.trend==='down'&&s.total>0);
+  const top3=S.filter(s=>s.total>0).sort((a,b)=>b.total-a.total).slice(0,3);
+  const hid=S.filter(s=>s.total>0&&s.daily_avg<20&&s.consistency>=90);
+  const its=[
+    {t:'blue',i:'📊',h:'Overall Performance — Feb 2026',d:`Total: <b style="color:var(--green)">${totL.toLocaleString()} L</b> across ${AL.length} active societies. Avg ${(totL/AL.length/27).toFixed(1)} L/soc/day. Intra-month: <b style="color:${parseFloat(gPct)>0?'var(--green)':'var(--red)'}">${parseFloat(gPct)>0?'+':''}${gPct}%</b>.`},
+    {t:'red',i:'📉',h:`${dec.length} Societies on Downward Trend`,d:`${dec.map(s=>s.name).join(', ')}. KATHIRUPPU & SITHAMALLI need immediate field visits.`},
+    {t:'green',i:'🏆',h:'Star Performers',d:`Top 3: ${top3.map((s,i)=>`${i+1}. <b>${s.name}</b> (${s.total.toLocaleString()} L, ${s.trend==='up'?'↑':'→'}, ${s.consistency}% cons.)`).join('; ')}.`},
+    {t:'amber',i:'⚠️',h:`${ZL.length} Inactive Societies`,d:`${ZL.map(s=>s.name).join(', ')} — 0 L Feb. Full reactivation: ~<b style="color:var(--green)">${Math.round(ZL.length*totL/AL.length*0.7).toLocaleString()} L/month</b> potential.`},
+    {t:'teal',i:'💎',h:'Under-Enrolled High-Consistency Societies',d:`${hid.length} societies: ≥90% consistency but &lt;20 L/day — ${hid.map(s=>s.name).join(', ')}. Member drives could double output in 3 months.`},
+    {t:'purple',i:'🗺️',h:'Expansion: 238 Unserved Villages',d:`1.20 lakh milch animals in unserved areas. Kollidam has 33,849 animals at 19% coverage. 10 new societies in top villages = est. 3–4 lakh L/month extra.`}
+  ];
+  const bg={blue:'rgba(26,115,232,.08)',red:'rgba(217,48,37,.08)',green:'rgba(30,142,62,.08)',amber:'rgba(249,171,0,.08)',teal:'rgba(18,158,175,.08)',purple:'rgba(132,48,206,.08)'};
+  const bc={blue:'rgba(26,115,232,.2)',red:'rgba(217,48,37,.2)',green:'rgba(30,142,62,.2)',amber:'rgba(249,171,0,.2)',teal:'rgba(18,158,175,.2)',purple:'rgba(132,48,206,.2)'};
+  sh('insightsPanel',its.map(it=>`<div style="background:${bg[it.t]};border:1px solid ${bc[it.t]};border-radius:var(--r2);padding:13px;margin-bottom:9px;display:flex;gap:9px;"><div style="font-size:19px;flex-shrink:0;">${it.i}</div><div><div style="font-size:12px;font-weight:600;color:var(--txt);margin-bottom:3px;">${it.h}</div><div style="font-size:12px;color:var(--txt2);line-height:1.6;">${it.d}</div></div></div>`).join(''));
+}
+
+// ── EXPANSION ──
+function renderExp(){
+  sh('blockCovCards',Object.entries(BLK).map(([name,d])=>{const pct=Math.round(d.served/d.villages*100);return`<div class="bcov"><div style="position:absolute;left:0;top:0;bottom:0;width:3px;background:${d.color};border-radius:3px 0 0 3px;"></div><div style="display:flex;justify-content:space-between;margin-bottom:5px;"><b style="font-size:11px;">${name}</b><span style="font-size:12px;font-family:var(--mono);color:var(--txt2);">${d.served}/${d.villages} (${pct}%)</span></div><div style="display:flex;gap:12px;margin-bottom:6px;"><div><div style="font-size:11px;color:var(--txt2);">MILCH</div><div style="font-size:13px;font-weight:700;color:var(--amber);">${d.total.toLocaleString()}</div></div><div><div style="font-size:11px;color:var(--txt2);">AVG/VLG</div><div style="font-size:13px;font-weight:700;">${d.avg}</div></div></div><div class="pbar" style="height:5px;"><div class="pfill" style="width:${pct}%;background:${d.color};height:5px;"></div></div></div>`;}).join(''));
+}
+
+// ── UNSERVED ──
+let _uvFilt='all';
+function filtUVBlk(blk,btn){_uvFilt=blk;document.querySelectorAll('#tab-unserved .pill').forEach(b=>b.classList.remove('act'));btn.classList.add('act');filtUV();}
+function filtUV(){const q=(document.getElementById('uvsearch')?.value||'').toLowerCase();const data=UNSERVED.filter(d=>(_uvFilt==='all'||d.b===_uvFilt)&&(d.v.toLowerCase().includes(q)||d.vet.toLowerCase().includes(q)));sv('uvct',data.length+' villages');const mx=data.length>0?data[0].ma:1;sh('uvBody',data.map((d,i)=>{const p=pri(d.ma),e=Math.round(d.ma*0.35*1.8*27);return`<tr><td style="font-size:11px;color:var(--txt2);">${i+1}</td><td><b>${d.v}</b><div class="pbar" style="height:3px;margin-top:3px;width:90px;"><div class="pfill" style="width:${Math.round(d.ma/mx*100)}%;background:linear-gradient(90deg,var(--amber),var(--orange));height:3px;"></div></div></td><td><span class="bdg b-p">${d.b}</span></td><td style="font-family:var(--mono);">${d.fc.toLocaleString()}</td><td style="font-family:var(--mono);">${d.fb}</td><td style="font-weight:700;color:var(--amber);font-family:var(--mono);">${d.ma.toLocaleString()}</td><td style="font-size:12px;color:var(--txt2);">${d.vet}</td><td style="font-weight:700;color:var(--green);font-family:var(--mono);">~${nf(e)} L</td><td><span class="bdg ${p.c}">${p.l}</span></td></tr>`}).join(''));}
+
+// ── NEW SOC ──
+function renderNS(){sh('nsBody',UNSERVED.map((d,i)=>{const p=pri(d.ma),dl=Math.round(d.ma*0.35*1.8),mo=dl*27;return`<tr><td style="font-size:11px;color:${i<3?'var(--amber)':'var(--txt3)'};font-weight:${i<3?700:400};">${i+1}</td><td><b>${d.v}</b></td><td><span class="bdg b-p">${d.b}</span></td><td style="font-weight:700;color:var(--amber);font-family:var(--mono);">${d.ma.toLocaleString()}</td><td style="font-size:12px;color:var(--txt2);">${d.vet}</td><td style="font-weight:700;color:var(--teal);font-family:var(--mono);">${dl.toLocaleString()}</td><td style="font-weight:700;color:var(--green);font-family:var(--mono);">~${nf(mo)}</td><td><span class="bdg ${p.c}">${p.l}</span></td></tr>`}).join(''));}
+
+// ── BLOCKS ──
+let _aBlk='Kollidam';
+function showBlk(n,btn){_aBlk=n;document.querySelectorAll('#tab-blocks .pill').forEach(b=>b.classList.remove('act'));btn.classList.add('act');renderBlk();}
+function renderBlk(){const d=BLK[_aBlk],pct=Math.round(d.served/d.villages*100),bv=UNSERVED.filter(u=>u.b===_aBlk);sh('blkPanel',`<div class="g2"><div class="card"><div class="card-t">📍 ${_aBlk} Block</div><div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:10px;">${['Total Milch','Villages','Avg/Village','Served','Unserved','Coverage'].map((l,i)=>{const vs=[d.total.toLocaleString(),d.villages,d.avg,d.served,d.villages-d.served,pct+'%'],cs=['var(--amber)','var(--txt)','var(--teal)','var(--green)','var(--red)',pct>=20?'var(--green)':'var(--red)'];return`<div style="background:var(--bg);border-radius:var(--r);padding:9px;text-align:center;"><div style="font-size:11px;color:var(--txt2);margin-bottom:2px;">${l}</div><div style="font-size:20px;font-weight:400;color:${cs[i]};">${vs[i]}</div></div>`;}).join('')}</div><div class="pbar" style="height:7px;margin-bottom:9px;"><div class="pfill" style="width:${pct}%;background:${d.color};height:7px;"></div></div><div style="font-size:12px;color:var(--txt2);line-height:1.6;">${d.note}</div></div><div class="card"><div class="card-t">Top Unserved — ${_aBlk}</div>${bv.slice(0,12).map((v,i)=>`<div style="display:flex;align-items:center;gap:7px;margin-bottom:6px;"><div style="font-size:11px;color:var(--txt2);width:14px;">${i+1}</div><div style="font-size:11px;flex:1;">${v.v}</div><div style="width:90px;background:var(--bg);border-radius:100px;height:5px;overflow:hidden;"><div style="width:${Math.round(v.ma/bv[0].ma*100)}%;height:100%;background:linear-gradient(90deg,var(--amber),var(--orange));border-radius:100px;"></div></div><div style="font-size:12px;font-family:var(--mono);width:38px;text-align:right;color:var(--amber);">${v.ma}</div><span class="bdg ${pri(v.ma).c}">${pri(v.ma).l}</span></div>`).join('')}${bv.length===0?'<div style="color:var(--txt2);font-size:11px;text-align:center;padding:18px;">No data</div>':''}</div></div>`);}
+
+// ── MAP ──
+function mkMarkerEl(col,sz,label=''){
+  const el=document.createElement('div');
+  el.style.cssText=`width:${sz}px;height:${sz}px;border-radius:50%;background:${col};border:2.5px solid #fff;box-shadow:0 2px 6px rgba(0,0,0,.45);display:flex;align-items:center;justify-content:center;font-size:${Math.max(8,sz-4)}px;font-weight:700;color:#fff;cursor:pointer;`;
+  el.textContent=label;
+  return el;
+}
+function mkDepotEl(){
+  const el=document.createElement('div');
+  el.style.cssText='width:20px;height:20px;border-radius:4px;background:#1a73e8;border:2.5px solid #fff;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:#fff;cursor:pointer;box-shadow:0 2px 8px rgba(0,0,0,.45);';
+  el.textContent='C';
+  return el;
+}
+function addMlMarker(map,lngLat,el,popupHtml,layerKey){
+  const popup=new maplibregl.Popup({offset:14,maxWidth:'260px'}).setHTML(popupHtml);
+  const marker=new maplibregl.Marker({element:el}).setLngLat(lngLat).setPopup(popup).addTo(map);
+  if(layerKey){
+    if(!_mLayers[layerKey])_mLayers[layerKey]=[];
+    _mLayers[layerKey].push(marker);
+  }
+  return marker;
+}
+
+function initMap(){
+  if(_lMap)return;
+  _lMap=new maplibregl.Map({container:'leafmap',style:'https://basemaps.cartocdn.com/gl/voyager-gl-style/style.json',center:[79.65,11.10],zoom:10.5,attributionControl:false});
+  _lMap.addControl(new maplibregl.NavigationControl(),'top-right');
+  _lMap.addControl(new maplibregl.AttributionControl({compact:true}),'bottom-right');
+  _lMap.on('load',()=>{
+    _ALL.forEach(s=>{
+      const c=SOC_COORDS[s.name];if(!c)return;
+      const isA=s.total>0&&s.active_days>0;
+      const el=mkMarkerEl(isA?'#1e8e3e':'#d93025',isA?13:11);
+      const html=`<b>${s.name}</b><br>Status: <span style="color:${isA?'#1e8e3e':'#d93025'};font-weight:500">${isA?'Active':'Inactive'}</span><br>Monthly: ${s.total.toLocaleString()} L<br>Consistency: ${s.consistency}%<br>Trend: ${s.trend}<br>Grade: ${grd(s)}`;
+      addMlMarker(_lMap,[c[1],c[0]],el,html,isA?'act':'inact');
+    });
+    UNSERVED.forEach(d=>{
+      if(!d.lat)return;
+      const isP1=d.ma>=800;
+      const el=mkMarkerEl(isP1?'#e8710a':'#f9ab00',isP1?12:9);
+      const html=`<b>${d.v}</b><br>Block: ${d.b}<br>Milch: ${d.ma.toLocaleString()}<br>Vet: ${d.vet}<br>Est: ~${nf(Math.round(d.ma*0.35*1.8*27))} L/mo<br>${pri(d.ma).l}`;
+      addMlMarker(_lMap,[d.lng,d.lat],el,html,isP1?'p1':'p3');
+    });
+    DEPOTS.forEach(d=>{
+      addMlMarker(_lMap,[d.lng,d.lat],mkDepotEl(),`<b>${d.name}</b><br>Capacity: ${d.cap}`,'depot');
+    });
+  });
+}
+function togLayer(key,btn){
+  btn.classList.toggle('act');
+  const markers=_mLayers[key];
+  if(!markers||!Array.isArray(markers))return;
+  const show=btn.classList.contains('act');
+  markers.forEach(m=>{ const el=m.getElement(); if(el) el.style.display=show?'':'none'; });
+}
+function fitMap(){if(_lMap)_lMap.flyTo({center:[79.68,11.10],zoom:10.5,duration:800});}
+
+// ── ROUTE ──
+function hav(a,b){const R=6371,dL=(b[0]-a[0])*Math.PI/180,dl=(b[1]-a[1])*Math.PI/180,x=Math.sin(dL/2)**2+Math.cos(a[0]*Math.PI/180)*Math.cos(b[0]*Math.PI/180)*Math.sin(dl/2)**2;return R*2*Math.atan2(Math.sqrt(x),Math.sqrt(1-x));}
+function NN(pts,si){const n=pts.length,vis=new Array(n).fill(false),rt=[si];vis[si]=true;for(let i=1;i<n;i++){const last=rt[rt.length-1];let bd=Infinity,bi=-1;for(let j=0;j<n;j++){if(!vis[j]){const d=hav(pts[last].c,pts[j].c);if(d<bd){bd=d;bi=j;}}}if(bi>=0){rt.push(bi);vis[bi]=true;}}rt.push(si);return rt;}
+function twoOpt(pts,rt){let imp=true,best=rt.slice();while(imp){imp=false;for(let i=1;i<best.length-2;i++){for(let j=i+1;j<best.length-1;j++){const d1=hav(pts[best[i-1]].c,pts[best[i]].c)+hav(pts[best[j]].c,pts[best[j+1]].c),d2=hav(pts[best[i-1]].c,pts[best[j]].c)+hav(pts[best[i]].c,pts[best[j+1]].c);if(d2<d1-0.01){best.splice(i,j+1-i,...best.slice(i,j+1).reverse());imp=true;}}}}return best;}
+function initRMap(){
+  if(_rMap)return;
+  _rMap=new maplibregl.Map({container:'routemap',style:'https://basemaps.cartocdn.com/gl/voyager-gl-style/style.json',center:[79.65,11.10],zoom:10.5,attributionControl:false});
+  _rMap.addControl(new maplibregl.NavigationControl(),'top-right');
+  _rMap.addControl(new maplibregl.AttributionControl({compact:true}),'bottom-right');
+}
+function planRoute(){
+  if(!_rMap)return;
+  const blk=document.getElementById('rBlk')?.value||'Kollidam';
+  const di=parseInt(document.getElementById('rDepot')?.value||0);
+  const mode=document.getElementById('rMode')?.value||'active';
+  const dep=DEPOTS[di]||DEPOTS[0];
+  const BC={Kollidam:[11.26,79.76],Sembanarkoil:[10.98,79.86],Mayiladuthurai:[11.08,79.65],Sirkali:[11.21,79.73],Kuthalam:[11.08,79.55]};
+  const bc=BC[blk];
+  let stops=[];
+  _ALL.filter(s=>s.total>0&&s.active_days>0).forEach(s=>{const co=SOC_COORDS[s.name];if(!co)return;if(Math.abs(co[0]-bc[0])<0.15&&Math.abs(co[1]-bc[1])<0.18)stops.push({n:s.name,c:co,tp:'active',dl:s.daily_avg,tot:s.total});});
+  if(mode==='all')UNSERVED.filter(d=>d.b===blk&&d.ma>=800).slice(0,5).forEach(d=>{if(d.lat)stops.push({n:d.v+' (unserved)',c:[d.lat,d.lng],tp:'unserved',dl:Math.round(d.ma*0.35*1.8),tot:0});});
+  if(stops.length===0){sh('rsteplist','<div style="padding:18px;color:var(--txt2);text-align:center;">No societies found for this block area.</div>');return;}
+  const all=[{n:dep.name,c:[dep.lat,dep.lng],tp:'depot'},...stops];
+  const rt=twoOpt(all,NN(all,0));
+  const cds=rt.map(i=>all[i].c);
+  let dist=0;for(let i=0;i<cds.length-1;i++)dist+=hav(cds[i],cds[i+1]);
+  const timeH=dist/40+stops.length*15/60,milk=stops.reduce((a,s)=>a+s.dl,0);
+  // Clear previous route markers and line
+  if(_rPoly&&_rMap.getSource&&_rMap.getSource('route')){_rMap.removeLayer('route-line');_rMap.removeSource('route');}
+  if(_rMap._routeMarkers){_rMap._routeMarkers.forEach(m=>m.remove());} _rMap._routeMarkers=[];
+  const doRender=()=>{
+    // Draw route polyline as GeoJSON source
+    const coords=cds.map(c=>[c[1],c[0]]);
+    if(_rMap.getSource('route')){_rMap.getSource('route').setData({type:'Feature',geometry:{type:'LineString',coordinates:coords}});}
+    else{_rMap.addSource('route',{type:'geojson',data:{type:'Feature',geometry:{type:'LineString',coordinates:coords}}});
+      _rMap.addLayer({id:'route-line',type:'line',source:'route',layout:{'line-join':'round','line-cap':'round'},paint:{'line-color':'#1a73e8','line-width':3,'line-opacity':0.85,'line-dasharray':[2,1.5]}});}
+    // Fit bounds
+    const lngs=coords.map(c=>c[0]),lats=coords.map(c=>c[1]);
+    _rMap.fitBounds([[Math.min(...lngs)-.01,Math.min(...lats)-.01],[Math.max(...lngs)+.01,Math.max(...lats)+.01]],{padding:40,duration:600});
+    // Add stop markers
+    rt.forEach((si,step)=>{
+      const s=all[si];if(!s)return;
+      const iD=s.tp==='depot';
+      const el=iD?mkDepotEl():mkMarkerEl(s.tp==='unserved'?'#e8710a':'#1e8e3e',14,iD?'D':String(step));
+      const popup=new maplibregl.Popup({offset:14,maxWidth:'200px'}).setHTML(`<b>Stop ${iD?'DEPOT':step}: ${s.n}</b>${s.dl?`<br>~${s.dl} L/day`:''}`);
+      const m=new maplibregl.Marker({element:el}).setLngLat([s.c[1],s.c[0]]).setPopup(popup).addTo(_rMap);
+      _rMap._routeMarkers.push(m);
+    });
+    _rPoly=true;
+  };
+  if(_rMap.isStyleLoaded())doRender(); else _rMap.once('load',doRender);
+  sh('rstats',`<div class="rscard"><div class="rsv" style="color:var(--blue);">${Math.round(dist)} km</div><div class="rsl">Total Distance</div></div><div class="rscard"><div class="rsv" style="color:var(--amber);">${timeH.toFixed(1)}h</div><div class="rsl">Est. Time</div></div><div class="rscard"><div class="rsv" style="color:var(--green);">${stops.length}</div><div class="rsl">Stops</div></div><div class="rscard"><div class="rsv" style="color:var(--teal);">${milk.toLocaleString()}L</div><div class="rsl">Daily Milk</div></div>`);
+  let prevCoord=null;
+  sh('rsteplist',`<div style="font-size:12px;font-weight:500;color:var(--txt2);padding:0 3px 8px;border-bottom:1px solid var(--brd);margin-bottom:7px;">${blk} · ${stops.length} stops · ${Math.round(dist)} km · ${timeH.toFixed(1)}h</div>`+rt.map((si,step)=>{const s=all[si];if(!s)return'';const d=step>0&&prevCoord?hav(prevCoord,s.c):0;prevCoord=s.c;return`<div class="rstep"><div class="rnum" style="background:${s.tp==='depot'?'var(--bdim)':s.tp==='unserved'?'rgba(232,113,10,.15)':'var(--gdim)'};color:${s.tp==='depot'?'var(--blue)':s.tp==='unserved'?'var(--orange)':'var(--green)'};">${s.tp==='depot'?'D':step}</div><div><div class="rname">${s.n}</div>${s.dl?`<div class="rdist">~${s.dl} L/day${step>0?' · '+d.toFixed(1)+' km':''}</div>`:'<div class="rdist">Start / Return Depot</div>'}</div></div>`;}).join(''));
+}
+function exportRoute(){const rows=['Step,Name,Type,Daily L,Cumulative km'];let cd=null,tot=0;document.querySelectorAll('.rstep').forEach((el,i)=>{const n=el.querySelector('.rname')?.textContent||'';const d=el.querySelector('.rdist')?.textContent||'';rows.push(`${i},"${n}",,${d}`);});const blob=new Blob([rows.join('\n')],{type:'text/csv'});const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='MYL_Route.csv';a.click();toast('Route exported!');}
+
+// ── TARGETS ──
+let _tFilt='all';
+function initTgts(S){S.forEach(s=>{if(!_tgts[s.name])_tgts[s.name]=Math.round(s.total*1.2)||500;});}
+function applyBulk(){const m=parseInt(document.getElementById('bulk')?.value||120)/100;_ALL.forEach(s=>{_tgts[s.name]=Math.round(s.total*m)||500;});lsSave();renderTgts(_tFilt);toast('Targets updated!');}
+function filtTgt(f,btn){_tFilt=f;document.querySelectorAll('#tab-targets .pill').forEach(b=>b.classList.remove('act'));btn.classList.add('act');renderTgts(f);}
+function renderTgts(f){
+  let S=_ALL;
+  if(f==='below')S=S.filter(s=>s.total>0&&s.total<(_tgts[s.name]||0)*0.7);
+  else if(f==='near')S=S.filter(s=>s.total>0&&s.total>=(_tgts[s.name]||0)*0.7&&s.total<(_tgts[s.name]||0)*0.9);
+  else if(f==='met')S=S.filter(s=>s.total>=(_tgts[s.name]||0)*0.9);
+  else if(f==='inactive')S=S.filter(s=>!s.total||!s.active_days);
+  const tC=_ALL.reduce((a,s)=>a+(s.total||0),0),tT=_ALL.reduce((a,s)=>a+(_tgts[s.name]||0),0),tP=Math.round(tC/tT*100);
+  const met=_ALL.filter(s=>s.total>=(_tgts[s.name]||0)*0.9).length,near=_ALL.filter(s=>s.total>0&&s.total>=(_tgts[s.name]||0)*0.7&&s.total<(_tgts[s.name]||0)*0.9).length;
+  sh('tgtSum',`<div class="tscard"><div class="tsv kv-b">${tC.toLocaleString()}</div><div class="tsl">Current Total (L)</div></div><div class="tscard"><div class="tsv kv-a">${tT.toLocaleString()}</div><div class="tsl">District Target (L)</div></div><div class="tscard"><div class="tsv" style="color:${tP>=90?'var(--green)':tP>=70?'var(--amber)':'var(--red)'};">${tP}%<div class="pbar" style="height:4px;margin-top:4px;"><div class="pfill" style="width:${Math.min(tP,100)}%;background:${tP>=90?'var(--green)':tP>=70?'var(--amber)':'var(--red)'};height:4px;"></div></div></div><div class="tsl">District Achievement</div></div><div class="tscard"><div class="tsv kv-g">${met}</div><div class="tsl">Societies Met Target</div></div>`);
+  sh('tgtCards',S.map(s=>{const tg=_tgts[s.name]||0,pc=tg>0?Math.min(Math.round(s.total/tg*100),200):0,col=!s.total?'var(--txt3)':pc>=90?'var(--green)':pc>=70?'var(--amber)':'var(--red)';return`<div class="tcard"><div style="display:flex;align-items:center;gap:8px;margin-bottom:7px;"><div style="font-size:12px;font-weight:600;color:var(--txt);flex:1;">${s.name}</div><div style="font-size:13px;font-weight:500;font-family:var(--mono);color:${col};">${s.total?pc+'%':'—'}</div></div><div style="display:flex;align-items:center;gap:8px;margin-bottom:5px;"><div class="pbar" style="flex:1;height:5px;"><div class="pfill" style="width:${Math.min(pc,100)}%;background:${col};height:5px;"></div></div><div style="font-size:11px;font-family:var(--mono);color:var(--txt2);white-space:nowrap;">${s.total.toLocaleString()} / ${tg.toLocaleString()} L</div></div><div style="display:flex;align-items:center;gap:7px;"><span style="font-size:11px;color:var(--txt2);">Target:</span><input type="range" min="0" max="${Math.max(tg*2,500)}" value="${tg}" oninput="updTgt('${s.name.replace(/'/g,"\'")}',this.value);document.getElementById('tv${s.name.replace(/[^a-z]/gi,'_')}').textContent=parseInt(this.value).toLocaleString();"><span id="tv${s.name.replace(/[^a-z]/gi,'_')}" style="font-size:12px;font-family:var(--mono);color:var(--amber);width:55px;text-align:right;">${tg.toLocaleString()}</span></div></div>`;}).join(''));
+}
+function updTgt(name,val){_tgts[name]=parseInt(val);lsSave();}
+
+// ── ACTION BOARD ──
+let _kbFilt='all';
+function initKB(S){if(_kb.todo.length||_kb.doing.length||_kb.done.length)return;S.filter(s=>!s.total||!s.active_days).forEach(s=>_kb.todo.push({id:'i_'+s.name,soc:s.name,act:INACT_ACT[s.name]||'Field visit + member re-engagement',pri:'high',stg:'todo'}));S.filter(s=>s.trend==='down'&&s.total>0).slice(0,6).forEach(s=>_kb.todo.push({id:'d_'+s.name,soc:s.name,act:'Retention drive: declining trend for 2+ weeks',pri:'medium',stg:'todo'}));UNSERVED.filter(d=>d.ma>=1500).slice(0,5).forEach(d=>_kb.todo.push({id:'u_'+d.v,soc:d.v,act:`Form new MPCS — ${d.ma.toLocaleString()} milch animals. Contact ${d.vet} vet.`,pri:'high',stg:'todo'}));lsSave();}
+function filtKB(f,btn){_kbFilt=f;document.querySelectorAll('#tab-actions .frow .pill').forEach(b=>b.classList.remove('act'));btn.classList.add('act');renderKB();}
+function renderKB(){const flt=c=>_kbFilt==='all'||c.pri===_kbFilt;const mkC=c=>`<div class="kcard2" onclick="advKB('${c.id}')"><div class="kc-soc">${c.soc}</div><div class="kc-act">${c.act}</div><div class="kc-ft"><span class="kc-ph ${c.pri==='high'?'kc-hi':c.pri==='medium'?'kc-mi':'kc-lo'}">${c.pri.toUpperCase()}</span><span style="font-size:11px;color:var(--txt2);">click → advance</span></div></div>`;const td=_kb.todo.filter(flt),do_=_kb.doing.filter(flt),dn=_kb.done.filter(flt);sh('col-todo',td.map(mkC).join(''));sh('col-doing',do_.map(mkC).join(''));sh('col-done',dn.map(mkC).join(''));sv('kbtodo',td.length);sv('kbdo',do_.length);sv('kbdone',dn.length);}
+function advKB(id){let card=null,from=null;for(const col of['todo','doing','done']){const i=_kb[col].findIndex(c=>c.id===id);if(i>=0){card=_kb[col][i];from=col;_kb[col].splice(i,1);break;}}if(!card)return;const nxt={todo:'doing',doing:'done',done:'todo'}[from];_kb[nxt].push({...card,stg:nxt});lsSave();renderKB();toast(from==='doing'?'✅ Completed!':'→ Advanced!');}
+function addAction(){const soc=prompt('Society/Village:');if(!soc)return;const act=prompt('Action required:');if(!act)return;const p=(prompt('Priority (high/medium/low):','medium')||'medium').toLowerCase();_kb.todo.push({id:'c_'+Date.now(),soc,act,pri:p,stg:'todo'});lsSave();renderKB();toast('Action added!');}
+function addToCol(col){const soc=prompt('Society:');if(!soc)return;const act=prompt('Action:');if(!act)return;_kb[col].push({id:'cc_'+Date.now(),soc,act,pri:'medium',stg:col});lsSave();renderKB();}
+
+// ── SCORECARD ──
+function renderSC(S,AL,totL){const eff=Math.round(AL.length/S.length*100),gA=S.filter(s=>grd(s)==='A').length,cons=Math.round(AL.reduce((a,s)=>a+s.consistency,0)/AL.length);const rows=[{k:'Monthly Collection',v:nf(totL)+' L',t:'1,00,000 L',ok:totL>=100000},{k:'Active Society Rate',v:eff+'%',t:'≥85%',ok:eff>=85},{k:'Grade A Societies',v:gA+'',t:'≥30',ok:gA>=30},{k:'New Societies Formed',v:'0',t:'5/quarter',ok:false},{k:'Inactive Reactivations',v:'0',t:'All 13 in 60d',ok:false},{k:'Avg Consistency',v:cons+'%',t:'≥85%',ok:cons>=85},{k:'Member Enrollment Growth',v:'Existing',t:'20% by Q2',ok:false}];sh('kpiSC',rows.map(r=>`<tr><td style="font-weight:500;">${r.k}</td><td style="font-family:var(--mono);font-weight:500;">${r.v}</td><td style="color:var(--txt2);">${r.t}</td><td style="color:var(--txt2);">Monthly</td><td style="color:var(--txt2);">Block Officers</td><td>${r.ok?'<span style="color:var(--green)">✓ On Track</span>':'<span style="color:var(--red)">✗ Action Needed</span>'}</td></tr>`).join(''));}
+
+// ── EXPORT/IMPORT ──
+function exportCSV(){const h=['#','Society','Monthly L','Daily Avg','Active Days','Consistency','Trend','Grade','Risk','Target L'];const rows=_ALL.map((s,i)=>[i+1,'"'+s.name+'"',s.total||0,s.daily_avg||0,s.active_days||0,s.consistency||0,s.trend,grd(s),rsk(s),_tgts[s.name]||0].join(','));const b=new Blob([[h.join(','),...rows].join('\n')],{type:'text/csv'});const a=document.createElement('a');a.href=URL.createObjectURL(b);a.download='MYL_Feb2026.csv';a.click();toast('Exported '+_ALL.length+' societies!');}
+function importCSV(inp){const f=inp.files[0];if(!f)return;const r=new FileReader();r.onload=e=>{try{const ls=e.target.result.trim().split('\n'),hs=ls[0].split(',').map(h=>h.replace(/"/g,'').trim().toLowerCase()),ni=hs.indexOf('society'),ti=hs.indexOf('monthly l');if(ni<0){toast('Need Society column',true);return;}_ALL=ls.slice(1).map(l=>{const cs=l.split(',').map(c=>c.replace(/"/g,'').trim()),b=SEED.find(s=>s.name.toLowerCase()===cs[ni]?.toLowerCase())||SEED[0];return{...b,name:cs[ni]||b.name,total:parseFloat(cs[ti])||b.total};});boot();toast('Imported '+_ALL.length+' societies!');}catch(err){toast('Import failed: '+err.message,true);}inp.value='';};r.readAsText(f);}
+
+// ── BOOT ──
+function boot(){
+  lsLoad();_ALL=SEED.map(s=>({...s}));
+  const AL=_ALL.filter(s=>s.total>0&&s.active_days>0),ZL=_ALL.filter(s=>!s.total||!s.active_days);
+  const totL=_ALL.reduce((a,s)=>a+(s.total||0),0);
+  const MYL=META.myl,h1=MYL.slice(0,13).reduce((a,b)=>a+b,0)/13,h2=MYL.slice(13).reduce((a,b)=>a+b,0)/14;
+  const gPct=((h2-h1)/h1*100).toFixed(1);
+  renderOV(_ALL,AL,ZL);
+  renderNDDB(_ALL,AL,ZL,totL);
+  renderTbl();
+  renderComp(totL,AL.length);
+  renderInact(ZL,totL/AL.length);
+  renderInsights(_ALL,AL,ZL,totL,parseFloat(gPct));
+  renderExp();filtUV();renderNS();renderBlk();
+  initTgts(_ALL);renderTgts('all');
+  initKB(_ALL);
+  renderSC(_ALL,AL,totL);
+  sv('chip-act','✓ '+AL.length+' Active');sv('chip-inact','✗ '+ZL.length+' Inactive');
+  const ov=document.getElementById('loader');if(ov){ov.style.opacity='0';setTimeout(()=>ov.style.display='none',500);}
+}
+window.addEventListener('DOMContentLoaded',()=>{document.getElementById('ldtxt').textContent='Computing metrics…';setTimeout(boot,300);});
+// ── ACTION PLAN DATA ──
+const AP_MONTHS=[
+{n:1,name:'Mar 2025',phase:'Stabilise & Diagnose',color:'#1a73e8',bg:'#e8f0fe',target:75000,prev:72238,newSoc:0,react:0,
+ focus:'Stop the bleeding on 14 declining societies; full vet audit of all 13 inactive centres.',
+ actions:['Vet visit to all 14 declining societies — identify root cause (disease / operator / price)','Issue reactivation notices to 13 inactive centres; set 30-day response deadline','Re-engage SITHAMALLI & KATHIRUPPU (combined 4,092 L/mo at risk)','Deploy field officer to Kollidam block — highest concentration of issues','GPS mapping: photograph and record co-ordinates for all 63 enrolled societies','Set individual targets in MYL Milk Intel for all active societies'],
+ kpis:['Daily procurement ≥ 2,750 L','Vet visits: 14/14 declining societies complete','13 inactive centres formally notified','SITHAMALLI decline reversed (↑ from 92 L/day)']},
+{n:2,name:'Apr 2025',phase:'Reactivation Sprint',color:'#f9ab00',bg:'#fef7e0',target:82000,prev:75000,newSoc:0,react:5,
+ focus:'Reactivate first 5 inactive centres. Target easiest cases first.',
+ actions:['Reactivate MADAPURAM & SENNIYANALLUR — newly formed / field-visit ready','Reactivate NAGAMBADI & THIRUVALANGADU — HQ proximity, straightforward logistics','Reactivate THENNAMPATTINAM — vet coordination in pipeline from Month 1','Begin farmer enrollment at Koothiyampettai (3,112 milch animals — top P1 site)','Submit new society formation application for Koothiyampettai to DCMPU','Conduct farmer awareness camp at Thandavankulam (2,620 milch, Kollidam block)'],
+ kpis:['5 inactive → active','Daily procurement ≥ 2,980 L','Koothiyampettai: ≥50 farmer members enrolled','Reactivated centres: ≥80% collection consistency']},
+{n:3,name:'May 2025',phase:'First New Societies',color:'#1e8e3e',bg:'#e6f4ea',target:92000,prev:82000,newSoc:1,react:8,
+ focus:'Register first 2 new MPCS societies. Reactivate remaining 8 inactive centres.',
+ actions:['Operationalise Koothiyampettai MPCS (3,112 milch → 1,961 L/day potential)','Reactivate ALAKUDI — critical Kollidam gap; offer 3-month procurement bonus','Reactivate MANALMEDU, RADHANALLUR, THILLAIVIDANGAN, KATTUR, SEEYALAM','Reactivate PERUNTHOTTAM & KADALANGUDI (final 2 inactive centres)','Begin farmer enrollment at Eduthukkatti (2,755 milch, Sembanarkoil block)','Route re-optimisation for Kollidam block to absorb new Koothiyampettai volumes'],
+ kpis:['1 new MPCS commissioned (Koothiyampettai)','All 13 inactive centres reactivated','Daily procurement ≥ 3,380 L','Koothiyampettai: ≥400 L/day by month end']},
+{n:4,name:'Jun 2025',phase:'Sembanarkoil Push',color:'#1e8e3e',bg:'#e6f4ea',target:105000,prev:92000,newSoc:3,react:0,
+ focus:'Commission 3 new societies in Sembanarkoil block — most under-served block (67 villages).',
+ actions:['Commission Eduthukkatti MPCS (2,755 milch → 1,736 L/day)','Commission Thirukkalacheri MPCS (1,716 milch → 1,081 L/day)','Commission Thandavankulam MPCS (2,620 milch → 1,651 L/day)','Sembanarkoil farmer felicitation event — best producer incentive ₹500/month for 3 months','NDDB fat/SNF testing equipment installed at all new societies','Member enrollment campaign: target 70+ members per new MPCS'],
+ kpis:['3 new MPCS commissioned in Sembanarkoil','Daily procurement ≥ 3,880 L','New societies: ≥80% collection days','Total active centres: 54+']},
+{n:5,name:'Jul 2025',phase:'Kollidam Saturation',color:'#129eaf',bg:'#e6f7f9',target:118000,prev:105000,newSoc:4,react:0,
+ focus:'Complete Kollidam block coverage. Commission all remaining P1 sites.',
+ actions:['Commission Alakkudy MPCS (2,387 milch → 1,504 L/day)','Commission Mudhalaimedu MPCS (2,018 milch → 1,271 L/day)','Commission Palayapalayam & Mahendrapalli MPCS (Kollidam P1 completions)','Kollidam block route re-optimised — 12+ active societies in single block','Chilling vehicle capacity review — add auxiliary if daily volumes exceed 4,500 L','Vet camp: all Kollidam societies — pregnancy diagnosis & herd health check'],
+ kpis:['4 new MPCS in Kollidam','Daily procurement ≥ 4,360 L','Kollidam block: 12 of 43 villages covered (28%)','All new societies: first full month operating']},
+{n:6,name:'Aug 2025',phase:'6-Month Review',color:'#8430ce',bg:'#f3e8fd',target:128000,prev:118000,newSoc:2,react:0,
+ focus:'Mid-year performance review. Commission 2 key Mayiladuthurai block societies.',
+ actions:['Commission Kesingan MPCS (1,440 milch → 907 L/day) — Mayiladuthurai block','Commission Thiruvalaputhur MPCS (1,196 milch → 753 L/day)','Full district NDDB benchmark audit — grade all active societies A/B/C/D','Mid-year board presentation: actual vs target procurement comparison','Begin PMKSY fodder development linkage for top 10 societies','Flag Grade D societies for intensive 90-day turnaround plan'],
+ kpis:['2 new MPCS in Mayiladuthurai','Daily procurement ≥ 4,740 L','6-month actual vs 1,18,000 L/mo target review','Grade A societies: ≥25% of active base']},
+{n:7,name:'Sep 2025',phase:'Sirkali & Quality Drive',color:'#129eaf',bg:'#e6f7f9',target:138000,prev:128000,newSoc:3,react:0,
+ focus:'Commission Melaiyur and 2 more Sirkali villages. Launch district-wide quality campaign.',
+ actions:['Commission Melaiyur MPCS (1,741 milch → 1,097 L/day) — Sirkali block anchor','Commission 2 additional Sirkali P2 villages (≥800 milch animals each)','District Quality Month: SNF/fat compliance checks at all 60+ societies','Adulteration screening drive at all chilling centres','Introduce two-axis fat+SNF payment calculator in MYL Milk Intel','Livestock insurance enrollment camp at new Sirkali societies'],
+ kpis:['3 new MPCS in Sirkali','Daily procurement ≥ 5,110 L','Quality: ≥90% societies at fat ≥3.0% & SNF ≥8.5%','Sirkali block: 5+ active societies']},
+{n:8,name:'Oct 2025',phase:'Harvest Season Buffer',color:'#f9ab00',bg:'#fef7e0',target:142000,prev:138000,newSoc:2,react:0,
+ focus:'Samba harvest season — protect existing volumes. Commission 2 P2 Kuthalam villages.',
+ actions:['Commission Thalaiyudaiyarar Koil Pathy + Manikkapangu (Kuthalam block)','Harvest incentive: ₹0.10/L bonus for societies maintaining ≥ previous month volume','Deploy mobile vet team to 14 previously-declining societies for preventive check','Kuthalam block farmer camp — price transparency & fat+SNF payment explanation','Arrange relief vehicle for Kollidam block during harvest period','Pre-position fodder advisory with agriculture dept for post-harvest livestock care'],
+ kpis:['2 new MPCS in Kuthalam','Daily procurement ≥ 5,260 L (protect from harvest dip)','Zero active societies going inactive during harvest','Kuthalam block: 4+ active societies']},
+{n:9,name:'Nov 2025',phase:'Sembanarkoil Completion',color:'#1e8e3e',bg:'#e6f4ea',target:152000,prev:142000,newSoc:3,react:0,
+ focus:'Commission remaining Sembanarkoil P2 villages to complete block saturation.',
+ actions:['Commission Kalamanallur MPCS (1,456 milch → 917 L/day)','Commission Alalasundram & one more Sembanarkoil P2 village','Sembanarkoil block 8+ active societies — introduce block-level route planning','Dairy farmer federation meeting for all Sembanarkoil societies','NDDB Anand model workshop for all society secretaries','Digital payment rollout: all societies to offer direct bank transfer to farmers'],
+ kpis:['3 new MPCS commissioned','Daily procurement ≥ 5,630 L','Sembanarkoil block: 8 active societies','Digital payments: ≥80% societies operational']},
+{n:10,name:'Dec 2025',phase:'Year-End Acceleration',color:'#1a73e8',bg:'#e8f0fe',target:162000,prev:152000,newSoc:3,react:0,
+ focus:'Commission 3 more societies. Aggressive member enrollment drives before year-end.',
+ actions:['Commission 3 new societies from remaining P2 villages across all blocks','Year-end member enrollment drive: target 50+ new members per society district-wide','DCMPU annual review meeting: present 10-month progress vs plan','Grade all 70+ active societies — A performers identified for scale-up investment','Felicitation ceremony: top 3 by volume, top 3 by consistency','Plan Year 2 strategy: remaining P2 and P3 village conversion pipeline'],
+ kpis:['3 new MPCS commissioned','Daily procurement ≥ 6,000 L','70+ active societies in district','Member enrollment: +500 new farmers district-wide']},
+{n:11,name:'Jan 2026',phase:'Kuthalam Completion',color:'#129eaf',bg:'#e6f7f9',target:172000,prev:162000,newSoc:3,react:0,
+ focus:'Complete Kuthalam block. Begin P3 village conversions. Push toward 1,75,000 L/mo.',
+ actions:['Commission 3 Kuthalam block P3 villages (500–799 milch animals)','P3 incentive model: DCMPU provides shared vet services for small societies','All 5 blocks now have ≥5 active societies — convene block-level federation meetings','Annual physical audit of all society infrastructure: weighing machines, chilling units','Train next cohort of society secretaries (succession planning)','Route rationalisation: consolidate micro-routes in blocks with 8+ societies'],
+ kpis:['3 new MPCS commissioned','Daily procurement ≥ 6,370 L','Kuthalam block: 7+ active societies','All 5 blocks: block federation meeting held']},
+{n:12,name:'Feb 2026',phase:'1,80,000 L Target',color:'#1e8e3e',bg:'#e6f4ea',target:180000,prev:172000,newSoc:2,react:0,
+ focus:'Cross 1,80,000 L/month. Finalise Year 2 plan. Validate all data in MYL Milk Intel.',
+ actions:['Commission final 2 societies to cross 80 active centres milestone','Cross 1,80,000 L/month — 2.49× growth from Feb 2025 baseline','Full data validation in MYL Milk Intel: all 80+ societies with updated co-ordinates','Submit annual report to DCMPU Thanjavur: volume, coverage, NDDB benchmarks','Set Year 2 targets: 2,50,000 L/month by Feb 2027','District Dairy Farmers Day: mass felicitation, media coverage, best society awards'],
+ kpis:['2 new MPCS commissioned','≥ 1,80,000 L/month achieved','80+ active societies in district','NDDB Grade A societies: ≥30% of active base']}
+];
+
+const AP_PIPELINE=[
+  {mo:'M3',v:'Koothiyampettai',b:'Kollidam',ma:3112,dl:1961,pri:'P1'},
+  {mo:'M4',v:'Eduthukkatti',b:'Sembanarkoil',ma:2755,dl:1736,pri:'P1'},
+  {mo:'M4',v:'Thandavankulam',b:'Kollidam',ma:2620,dl:1651,pri:'P1'},
+  {mo:'M4',v:'Thirukkalacheri',b:'Sembanarkoil',ma:1716,dl:1081,pri:'P1'},
+  {mo:'M5',v:'Alakkudy',b:'Kollidam',ma:2387,dl:1504,pri:'P1'},
+  {mo:'M5',v:'Mudhalaimedu',b:'Kollidam',ma:2018,dl:1271,pri:'P1'},
+  {mo:'M5',v:'Palayapalayam',b:'Kollidam',ma:1694,dl:1067,pri:'P1'},
+  {mo:'M5',v:'Mahendrapalli',b:'Kollidam',ma:1680,dl:1058,pri:'P1'},
+  {mo:'M6',v:'Kesingan',b:'Mayiladuthurai',ma:1440,dl:907,pri:'P2'},
+  {mo:'M6',v:'Thiruvalaputhur',b:'Mayiladuthurai',ma:1196,dl:753,pri:'P2'},
+  {mo:'M7',v:'Melaiyur',b:'Sirkali',ma:1741,dl:1097,pri:'P1'},
+  {mo:'M7',v:'Thalaiyudaiyarar Koil Pathy',b:'Sembanarkoil',ma:1478,dl:931,pri:'P2'},
+  {mo:'M7',v:'Manikkapangu',b:'Sembanarkoil',ma:1459,dl:919,pri:'P2'},
+  {mo:'M8',v:'Kalamanallur',b:'Sembanarkoil',ma:1456,dl:917,pri:'P2'},
+  {mo:'M8',v:'Alalasundram',b:'Kollidam',ma:1311,dl:826,pri:'P2'},
+  {mo:'M9',v:'Theru Oothu (Kuthalam)',b:'Kuthalam',ma:1050,dl:662,pri:'P2'},
+  {mo:'M9',v:'Manali (Sirkali)',b:'Sirkali',ma:920,dl:580,pri:'P2'},
+  {mo:'M10',v:'P2 Village — Sembanarkoil',b:'Sembanarkoil',ma:850,dl:536,pri:'P2'},
+  {mo:'M10',v:'P2 Village — Kuthalam',b:'Kuthalam',ma:820,dl:517,pri:'P2'},
+  {mo:'M11',v:'P3 Village 1 — Kuthalam',b:'Kuthalam',ma:700,dl:441,pri:'P3'},
+  {mo:'M11',v:'P3 Village 2 — Kuthalam',b:'Kuthalam',ma:650,dl:410,pri:'P3'},
+  {mo:'M12',v:'P3 Village — Mayiladuthurai',b:'Mayiladuthurai',ma:600,dl:378,pri:'P3'},
+];
+
+const AP_DECLINING=[
+  {name:'SITHAMALLI',cur:2482,tgt:2800,action:'Vet + enrollment drive'},
+  {name:'KATHIRUPPU',cur:1610,tgt:1900,action:'Route + operator review'},
+  {name:'KEELAMOOLAI',cur:1157,tgt:1300,action:'Vet visit + incentives'},
+  {name:'MATHIRIVELLUR',cur:1126,tgt:1300,action:'Consistency drive'},
+  {name:'JOTHIYAKUDI',cur:1090,tgt:1200,action:'Operator engagement'},
+  {name:'VADARENGAM',cur:975,tgt:1100,action:'Vet + member re-enroll'},
+  {name:'THIRUMULLAIVASAL',cur:706,tgt:850,action:'Farmer awareness camp'},
+  {name:'KONARIRAJAPURAM',cur:663,tgt:780,action:'Consistency incentive'},
+  {name:'THIRUVALI',cur:570,tgt:700,action:'Vet visit'},
+  {name:'PANAMANGALAM',cur:536,tgt:650,action:'Member enrollment'},
+  {name:'EURUKKUR',cur:424,tgt:550,action:'Route review'},
+  {name:'KEEZHAIYUR',cur:392,tgt:600,action:'Consistency: 52%→90%'},
+  {name:'ELAYAMATHUKOODAM',cur:111,tgt:400,action:'Full restart (37% cons.)'},
+  {name:'ARAPALLAM',cur:77,tgt:300,action:'Full restart (48% cons.)'},
+];
+
+const AP_INACTIVE_SCHEDULE=[
+  {name:'MADAPURAM',mo:'M2',action:'Field visit → verify members → issue guarantee letter'},
+  {name:'SENNIYANALLUR',mo:'M2',action:'Recent formation → assign MPCS mentor for 3 months'},
+  {name:'NAGAMBADI',mo:'M2',action:'Low count → consider federation with neighbouring village'},
+  {name:'THIRUVALANGADU',mo:'M2',action:'HQ block gap → expand coverage'},
+  {name:'THENNAMPATTINAM',mo:'M2',action:'Vet coordination + gram sabha meeting'},
+  {name:'ALAKUDI',mo:'M3',action:'Critical Kollidam gap → 3-month procurement bonus'},
+  {name:'MANALMEDU',mo:'M3',action:'Contact original members → offer bonus'},
+  {name:'RADHANALLUR',mo:'M3',action:'Investigate cause → address → restart'},
+  {name:'THILLAIVIDANGAN',mo:'M3',action:'Nearest active: KATHIRUPPU. Reactivate or merge route'},
+  {name:'KATTUR',mo:'M3',action:'Transport route issue → review chilling centre logistics'},
+  {name:'SEEYALAM',mo:'M3',action:'Vet visit needed → possible disease impact → verify herd'},
+  {name:'PERUNTHOTTAM',mo:'M3',action:'Survey milch animals → restart with NDDB incentives'},
+  {name:'KADALANGUDI',mo:'M3',action:'HQ block gap → high-potential village expansion'},
+];
+
+const AP_RISKS=[
+  {level:'HIGH',risk:'Reactivation failure',desc:'ALAKUDI/MADAPURAM/SEEYALAM may not reactivate within 3 months',mitigation:'Commission new MPCS in adjacent village if reactivation fails by M4'},
+  {level:'HIGH',risk:'Harvest season volume drop',desc:'Oct–Nov Samba harvest diverts farm labour, reducing collection consistency',mitigation:'Pre-position incentives; extra vehicle; advance vet visits in September'},
+  {level:'MED',risk:'New society formation delay',desc:'TNRD registration, panchayat land, DCMPU approval may slip 4–6 weeks',mitigation:'Begin all M3–M5 societies in parallel by M2; maintain 2 backup villages'},
+  {level:'MED',risk:'Chilling capacity constraint',desc:'Daily procurement exceeding 5,000 L may strain chilling infrastructure',mitigation:'Commission auxiliary chilling unit by M5 (review in M4)'},
+  {level:'LOW',risk:'Vet resource shortage',desc:'14 declining + 13 inactive + 22 new societies need concurrent vet support',mitigation:'Empanel 2 private vets; coordinate with Animal Husbandry dept by M1'},
+];
+
+let _apMonth=0;
+
+function renderAP(){
+  // --- Ladder chart ---
+  const labels=AP_MONTHS.map(m=>m.name);
+  const targets=AP_MONTHS.map(m=>m.target);
+  mc('apLadderChart',{
+    type:'line',
+    data:{labels,datasets:[
+      {label:'Target L/mo',data:targets,borderColor:'#1a73e8',backgroundColor:'rgba(26,115,232,.08)',borderWidth:2.5,pointRadius:4,pointBackgroundColor:'#1a73e8',tension:.35,fill:true},
+      {label:'Baseline',data:Array(12).fill(72238),borderColor:'#d93025',borderDash:[5,4],borderWidth:1.5,pointRadius:0,tension:0}
+    ]},
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:true,labels:{font:{size:11},color:'#5f6368',boxWidth:12}}},scales:{
+      x:{grid:{color:'rgba(0,0,0,0.06)'},ticks:{color:'#5f6368',font:{size:10}}},
+      y:{grid:{color:'rgba(0,0,0,0.06)'},ticks:{color:'#5f6368',font:{size:10},callback:v=>(v/1000).toFixed(0)+'K'}}
+    }}
+  });
+
+  // --- Lever chart ---
+  mc('apLeverChart',{
+    type:'bar',
+    data:{labels:['Existing\nSocieties','Reactivation\n(13 centres)','Declining\nReversal (14)','New MPCS\n(22 villages)'],
+      datasets:[{data:[22000,12000,8000,66000],backgroundColor:['#e8f0fe','#fef7e0','#fce8e6','#e6f4ea'],borderColor:['#1a73e8','#f9ab00','#d93025','#1e8e3e'],borderWidth:2}]},
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{
+      x:{grid:{display:false},ticks:{color:'#5f6368',font:{size:10}}},
+      y:{grid:{color:'rgba(0,0,0,0.06)'},ticks:{color:'#5f6368',font:{size:10},callback:v=>(v/1000).toFixed(0)+'K L'}}
+    }}
+  });
+
+  // --- Month pills ---
+  const pills=document.getElementById('ap-month-pills');
+  if(pills&&!pills.children.length){
+    AP_MONTHS.forEach((m,i)=>{
+      const b=document.createElement('button');
+      b.className='pill'+(i===0?' act':'');
+      b.textContent=m.name;
+      b.style.borderColor=i===_apMonth?m.color:'';
+      b.style.color=i===_apMonth?m.color:'';
+      b.style.background=i===_apMonth?m.bg:'';
+      b.onclick=()=>{_apMonth=i;document.querySelectorAll('#ap-month-pills .pill').forEach((p,j)=>{
+        const mo=AP_MONTHS[j];
+        p.classList.toggle('act',j===i);
+        p.style.borderColor=j===i?mo.color:'';
+        p.style.color=j===i?mo.color:'';
+        p.style.background=j===i?mo.bg:'';
+      });renderAPMonth(i);};
+      pills.appendChild(b);
+    });
+  }
+  renderAPMonth(_apMonth);
+
+  // --- Pipeline table ---
+  const priColors={'P1':['#fce8e6','#c5221f'],'P2':['#fef7e0','#b06000'],'P3':['#e6f4ea','#137333']};
+  sh('ap-pipeline-body',AP_PIPELINE.map((r,i)=>{
+    const [bg,tc]=priColors[r.pri]||['#fff','#202124'];
+    return`<tr style="background:${i%2?'#f8f9fa':'#fff'}"><td><span class="bdg" style="background:#e8f0fe;color:#1a73e8;">${r.mo}</span></td><td style="font-weight:500;">${r.v}</td><td>${r.b}</td><td style="font-family:var(--mono);">${r.ma.toLocaleString()}</td><td style="font-family:var(--mono);color:#1a73e8;font-weight:500;">${r.dl.toLocaleString()} L/day</td><td style="font-family:var(--mono);color:#1e8e3e;font-weight:500;">~${Math.round(r.dl*27/1000)*1000} L/mo</td><td><span class="bdg" style="background:${bg};color:${tc};">${r.pri}</span></td></tr>`;
+  }).join(''));
+
+  // --- Declining table ---
+  sh('ap-declining-body',AP_DECLINING.map((r,i)=>{
+    const pct=Math.round((r.tgt-r.cur)/r.cur*100);
+    return`<tr style="background:${i%2?'#f8f9fa':'#fff'}"><td style="font-weight:500;font-size:12px;">${r.name}</td><td style="font-family:var(--mono);color:#d93025;">${r.cur.toLocaleString()}</td><td style="font-family:var(--mono);color:#1e8e3e;font-weight:500;">${r.tgt.toLocaleString()} <span style="font-size:10px;color:#1e8e3e;">+${pct}%</span></td><td style="font-size:12px;color:#5f6368;">${r.action}</td></tr>`;
+  }).join(''));
+
+  // --- Inactive table ---
+  const moColors={'M2':'#fef7e0','M3':'#e6f4ea'};
+  const moTColors={'M2':'#b06000','M3':'#137333'};
+  sh('ap-inactive-body',AP_INACTIVE_SCHEDULE.map((r,i)=>{
+    return`<tr style="background:${i%2?'#f8f9fa':'#fff'}"><td style="font-weight:500;font-size:12px;">${r.name}</td><td><span class="bdg" style="background:${moColors[r.mo]||'#e8f0fe'};color:${moTColors[r.mo]||'#1a73e8'};">${r.mo}</span></td><td style="font-size:12px;color:#5f6368;">${r.action}</td></tr>`;
+  }).join(''));
+
+  // --- Risk register ---
+  const riskCfg={'HIGH':['#fce8e6','#c5221f','🔴'],'MED':['#fef7e0','#b06000','🟡'],'LOW':['#e6f4ea','#137333','🟢']};
+  sh('ap-risks',AP_RISKS.map(r=>{
+    const [bg,tc,ic]=riskCfg[r.level]||['#f1f3f4','#5f6368','⚪'];
+    return`<div class="acard" style="border-left-color:${tc};background:${bg};margin-bottom:8px;"><div style="font-size:16px;flex-shrink:0;">${ic}</div><div style="flex:1;"><div class="ac-t" style="color:${tc};">${r.risk} <span style="font-size:10px;font-weight:400;padding:1px 6px;border-radius:100px;background:${tc};color:#fff;margin-left:4px;">${r.level}</span></div><div class="ac-d">${r.desc}</div><div class="ac-a" style="color:${tc};">→ Mitigation: ${r.mitigation}</div></div></div>`;
+  }).join(''));
+}
+
+function renderAPMonth(i){
+  const m=AP_MONTHS[i];
+  const addL=m.target-m.prev;
+  const pct=Math.round(m.target/180000*100);
+  const detail=document.getElementById('ap-month-detail');
+  if(!detail)return;
+  detail.innerHTML=`
+    <div style="display:flex;align-items:center;gap:12px;margin-bottom:14px;flex-wrap:wrap;">
+      <div style="padding:6px 16px;border-radius:100px;background:${m.bg};color:${m.color};font-weight:500;font-size:13px;">${m.n}. ${m.name}</div>
+      <div style="padding:6px 16px;border-radius:100px;background:#e8f0fe;color:#174ea6;font-size:13px;">Phase: ${m.phase}</div>
+      ${m.newSoc?`<div style="padding:6px 16px;border-radius:100px;background:#e6f4ea;color:#137333;font-size:13px;">+${m.newSoc} New MPCS</div>`:''}
+      ${m.react?`<div style="padding:6px 16px;border-radius:100px;background:#fef7e0;color:#b06000;font-size:13px;">+${m.react} Reactivated</div>`:''}
+    </div>
+    <div style="background:${m.bg};border-left:4px solid ${m.color};border-radius:8px;padding:12px 16px;margin-bottom:14px;">
+      <div style="font-size:12px;color:${m.color};font-weight:500;margin-bottom:4px;">Strategic Focus</div>
+      <div style="font-size:13px;color:#202124;">${m.focus}</div>
+    </div>
+    <div class="g2" style="margin-bottom:14px;">
+      <div>
+        <div class="sec-lbl" style="margin-bottom:10px;">Actions</div>
+        ${m.actions.map(a=>`<div style="display:flex;gap:10px;margin-bottom:8px;align-items:flex-start;"><div style="width:6px;height:6px;border-radius:50%;background:${m.color};flex-shrink:0;margin-top:6px;"></div><div style="font-size:13px;color:#202124;line-height:1.6;">${a}</div></div>`).join('')}
+      </div>
+      <div>
+        <div class="sec-lbl" style="margin-bottom:10px;">KPIs</div>
+        ${m.kpis.map(k=>`<div style="display:flex;gap:10px;margin-bottom:8px;align-items:flex-start;"><div style="flex-shrink:0;width:18px;height:18px;border-radius:50%;background:${m.bg};border:1.5px solid ${m.color};display:flex;align-items:center;justify-content:center;"><svg width="9" height="7" viewBox="0 0 9 7"><polyline points="1,4 3.5,6 8,1" fill="none" stroke="${m.color}" stroke-width="1.5" stroke-linecap="round"/></svg></div><div style="font-size:13px;color:#202124;line-height:1.6;">${k}</div></div>`).join('')}
+        <div style="margin-top:14px;background:#f8f9fa;border-radius:8px;padding:12px;">
+          <div style="font-size:11px;color:#5f6368;margin-bottom:6px;">Monthly Target</div>
+          <div style="font-size:22px;font-weight:500;color:${m.color};">${m.target.toLocaleString('en-IN')} <span style="font-size:12px;color:#5f6368;">L/mo</span></div>
+          <div style="font-size:12px;color:#5f6368;">+${addL.toLocaleString('en-IN')} L vs prev · ${Math.round(m.target/27).toLocaleString('en-IN')} L/day · ${pct}% of year-end target</div>
+          <div class="pbar" style="height:5px;margin-top:8px;"><div class="pfill" style="width:${pct}%;background:${m.color};"></div></div>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+// ── LIVE RE-GEOCODER (Nominatim) ──
+async function reGeocode(){
+  const btn=document.getElementById('geocode-btn');
+  const status=document.getElementById('geocode-status');
+  if(!btn||!status)return;
+  btn.disabled=true; btn.textContent='⏳ Geocoding…';
+  status.style.display='block';
+  const societies=_ALL.length?_ALL:SEED;
+  let ok=0,fail=0,updated=0;
+  for(const s of societies){
+    const name=s.name.replace(/ MPCS/,'').replace(/ THITTU/,'');
+    const q=encodeURIComponent(name+', Mayiladuthurai, Tamil Nadu, India');
+    status.textContent=`Geocoding ${s.name}… (${ok+fail+1}/${societies.length})`;
+    try{
+      const r=await fetch(`https://nominatim.openstreetmap.org/search?q=${q}&format=json&limit=3&countrycodes=in`,
+        {headers:{'User-Agent':'MYL-MilkIntel/1.0'}});
+      const data=await r.json();
+      // Filter to Mayiladuthurai district bounds: lat 10.8-11.6, lng 79.3-80.1
+      const valid=data.filter(d=>+d.lat>10.8&&+d.lat<11.6&&+d.lon>79.3&&+d.lon<80.1);
+      if(valid.length){
+        const lat=Math.round(+valid[0].lat*10000)/10000;
+        const lng=Math.round(+valid[0].lon*10000)/10000;
+        SOC_COORDS[s.name]=[lat,lng];
+        ok++; updated++;
+      } else { fail++; }
+    }catch(e){ fail++; }
+    await new Promise(res=>setTimeout(res,1100)); // 1 req/sec rate limit
+  }
+  // Refresh map with new coords
+  if(_lMap){
+    // Remove all existing markers
+    ['act','inact','p1','p3','depot'].forEach(k=>{
+      if(_mLayers[k]&&Array.isArray(_mLayers[k])){
+        _mLayers[k].forEach(m=>m.remove());
+        _mLayers[k]=[];
+      }
+    });
+    // Re-add markers (map already loaded)
+    _ALL.forEach(s=>{
+      const c=SOC_COORDS[s.name];if(!c)return;
+      const isA=s.total>0&&s.active_days>0;
+      const el=mkMarkerEl(isA?'#1e8e3e':'#d93025',isA?13:11);
+      const html=`<b>${s.name}</b><br>${isA?'Active':'Inactive'}<br>${s.total.toLocaleString()} L`;
+      addMlMarker(_lMap,[c[1],c[0]],el,html,isA?'act':'inact');
+    });
+  }
+  btn.disabled=false; btn.textContent='📍 Re-geocode All';
+  status.textContent=`✓ Geocoded ${ok} societies (${fail} not found in district). Map refreshed.`;
+  status.style.background=ok>fail?'#e6f4ea':'#fef7e0';
+  status.style.color=ok>fail?'#137333':'#b06000';
+  status.style.borderColor=ok>fail?'rgba(30,142,62,.2)':'rgba(249,171,0,.2)';
+  toast(`Geocoded ${ok}/${societies.length} societies!`);
+}
+
+</script></body></html>
