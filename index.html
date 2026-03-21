@@ -1975,6 +1975,8 @@ function importCSV(inp){const f=inp.files[0];if(!f)return;const r=new FileReader
 // ── BOOT ──
 function boot(){
   lsLoad();dmLsLoad();_ALL=SEED.map(s=>({...s}));
+  // Always set active date to TODAY — never allow a hardcoded past date
+  _dmActiveDate = new Date().toISOString().split('T')[0];
   const AL=_ALL.filter(s=>s.total>0&&s.active_days>0),ZL=_ALL.filter(s=>!s.total||!s.active_days);
   const totL=_ALL.reduce((a,s)=>a+(s.total||0),0);
   const MYL=META.myl,h1=MYL.slice(0,13).reduce((a,b)=>a+b,0)/13,h2=MYL.slice(13).reduce((a,b)=>a+b,0)/14;
@@ -2339,7 +2341,9 @@ function dmLsLoad() {
   try {
     const d = JSON.parse(localStorage.getItem(DM_LSK)||'{}');
     if(d.data) _dmData = d.data;
-    if(d.esc) _escalations = d.esc;
+    if(d.esc)  _escalations = d.esc;
+    // NOTE: _dmActiveDate is intentionally NOT restored from localStorage.
+    // boot() always sets it to today so the dashboard never opens on a stale past date.
   } catch(e) {}
 }
 
@@ -2347,8 +2351,8 @@ function dmSetDate() {
   const inp = document.getElementById('dm-date');
   if (!inp) return;
   if (!_dmActiveDate) {
-    // Default to Feb 27 2026 (last day of data)
-    _dmActiveDate = '2026-02-27';
+    // Default to today's actual date
+    _dmActiveDate = new Date().toISOString().split('T')[0];
   }
   inp.value = _dmActiveDate;
   const d = new Date(_dmActiveDate + 'T00:00:00');
@@ -3541,6 +3545,19 @@ async function gsFetchNow() {
     });
 
     dmLsSave();
+
+    // ── Always advance active date to latest date in synced data ──
+    const today = new Date().toISOString().split('T')[0];
+    if (dates.size > 0) {
+      const latestFromSheet = [...dates].sort().pop();
+      // Use latest sheet date, but never go beyond today
+      _dmActiveDate = latestFromSheet <= today ? latestFromSheet : today;
+    } else {
+      // No date column — data was stored under _dmActiveDate (today)
+      _dmActiveDate = today;
+    }
+    dmSetDate(); // always update UI date label + input
+
     const sv2=(id,v)=>{const e=document.getElementById(id);if(e)e.textContent=v;};
     sv2('gs-last-sync', new Date().toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit'}));
     gsSetStatus('connected');
@@ -3915,13 +3932,15 @@ async function fbPollAll() {
 
     if (changed) {
       dmLsSave();
-      const dp = document.getElementById('tab-daily');
-      if (dp && dp.classList.contains('act')) {
-        renderDE(); renderDMDashboard(); renderReport(); renderAlerts(); renderHeatmap();
-        dmUpdateBadge();
+      // Advance active date to the latest date in _dmData, never beyond today
+      const today = new Date().toISOString().split('T')[0];
+      const allDates = Object.keys(_dmData).filter(k => /^\d{4}-\d{2}-\d{2}$/.test(k)).sort();
+      if (allDates.length) {
+        const latest = allDates[allDates.length - 1];
+        const best = latest <= today ? latest : today;
+        if (best !== _dmActiveDate) { _dmActiveDate = best; dmSetDate(); }
       }
-      // Always update the sidebar badge regardless of active tab
-      dmUpdateBadge();
+      gsRenderAll();
     }
 
     _fbLastSync = new Date();
