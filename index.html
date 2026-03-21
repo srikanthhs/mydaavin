@@ -3420,46 +3420,100 @@ function gsSetStatus(state) {
   _gsConnected = state === 'connected';
 }
 
-// ── CORS-safe fetch for Google Sheets CSV URLs ──────────────────────────────
-// Google Sheets published CSV URLs often return a 307 redirect to a
-// different Google domain. fetch() cannot follow cross-origin 307s from
-// a hosted page (CORS blocks it). Solution: always route Sheets URLs
-// through corsproxy.io which follows the redirect server-side.
+// ── CORS-safe fetch for Google Sheets ──────────────────────────────────────
+// Strategy (in order):
+//  1. Google's own gviz/tq endpoint — has native CORS headers, no proxy needed
+//  2. Direct CSV fetch (works if sheet is truly public and no redirect)
+//  3. sheets.lol proxy (built specifically for Google Sheets)
+//  4. thingproxy.freeboard.io
+// We never use corsproxy.io or allorigins.win — both block Vercel origins.
+
 function gsIsGoogleUrl(url) {
-  return /docs\.google\.com|drive\.google\.com|spreadsheets\.google/i.test(url);
+  return /docs\.google\.com|drive\.google\.com/i.test(url);
+}
+
+// Extract the published spreadsheet key from a /pub?output=csv URL
+// e.g. https://docs.google.com/spreadsheets/d/e/PACX-.../pub?output=csv
+//   or https://docs.google.com/spreadsheets/d/SHEET_ID/pub?output=csv
+function gsExtractSheetKey(url) {
+  // Published /e/KEY/ form
+  const pub = url.match(/spreadsheets\/d\/e\/([^\/\?]+)/);
+  if (pub) return { type: 'pub', key: pub[1] };
+  // Regular sheet ID form
+  const reg = url.match(/spreadsheets\/d\/([^\/\?]+)/);
+  if (reg) return { type: 'reg', key: reg[1] };
+  return null;
+}
+
+// Extract gid (sheet tab) from URL
+function gsExtractGid(url) {
+  const m = url.match(/[?&]gid=(\d+)/);
+  return m ? m[1] : '0';
 }
 
 async function gsFetchUrl(rawUrl, opts={}) {
-  // Always proxy Google Sheets/Drive URLs — the 307 redirect is cross-origin
-  // and cannot be followed by fetch() in a browser.
-  if (gsIsGoogleUrl(rawUrl)) {
-    // Strip _t cache-buster before proxying (Google sometimes rejects it)
-    const cleanUrl = rawUrl.replace(/[?&]_t=\d+/, '').replace(/&&/, '&').replace(/\?&/, '?');
-    const proxy = 'https://corsproxy.io/?' + encodeURIComponent(cleanUrl);
-    try {
-      const r = await fetch(proxy, {...opts, mode:'cors'});
-      if (r.ok) return r;
-      // If proxy also fails, log and throw
-      throw new Error('Proxy returned HTTP ' + r.status);
-    } catch(e) {
-      // Try allorigins as a secondary proxy fallback
-      const proxy2 = 'https://api.allorigins.win/raw?url=' + encodeURIComponent(cleanUrl);
-      return fetch(proxy2, {...opts, mode:'cors'});
-    }
-  }
-  // Non-Google URLs: try direct, proxy on CORS failure
-  try {
+  if (!gsIsGoogleUrl(rawUrl)) {
+    // Non-Google URL: direct fetch
     const r = await fetch(rawUrl, opts);
-    if (r.ok) return r;
-    if (r.status >= 400 && r.status < 500) return r; // real error, don't proxy
-    throw new Error('HTTP ' + r.status);
-  } catch(e) {
-    if (e instanceof TypeError || location.protocol === 'file:') {
-      const proxy = 'https://corsproxy.io/?' + encodeURIComponent(rawUrl);
-      return fetch(proxy, {...opts, mode:'cors'});
-    }
-    throw e;
+    return r;
   }
+
+  const info = gsExtractSheetKey(rawUrl);
+  const gid  = gsExtractGid(rawUrl);
+
+  // ── Strategy 1: Google gviz/tq CSV endpoint (native CORS, no proxy) ──────
+  // Works for published sheets. Returns CSV directly with Access-Control-Allow-Origin: *
+  if (info) {
+    const gvizBase = info.type === 'pub'
+      ? `https://docs.google.com/spreadsheets/d/e/${info.key}/gviz/tq`
+      : `https://docs.google.com/spreadsheets/d/${info.key}/gviz/tq`;
+    const gvizUrl = `${gvizBase}?tqx=out:csv&gid=${gid}`;
+    try {
+      const r = await fetch(gvizUrl, {cache:'no-store'});
+      if (r.ok) { gsLog(_gsSyncLogs,'✓ Fetched via Google gviz API','info'); return r; }
+    } catch(e) { /* try next */ }
+  }
+
+  // ── Strategy 2: Direct CSV fetch (sometimes works without redirect) ───────
+  const csvUrl = info
+    ? (info.type === 'pub'
+        ? `https://docs.google.com/spreadsheets/d/e/${info.key}/pub?output=csv&gid=${gid}`
+        : `https://docs.google.com/spreadsheets/d/${info.key}/export?format=csv&gid=${gid}`)
+    : rawUrl;
+  try {
+    const r = await fetch(csvUrl, {cache:'no-store'});
+    if (r.ok) { gsLog(_gsSyncLogs,'✓ Fetched directly','info'); return r; }
+  } catch(e) { /* try next */ }
+
+  // ── Strategy 3: sheets.lol (purpose-built Google Sheets proxy) ───────────
+  if (info) {
+    const sheetslol = info.type === 'pub'
+      ? `https://sheets.lol/api/rows/${info.key}/${gid}`
+      : `https://sheets.lol/api/rows/${info.key}/${gid}`;
+    try {
+      const r = await fetch(sheetslol, {cache:'no-store'});
+      if (r.ok) {
+        // sheets.lol returns JSON array of objects — convert to CSV text
+        const json = await r.json();
+        if (Array.isArray(json) && json.length > 0) {
+          const headers = Object.keys(json[0]).join(',');
+          const csvRows = json.map(row => Object.values(row).map(v => `"${(v||'').toString().replace(/"/g,'""')}"`).join(','));
+          gsLog(_gsSyncLogs,'✓ Fetched via sheets.lol','info');
+          // Return a Response-like object with .text() method
+          return new Response([headers, ...csvRows].join('\n'), {status:200});
+        }
+      }
+    } catch(e) { /* try next */ }
+  }
+
+  // ── Strategy 4: thingproxy ───────────────────────────────────────────────
+  try {
+    const tp = 'https://thingproxy.freeboard.io/fetch/' + csvUrl;
+    const r = await fetch(tp, {cache:'no-store'});
+    if (r.ok) { gsLog(_gsSyncLogs,'✓ Fetched via thingproxy','info'); return r; }
+  } catch(e) { /* all strategies failed */ }
+
+  throw new Error('All fetch strategies failed for Google Sheets URL. Check that the sheet is published (File → Share → Publish to web → CSV).');
 }
 
 async function gsTestConnection() {
