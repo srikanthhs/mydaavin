@@ -1970,8 +1970,9 @@ function boot(){
   }
   sv('chip-act','✓ '+AL.length+' Active');sv('chip-inact','✗ '+ZL.length+' Inactive');
   const ov=document.getElementById('loader');if(ov){ov.style.opacity='0';setTimeout(()=>ov.style.display='none',500);}
-  // Start Firebase sync
-  // Start Firebase sync
+  // Update sidebar badge with today's data state
+  setTimeout(dmUpdateBadge, 100);
+  // Start Firebase sync (800ms delay so DOM is fully ready)
   setTimeout(fbInit, 800);
 }
 window.addEventListener('DOMContentLoaded',()=>{document.getElementById('ldtxt').textContent='Computing metrics…';setTimeout(boot,300);});
@@ -2286,6 +2287,26 @@ const DM_BLOCK_SOC = {
 function dmLsSave() {
   try { localStorage.setItem(DM_LSK, JSON.stringify({data:_dmData, esc:_escalations})); } catch(e){}
 }
+function dmUpdateBadge() {
+  // Update the sidebar "Daily Monitoring" badge with today's reported count
+  const bdg = document.getElementById('dm-badge');
+  if (!bdg || !_ALL.length) return;
+  const activeList = _ALL.filter(s => s.total > 0 && s.active_days > 0);
+  const reported = activeList.filter(s => {
+    const e = _dmData[_dmActiveDate]?.[s.name];
+    return e && (e.mor !== null || e.eve !== null);
+  }).length;
+  const pct = Math.round(reported / activeList.length * 100);
+  if (reported === 0) {
+    bdg.style.background = '#f1f3f4'; bdg.style.color = '#5f6368'; bdg.textContent = 'Today';
+  } else if (pct < 50) {
+    bdg.style.background = '#fce8e6'; bdg.style.color = '#c5221f'; bdg.textContent = reported + ' reported';
+  } else if (pct < 90) {
+    bdg.style.background = '#fef7e0'; bdg.style.color = '#b06000'; bdg.textContent = pct + '%';
+  } else {
+    bdg.style.background = '#e6f4ea'; bdg.style.color = '#137333'; bdg.textContent = pct + '% ✓';
+  }
+}
 function dmLsLoad() {
   try {
     const d = JSON.parse(localStorage.getItem(DM_LSK)||'{}');
@@ -2485,6 +2506,7 @@ function dmSaveEntry() {
   renderDMDashboard();
   renderAlerts();
   renderReport();
+  dmUpdateBadge();
   gsAutoPushIfEnabled();  // push to Google Sheets if enabled
   fbWriteDay(dk);         // push to Firebase Firestore
 }
@@ -3126,7 +3148,7 @@ function xlImportData() {
       ${skipped>0?`<span style="color:var(--amber);margin-left:8px;">⚠ ${skipped} rows skipped (society name not matched)</span>`:''}`;
   }
   // Refresh current view
-  renderDE(); renderDMDashboard(); renderReport();
+  renderDE(); renderDMDashboard(); renderReport(); dmUpdateBadge();
   toast(`✓ Imported ${imported} rows from Excel`);
 }
 
@@ -3258,6 +3280,16 @@ function gsLoad() {
     if(d.plogs)    _gsPushLogs = d.plogs;
     gsRenderLog('gs-sync-log', _gsSyncLogs);
     gsRenderLog('gs-push-log', _gsPushLogs);
+    // AUTO-RESUME: if a URL was saved, fetch immediately and restart timer
+    if(d.csvUrl) {
+      setTimeout(gsFetchNow, 1500); // fetch on startup after DOM settles
+      const iv = parseInt(d.interval||'0');
+      if(iv > 0) {
+        if(_gsTimer) clearInterval(_gsTimer);
+        _gsTimer = setInterval(gsFetchNow, iv);
+        gsLog(_gsSyncLogs, '\u25b6 Auto-sync resumed (every ' + (iv/60000) + ' min) from saved settings', 'ok');
+      }
+    }
   } catch(e) {}
 }
 function gsSave() {
@@ -3300,28 +3332,16 @@ function gsSetStatus(state) {
   _gsConnected = state === 'connected';
 }
 
-// ── CORS proxy wrapper ─────────────────────────────────────
-// When opened as a local file (origin: null) browsers block direct
-// fetches to docs.google.com.  Route through a free CORS proxy so
-// the published-CSV URL works in both local and hosted contexts.
-function gsCorsUrl(rawUrl) {
-  // If already hosted on a real origin, try direct first; proxy as fallback.
-  // When origin is null (local file) always use proxy.
-  const isLocalFile = (location.protocol === 'file:' || location.origin === 'null');
-  if (!isLocalFile) return rawUrl;          // hosted → direct
-  return 'https://corsproxy.io/?' + encodeURIComponent(rawUrl);
-}
-
+// ── CORS proxy: needed when file is opened locally (origin: null) ──────────
 async function gsFetchUrl(rawUrl, opts={}) {
-  // Try direct first; if CORS error, retry through proxy
+  // Try direct first; on CORS/network failure, retry via corsproxy.io
   try {
-    const resp = await fetch(rawUrl, opts);
-    if (resp.ok || resp.type === 'opaque') return resp;
-    throw new Error('HTTP ' + resp.status);
+    const r = await fetch(rawUrl, opts);
+    if(r.ok) return r;
+    throw new Error('HTTP ' + r.status);
   } catch(e) {
-    // On CORS / network failure, fall back to proxy
-    const proxyUrl = 'https://corsproxy.io/?' + encodeURIComponent(rawUrl);
-    return fetch(proxyUrl, {...opts, mode:'cors'});
+    const proxy = 'https://corsproxy.io/?' + encodeURIComponent(rawUrl);
+    return fetch(proxy, {...opts, mode:'cors'});
   }
 }
 
@@ -3352,7 +3372,7 @@ async function gsFetchNow() {
   const url = document.getElementById('gs-csv-url')?.value?.trim();
   if(!url) { toast('No CSV URL configured', true); return; }
   gsSetStatus('syncing');
-  gsLog(_gsSyncLogs, 'Fetching data' + (location.protocol==='file:'?' (via CORS proxy)':'') + '…', 'info');
+  gsLog(_gsSyncLogs, 'Fetching data' + (location.protocol === 'file:' ? ' (via CORS proxy)' : '') + '…', 'info');
   gsRenderLog('gs-sync-log', _gsSyncLogs);
 
   try {
@@ -3401,7 +3421,7 @@ async function gsFetchNow() {
     gsSetStatus('connected');
     gsLog(_gsSyncLogs, `✓ Synced ${updated} rows across ${dates.size} date(s) from ${dataRows.length} total`, 'ok');
     gsSave();
-    renderDE(); renderDMDashboard(); renderReport();
+    renderDE(); renderDMDashboard(); renderReport(); dmUpdateBadge();
     toast(`✓ Synced ${updated} rows from Google Sheets`);
 
     // Show preview
@@ -3585,15 +3605,29 @@ let _fbReady     = false;
 let _fbLastSync  = null;
 
 // ── REST helpers ───────────────────────────────────────
+// fbFetch: CORS-safe fetch for Firestore REST.
+// When run from file:// the browser blocks cross-origin fetches;
+// we transparently retry via corsproxy.io on any network failure.
+async function _fbFetch(url, opts={}) {
+  try {
+    const r = await fetch(url, opts);
+    // 4xx from Firestore is a real error (not a CORS block) — return it directly
+    return r;
+  } catch(e) {
+    // Network/CORS failure — retry through proxy
+    const proxy = 'https://corsproxy.io/?' + encodeURIComponent(url);
+    return fetch(proxy, {...opts, mode:'cors'});
+  }
+}
 
 async function _fbGet(path) {
-  const r = await fetch(`${_FB_BASE}/${path}?key=${_FB_KEY}`);
+  const r = await _fbFetch(`${_FB_BASE}/${path}?key=${_FB_KEY}`);
   if (!r.ok) throw new Error(`${r.status} ${await r.text()}`);
   return r.json();
 }
 
 async function _fbPatch(path, doc) {
-  const r = await fetch(`${_FB_BASE}/${path}?key=${_FB_KEY}`, {
+  const r = await _fbFetch(`${_FB_BASE}/${path}?key=${_FB_KEY}`, {
     method: 'PATCH',
     headers: {'Content-Type':'application/json'},
     body: JSON.stringify(doc)
@@ -3603,7 +3637,7 @@ async function _fbPatch(path, doc) {
 }
 
 async function _fbList(col) {
-  const r = await fetch(`${_FB_BASE}/${col}?key=${_FB_KEY}&pageSize=200`);
+  const r = await _fbFetch(`${_FB_BASE}/${col}?key=${_FB_KEY}&pageSize=200`);
   if (!r.ok) throw new Error(`${r.status} ${await r.text()}`);
   return r.json();
 }
@@ -3654,6 +3688,27 @@ function _objToFields(obj) {
   return fields;
 }
 
+// ── Firebase UI helpers ────────────────────────────────────
+function fbStatusTxt(msg) {
+  const el = document.getElementById('fb-status-txt');
+  if (el) el.textContent = msg;
+}
+function fbSetDot(state) {
+  // state: 'live' | 'syncing' | 'err'
+  document.querySelectorAll('.fb-dot').forEach(d => {
+    d.classList.remove('live', 'syncing', 'err');
+    if (state) d.classList.add(state);
+  });
+}
+function fbBanner(type, msg) {
+  // type: 'syn' | 'ok' | 'err' | '' (hide)
+  const b = document.getElementById('fb-banner');
+  const t = document.getElementById('fb-banner-txt');
+  if (!b) return;
+  b.className = type || '';
+  if (t && msg) t.textContent = msg;
+}
+
 // ── Init ───────────────────────────────────────────────
 
 async function fbInit() {
@@ -3662,7 +3717,7 @@ async function fbInit() {
 
   try {
     // Quick connectivity check — list dailyData collection
-    const r = await fetch(`${_FB_BASE}/dailyData?key=${_FB_KEY}&pageSize=1`);
+    const r = await _fbFetch(`${_FB_BASE}/dailyData?key=${_FB_KEY}&pageSize=1`);
     if (!r.ok) {
       const body = await r.text();
       if (r.status === 403) {
@@ -3733,8 +3788,10 @@ async function fbPollAll() {
       dmLsSave();
       const dp = document.getElementById('tab-daily');
       if (dp && dp.classList.contains('act')) {
-        renderDE(); renderDMDashboard(); renderReport();
+        renderDE(); renderDMDashboard(); renderReport(); renderAlerts(); renderHeatmap();
       }
+      // Always update the sidebar badge regardless of active tab
+      dmUpdateBadge();
     }
 
     _fbLastSync = new Date();
