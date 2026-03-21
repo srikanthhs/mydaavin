@@ -1541,76 +1541,74 @@ function goTab(id,el){
 function rebuildAllFromDmData() {
   if (!_dmData || !Object.keys(_dmData).length) return;
 
-  // Gather all dates in _dmData, sorted
+  // All valid date keys, sorted
   const allDates = Object.keys(_dmData)
     .filter(k => /^\d{4}-\d{2}-\d{2}$/.test(k))
     .sort();
   if (!allDates.length) return;
 
-  // Use the most recent N days (up to 27) for stats
+  // Use the most recent 27 days for stats
   const windowDates = allDates.slice(-27);
   const N = windowDates.length;
 
-  // Rebuild each society in _ALL
   _ALL.forEach(s => {
+    // dailyTotals: null = no data received, number = actual reported value (including 0)
     const dailyTotals = windowDates.map(dk => {
       const e = _dmData[dk]?.[s.name];
-      if (!e) return null;
-      const mor = e.mor ?? 0;
-      const eve = e.eve ?? 0;
-      return (mor + eve) > 0 ? Math.round((mor + eve) * 10) / 10 : null;
+      if (!e) return null;                            // no entry = no data
+      const mor = e.mor ?? null;
+      const eve = e.eve ?? null;
+      if (mor === null && eve === null) return null;  // entry exists but both fields absent
+      return Math.round(((mor ?? 0) + (eve ?? 0)) * 10) / 10;  // 0 is valid
     });
 
-    const recorded = dailyTotals.filter(v => v !== null);
-    if (recorded.length === 0) return; // no data yet, keep SEED
+    const withData = dailyTotals.filter(v => v !== null); // days where data was received
+    if (withData.length === 0) return; // no data for this society, keep existing
 
-    // total: sum of all recorded days
-    s.total = Math.round(recorded.reduce((a, b) => a + b, 0) * 10) / 10;
+    // total: sum of all days that have data
+    s.total = Math.round(withData.reduce((a, b) => a + b, 0) * 10) / 10;
 
-    // active_days: days with >0 collection
-    s.active_days = recorded.filter(v => v > 0).length;
+    // active_days: days with actual collection > 0
+    s.active_days = withData.filter(v => v > 0).length;
 
-    // daily_avg: average over active days
+    // daily_avg: mean of days with >0 collection
     s.daily_avg = s.active_days > 0
       ? Math.round(s.total / s.active_days * 10) / 10
       : 0;
 
-    // consistency: % of window days with data
-    s.consistency = Math.round(recorded.length / N * 100);
+    // consistency: % of window days for which data was received
+    s.consistency = Math.round(withData.length / N * 100);
 
-    // daily[]: fill array aligned to windowDates (0 for missing days)
+    // daily[]: full window array — null days become 0 for charting
     s.daily = dailyTotals.map(v => v === null ? 0 : v);
 
-    // trend: compare last 7 days avg vs previous 7 days avg
-    const last7  = s.daily.slice(-7).filter(v => v > 0);
-    const prev7  = s.daily.slice(-14, -7).filter(v => v > 0);
-    const avgL   = last7.length  ? last7.reduce((a,b)=>a+b,0)/last7.length   : 0;
-    const avgP   = prev7.length  ? prev7.reduce((a,b)=>a+b,0)/prev7.length   : 0;
-    s.trend = avgP === 0 ? 'stable'
+    // trend: last 7 reported days avg vs previous 7 reported days avg
+    const last7vals  = s.daily.slice(-7).filter(v => v > 0);
+    const prev7vals  = s.daily.slice(-14, -7).filter(v => v > 0);
+    const avgL = last7vals.length  ? last7vals.reduce((a,b)=>a+b,0)/last7vals.length   : 0;
+    const avgP = prev7vals.length  ? prev7vals.reduce((a,b)=>a+b,0)/prev7vals.length   : 0;
+    s.trend = avgP === 0 ? (avgL > 0 ? 'stable' : 'stable')
             : avgL > avgP * 1.05 ? 'up'
             : avgL < avgP * 0.95 ? 'down'
             : 'stable';
   });
 
-  // Rebuild META.myl (district daily totals) from _dmData
-  const distDailyTotals = windowDates.map(dk => {
+  // Rebuild META.myl (district daily totals) — sum across ALL societies per day
+  META.myl = windowDates.map(dk => {
     const dayData = _dmData[dk] || {};
-    return Object.values(dayData).reduce((sum, e) => {
-      return sum + ((e.mor ?? 0) + (e.eve ?? 0));
-    }, 0);
+    return Math.round(
+      Object.values(dayData).reduce((sum, e) => sum + ((e.mor ?? 0) + (e.eve ?? 0)), 0)
+      * 10) / 10;
   });
-  META.myl = distDailyTotals.map(v => Math.round(v * 10) / 10);
 
-  // Update DAYS labels to match window
-  const dayLabels = windowDates.map(dk => {
-    const d = new Date(dk + 'T00:00:00');
-    return d.toLocaleDateString('en-IN', { day:'numeric', month:'short' });
-  });
-  // DAYS is const so we mutate in place
+  // Update DAYS axis labels to actual date strings
   DAYS.length = 0;
-  dayLabels.forEach(l => DAYS.push(l));
+  windowDates.forEach(dk => {
+    const d = new Date(dk + 'T00:00:00');
+    DAYS.push(d.toLocaleDateString('en-IN', { day:'numeric', month:'short' }));
+  });
 
-  // Update morPct from actual data
+  // Recompute morPct from last 7 days of actual data
   let totalMor = 0, totalEve = 0;
   allDates.slice(-7).forEach(dk => {
     Object.values(_dmData[dk] || {}).forEach(e => {
@@ -3651,7 +3649,10 @@ async function gsFetchNow() {
         // Collect all date entries for this row
         const byDate = {};
         Object.entries(colDateMap).forEach(([colIdx, {date, field}]) => {
-          const val = parseFloat(row[colIdx]);
+          const raw = row[colIdx];
+          // Empty cell = no data. '0' or 0 = explicit zero (reported nothing collected).
+          if (raw === '' || raw === null || raw === undefined) return;
+          const val = parseFloat(raw);
           if (isNaN(val) || val < 0) return;
           if (!byDate[date]) byDate[date] = {mor:null, eve:null, total:null};
           if (field === 'mor')   byDate[date].mor   = val;
@@ -3738,6 +3739,20 @@ async function gsFetchNow() {
     gsSetStatus('connected');
     gsLog(_gsSyncLogs, `✓ Synced ${updated} entries across ${dates.size} date(s) from ${rows.length} total rows`, 'ok');
     if (skipped > 0) gsLog(_gsSyncLogs, `⚠ Skipped ${skipped} — unmatched: ${noMatch.slice(0,5).join(', ')}${noMatch.length>5?' …':''}`, 'err');
+
+    // ── Data verification log ──
+    rebuildAllFromDmData();
+    const latestDk = [...dates].sort().pop() || _dmActiveDate;
+    const dayEntries = Object.entries(_dmData[latestDk] || {});
+    const distTotal = dayEntries.reduce((s,[,e])=>s+(e.mor??0)+(e.eve??0),0);
+    const topSocs = dayEntries
+      .map(([name,e])=>({name, tot:(e.mor??0)+(e.eve??0)}))
+      .filter(x=>x.tot>0)
+      .sort((a,b)=>b.tot-a.tot).slice(0,3)
+      .map(x=>`${x.name}:${x.tot.toFixed(1)}L`).join(', ');
+    gsLog(_gsSyncLogs,
+      `📊 ${latestDk}: ${dayEntries.length} societies, district total ${distTotal.toFixed(1)} L. Top: ${topSocs||'—'}`,
+      'ok');
     gsSave();
     gsRenderAll();
     fbSaveAppState(); // persist rebuilt _ALL + META to Firestore
