@@ -3300,6 +3300,31 @@ function gsSetStatus(state) {
   _gsConnected = state === 'connected';
 }
 
+// ── CORS proxy wrapper ─────────────────────────────────────
+// When opened as a local file (origin: null) browsers block direct
+// fetches to docs.google.com.  Route through a free CORS proxy so
+// the published-CSV URL works in both local and hosted contexts.
+function gsCorsUrl(rawUrl) {
+  // If already hosted on a real origin, try direct first; proxy as fallback.
+  // When origin is null (local file) always use proxy.
+  const isLocalFile = (location.protocol === 'file:' || location.origin === 'null');
+  if (!isLocalFile) return rawUrl;          // hosted → direct
+  return 'https://corsproxy.io/?' + encodeURIComponent(rawUrl);
+}
+
+async function gsFetchUrl(rawUrl, opts={}) {
+  // Try direct first; if CORS error, retry through proxy
+  try {
+    const resp = await fetch(rawUrl, opts);
+    if (resp.ok || resp.type === 'opaque') return resp;
+    throw new Error('HTTP ' + resp.status);
+  } catch(e) {
+    // On CORS / network failure, fall back to proxy
+    const proxyUrl = 'https://corsproxy.io/?' + encodeURIComponent(rawUrl);
+    return fetch(proxyUrl, {...opts, mode:'cors'});
+  }
+}
+
 async function gsTestConnection() {
   const url = document.getElementById('gs-csv-url')?.value?.trim();
   if(!url) { toast('Paste a published CSV URL first', true); return; }
@@ -3307,7 +3332,7 @@ async function gsTestConnection() {
   gsLog(_gsSyncLogs, 'Testing connection…', 'info');
   gsRenderLog('gs-sync-log', _gsSyncLogs);
   try {
-    const resp = await fetch(url, {cache:'no-store'});
+    const resp = await gsFetchUrl(url, {cache:'no-store'});
     if(!resp.ok) throw new Error('HTTP ' + resp.status);
     const text = await resp.text();
     const lines = text.trim().split('\n').filter(Boolean);
@@ -3327,11 +3352,11 @@ async function gsFetchNow() {
   const url = document.getElementById('gs-csv-url')?.value?.trim();
   if(!url) { toast('No CSV URL configured', true); return; }
   gsSetStatus('syncing');
-  gsLog(_gsSyncLogs, 'Fetching data…', 'info');
+  gsLog(_gsSyncLogs, 'Fetching data' + (location.protocol==='file:'?' (via CORS proxy)':'') + '…', 'info');
   gsRenderLog('gs-sync-log', _gsSyncLogs);
 
   try {
-    const resp = await fetch(url + (url.includes('?') ? '&' : '?') + '_t=' + Date.now(), {cache:'no-store'});
+    const resp = await gsFetchUrl(url + (url.includes('?') ? '&' : '?') + '_t=' + Date.now(), {cache:'no-store'});
     if(!resp.ok) throw new Error('HTTP ' + resp.status);
     const text = await resp.text();
     const wb = XLSX.read(text, {type:'string'});
