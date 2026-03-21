@@ -2173,7 +2173,7 @@ function boot(){
   // _ALL starts empty — will be populated from Firestore in fbLoadAppState()
   _ALL = SEED.length ? SEED.map(s=>({...s})) : [];
   // Always set active date to TODAY
-  _dmActiveDate = new Date().toISOString().split('T')[0];
+  _dmActiveDate = (()=>{const _d=new Date();return _d.getFullYear()+'-'+String(_d.getMonth()+1).padStart(2,'0')+'-'+String(_d.getDate()).padStart(2,'0')})();
   // Recompute _ALL from any locally cached _dmData immediately (offline support)
   if (_ALL.length) rebuildAllFromDmData();
   // Render a skeleton UI immediately so the page isn't blank
@@ -2514,7 +2514,7 @@ function dmSetDate() {
   if (!inp) return;
   if (!_dmActiveDate) {
     // Default to today's actual date
-    _dmActiveDate = new Date().toISOString().split('T')[0];
+    _dmActiveDate = (()=>{const _d=new Date();return _d.getFullYear()+'-'+String(_d.getMonth()+1).padStart(2,'0')+'-'+String(_d.getDate()).padStart(2,'0')})();
   }
   inp.value = _dmActiveDate;
   const d = new Date(_dmActiveDate + 'T00:00:00');
@@ -2559,13 +2559,7 @@ function dmGetEntry(socName) {
   const dk = _dmActiveDate;
   if (!_dmData[dk]) _dmData[dk] = {};
   if (!_dmData[dk][socName]) {
-    // Prefill from SEED daily data if available
-    const s = _ALL.find(x => x.name === socName);
-    const idx = dmDayIdx(dk);
-    const val = (s && idx >= 0 && s.daily[idx] !== undefined) ? s.daily[idx] : null;
-    const mor = val !== null ? Math.round(val * 0.58 * 10) / 10 : null;
-    const eve = val !== null ? Math.round(val * 0.42 * 10) / 10 : null;
-    _dmData[dk][socName] = {mor: mor, eve: eve, note: '', saved: val !== null};
+    _dmData[dk][socName] = {mor: null, eve: null, note: '', saved: false};
   }
   return _dmData[dk][socName];
 }
@@ -2579,17 +2573,29 @@ function dmGetTotal(socName, dateStr) {
 }
 
 function dm7dayAvg(s) {
-  const idx = dmDayIdx(_dmActiveDate);
-  if (idx < 0) return s.daily_avg;
-  const start = Math.max(0, idx - 6);
-  const vals = s.daily.slice(start, idx).filter(v => v > 0);
-  return vals.length > 0 ? Math.round(vals.reduce((a,b)=>a+b,0)/vals.length*10)/10 : s.daily_avg;
+  // Compute 7-day rolling avg from actual _dmData (not s.daily which may be stale)
+  const allDates = Object.keys(_dmData).filter(k=>/^\d{4}-\d{2}-\d{2}$/.test(k)).sort();
+  const activeIdx = allDates.indexOf(_dmActiveDate);
+  const lookback = activeIdx >= 0 ? allDates.slice(Math.max(0, activeIdx-7), activeIdx) : allDates.slice(-7);
+  const vals = lookback.map(dk=>{
+    const e = _dmData[dk]?.[s.name];
+    if(!e) return null;
+    const t = (e.mor??0)+(e.eve??0);
+    return t > 0 ? t : null;
+  }).filter(v=>v!==null);
+  if(vals.length > 0) return Math.round(vals.reduce((a,b)=>a+b,0)/vals.length*10)/10;
+  // Fallback to s.daily_avg from _ALL
+  return s.daily_avg || 0;
 }
 
 function dmGetYday(s) {
-  const idx = dmDayIdx(_dmActiveDate);
+  const allDates = Object.keys(_dmData).filter(k=>/^\d{4}-\d{2}-\d{2}$/.test(k)).sort();
+  const idx = allDates.indexOf(_dmActiveDate);
   if (idx <= 0) return null;
-  return s.daily[idx-1];
+  const ydayDk = allDates[idx-1];
+  const e = _dmData[ydayDk]?.[s.name];
+  if (!e) return null;
+  return (e.mor??0)+(e.eve??0);
 }
 
 // ── DATA ENTRY RENDER ────────────────────────────────────
@@ -2612,8 +2618,10 @@ function renderDE() {
     const t = dmGetTotal(s.name);
     if (t !== null) { todayTotal += t; reported++; }
   });
-  const ydayIdx = dmDayIdx(_dmActiveDate) - 1;
-  const ydayTotal = ydayIdx >= 0 ? activeList.reduce((a,s) => a + (s.daily[ydayIdx]||0), 0) : 0;
+  const _rdeAllDates2 = Object.keys(_dmData).filter(k=>/^\d{4}-\d{2}-\d{2}$/.test(k)).sort();
+  const _rdeTodIdx2 = _rdeAllDates2.indexOf(_dmActiveDate);
+  const _rdeYdDk2 = _rdeTodIdx2 > 0 ? _rdeAllDates2[_rdeTodIdx2-1] : null;
+  const ydayTotal = _rdeYdDk2 ? activeList.reduce((a,s)=>{const e=_dmData[_rdeYdDk2]?.[s.name];return a+((e?.mor??0)+(e?.eve??0));},0) : 0;
   const diff = todayTotal - ydayTotal;
   const sv2 = (id, v) => { const e = document.getElementById(id); if(e) e.textContent = v; };
   sv2('dm-total-today', todayTotal > 0 ? Math.round(todayTotal).toLocaleString('en-IN') + ' L' : '— L');
@@ -2800,13 +2808,17 @@ function renderDMDashboard() {
   sv2('dm-kpi-low', lowList.length);
   sv2('dm-kpi-low-names', lowList.slice(0,3).join(', ')+(lowList.length>3?' +more':''));
 
-  // vs yesterday chip
-  const ydayIdx = dayIdx - 1;
-  const ydayTot = ydayIdx>=0 ? activeList.reduce((a,s)=>a+(s.daily[ydayIdx]||0),0) : 0;
+  // vs yesterday chip — use _dmData directly
+  const allDatesForYday = Object.keys(_dmData).filter(k=>/^\d{4}-\d{2}-\d{2}$/.test(k)).sort();
+  const todayIdxForYday = allDatesForYday.indexOf(dk);
+  const ydayDk = todayIdxForYday > 0 ? allDatesForYday[todayIdxForYday-1] : null;
+  const ydayTot = ydayDk ? activeList.reduce((a,s)=>{
+    const e=_dmData[ydayDk]?.[s.name]; return a+((e?.mor??0)+(e?.eve??0));
+  },0) : 0;
   const diff = totalToday - ydayTot;
   const cmpEl = document.getElementById('dm-kpi-total-cmp');
   if(cmpEl) {
-    cmpEl.innerHTML = ydayTot>0 ? `<span class="cmp-chip ${diff>=0?'cmp-up':'cmp-dn'}">${diff>=0?'▲':'▼'} ${Math.abs(Math.round(diff)).toLocaleString()} L vs yesterday</span>` : '';
+    cmpEl.innerHTML = ydayTot>0 ? `<span class="cmp-chip ${diff>=0?'cmp-up':'cmp-dn'}">${diff>=0?'▲':'▼'} ${Math.abs(Math.round(diff)).toLocaleString()} L vs ${ydayDk}</span>` : '';
   }
 
   // Block cards
@@ -2853,17 +2865,15 @@ function renderDMDashboard() {
     return `<div class="rpt-line"><span>${x.s.name}</span><span><span class="cmp-chip ${pct<70?'cmp-dn':'cmp-eq'}">${pct}% of avg</span> <span style="font-family:var(--mono);font-size:11px;color:var(--txt2);">${Math.round(x.t||0)} L</span></span></div>`;
   }).join(''));
 
-  // 7-day trend chart
-  const labels=[], distTotals=[];
-  for(let i=6;i>=0;i--) {
-    const idx = dayIdx-i;
-    if(idx<0||idx>26){labels.push('');distTotals.push(0);continue;}
-    labels.push('Feb '+(idx+1));
-    distTotals.push(Math.round(activeList.reduce((a,s)=>a+(s.daily[idx]||0),0)));
-  }
+  // 7-day trend chart — use actual _dmData dates
+  const _allD = Object.keys(_dmData).filter(k=>/^\d{4}-\d{2}-\d{2}$/.test(k)).sort();
+  const _todI = _allD.indexOf(dk);
+  const _win7 = _todI >= 0 ? _allD.slice(Math.max(0,_todI-6), _todI+1) : _allD.slice(-7);
+  const labels7 = _win7.map(d=>new Date(d+'T00:00:00').toLocaleDateString('en-IN',{day:'numeric',month:'short'}));
+  const distTotals7 = _win7.map(d=>Math.round(activeList.reduce((a,s)=>{const e=_dmData[d]?.[s.name];return a+((e?.mor??0)+(e?.eve??0));},0)));
   if(_dm7dayChart){_dm7dayChart.destroy();_dm7dayChart=null;}
   const ctx = document.getElementById('dm-7day-chart');
-  if(ctx) _dm7dayChart = new Chart(ctx,{type:'bar',data:{labels,datasets:[{label:'District Total',data:distTotals,backgroundColor:distTotals.map((v,i)=>i===6?'#1a73e8':'#c5d9f7'),borderRadius:4,borderWidth:0}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{grid:{display:false},ticks:{font:{size:11}}},y:{ticks:{font:{size:11},callback:v=>v.toLocaleString()},grid:{color:'rgba(0,0,0,0.06)'}}}}});
+  if(ctx) _dm7dayChart = new Chart(ctx,{type:'bar',data:{labels:labels7,datasets:[{label:'District Total',data:distTotals7,backgroundColor:distTotals7.map((_,i)=>i===distTotals7.length-1?'#1a73e8':'#c5d9f7'),borderRadius:4,borderWidth:0}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{grid:{display:false},ticks:{font:{size:11}}},y:{ticks:{font:{size:11},callback:v=>v.toLocaleString()},grid:{color:'rgba(0,0,0,0.06)'}}}}});
 }
 
 // ── ALERTS ENGINE ────────────────────────────────────────
@@ -2874,7 +2884,8 @@ function renderAlerts() {
 function dmGenerateAlerts() {
   if(!_ALL.length) return;
   const activeList = _ALL.filter(s=>s.total>0&&s.active_days>0);
-  const dayIdx = dmDayIdx(_dmActiveDate);
+  const _agAllD = Object.keys(_dmData).filter(k=>/^\d{4}-\d{2}-\d{2}$/.test(k)).sort();
+  const _agTodI = _agAllD.indexOf(_dmActiveDate);
   const alerts = [];
 
   activeList.forEach(s => {
@@ -2896,8 +2907,8 @@ function dmGenerateAlerts() {
       alerts.push({type:'warning',icon:'⚠️',title:`${name} — Below average (${Math.round(t/avg*100)}%)`,desc:`Today: ${Math.round(t)} L vs 7-day avg: ${avg} L.`,action:`Monitor. If continues for 2 more days, escalate.`,soc:name});
     }
     // Consecutive miss check (3 days with low/zero from SEED daily)
-    else if(dayIdx>=3) {
-      const last3 = s.daily.slice(dayIdx-3, dayIdx);
+    else if(_agTodI>=3) {
+      const last3 = _agAllD.slice(Math.max(0,_agTodI-3),_agTodI).map(d=>{const e=_dmData[d]?.[name];return(e?.mor??0)+(e?.eve??0);});
       if(last3.every(v=>v<avg*0.6)) {
         alerts.push({type:'warning',icon:'📊',title:`${name} — 3-day declining trend`,desc:`Last 3 days all below 60% of average. Today: ${Math.round(t)} L.`,action:`Schedule field visit. Check: new society nearby? farmer grievance?`,soc:name});
       }
@@ -2985,34 +2996,54 @@ function renderHeatmap() {
   const q = (document.getElementById('hm-search')?.value||'').toLowerCase();
   let socs = _ALL.filter(s=>s.total>0&&s.active_days>0);
   if(_hmActiveFilt==='declining') socs=socs.filter(s=>s.trend==='down');
-  if(_hmActiveFilt==='growing') socs=socs.filter(s=>s.trend==='up');
+  if(_hmActiveFilt==='growing')   socs=socs.filter(s=>s.trend==='up');
   if(q) socs=socs.filter(s=>s.name.toLowerCase().includes(q));
 
-  const dayLabels = Array.from({length:27},(_,i)=>(i+1).toString());
+  // Use actual window dates from _dmData
+  const allDates = Object.keys(_dmData).filter(k=>/^\d{4}-\d{2}-\d{2}$/.test(k)).sort();
+  const windowDates = allDates.slice(-27);
+  const N = windowDates.length || 27;
+
+  // Day labels: just the day number + short month
+  const dayLabels = windowDates.map(dk => {
+    const d = new Date(dk+'T00:00:00');
+    return d.toLocaleDateString('en-IN',{day:'numeric',month:'short'});
+  });
 
   function heatColor(pct) {
     if(pct===null) return '#e8eaed';
-    if(pct<=0) return '#fce8e6';
-    if(pct<50) return '#f28b82';
-    if(pct<75) return '#fdd663';
-    if(pct<95) return '#81c995';
-    if(pct<120) return '#1e8e3e';
+    if(pct<=0)   return '#fce8e6';
+    if(pct<50)   return '#f28b82';
+    if(pct<75)   return '#fdd663';
+    if(pct<95)   return '#81c995';
+    if(pct<120)  return '#1e8e3e';
     return '#0d652d';
   }
 
-  const header = `<div style="display:grid;grid-template-columns:160px repeat(27,1fr);gap:2px;margin-bottom:3px;">
+  const header = `<div style="display:grid;grid-template-columns:160px repeat(${N},1fr);gap:2px;margin-bottom:3px;">
     <div style="font-size:9px;font-family:var(--mono);color:var(--txt3);padding-left:2px;">Society</div>
-    ${dayLabels.map(d=>`<div style="font-size:8px;font-family:var(--mono);color:var(--txt3);text-align:center;">${d}</div>`).join('')}
+    ${dayLabels.map(d=>`<div style="font-size:8px;font-family:var(--mono);color:var(--txt3);text-align:center;writing-mode:vertical-lr;transform:rotate(180deg);height:32px;overflow:hidden;">${d}</div>`).join('')}
   </div>`;
 
   const rows = socs.map(s => {
-    const avg = s.daily.filter(v=>v>0).reduce((a,b)=>a+b,0) / (s.daily.filter(v=>v>0).length||1);
-    const cells = s.daily.map((v,i)=>{
-      const pct = avg>0 ? Math.round(v/avg*100) : null;
-      const bg = heatColor(v>0?pct:v===0&&s.daily.slice(0,i).some(x=>x>0)?0:null);
-      return `<div class="hm-cell" style="background:${bg};" title="Feb ${i+1}: ${v} L (${pct!==null?pct+'% of avg':'no collection'})">${v>0?'':''}</div>`;
+    // Build daily values aligned to windowDates
+    const dailyVals = windowDates.map(dk => {
+      const e = _dmData[dk]?.[s.name];
+      if(!e) return null;
+      return ((e.mor??0)+(e.eve??0));
+    });
+    const activeDayVals = dailyVals.filter(v=>v!==null&&v>0);
+    const avg = activeDayVals.length ? activeDayVals.reduce((a,b)=>a+b,0)/activeDayVals.length : 0;
+
+    const cells = dailyVals.map((v,i)=>{
+      const pct = v===null ? null : (avg>0 ? Math.round(v/avg*100) : (v>0?100:0));
+      const bg = heatColor(v===null ? null : (v===0 && i>0 ? 0 : pct));
+      const label = windowDates[i] ? new Date(windowDates[i]+'T00:00:00').toLocaleDateString('en-IN',{day:'numeric',month:'short'}) : '';
+      const tip = v===null ? `${label}: no data` : `${label}: ${v.toFixed(1)} L${avg>0?' ('+Math.round(v/avg*100)+'% of avg)':''}`;
+      return `<div class="hm-cell" style="background:${bg};" title="${tip}"></div>`;
     }).join('');
-    return `<div style="display:grid;grid-template-columns:160px repeat(27,1fr);gap:2px;margin-bottom:2px;align-items:center;">
+
+    return `<div style="display:grid;grid-template-columns:160px repeat(${N},1fr);gap:2px;margin-bottom:2px;align-items:center;">
       <div style="font-size:10px;color:var(--txt);padding-right:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;" title="${s.name}">${s.name}</div>
       ${cells}
     </div>`;
@@ -3110,7 +3141,6 @@ function escDelete(idx) {
 function renderReport() {
   if(!_ALL.length) return;
   const activeList = _ALL.filter(s=>s.total>0&&s.active_days>0);
-  const dayIdx = dmDayIdx(_dmActiveDate);
   const d = new Date(_dmActiveDate+'T00:00:00');
   const dStr = d.toLocaleDateString('en-IN',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
 
@@ -3118,8 +3148,10 @@ function renderReport() {
   const reported = activeList.filter(s=>dmGetTotal(s.name)!==null).length;
   const missed = activeList.filter(s=>{const t=dmGetTotal(s.name);return t===0||t===null;});
   const low = activeList.filter(s=>{const t=dmGetTotal(s.name);const avg=dm7dayAvg(s);return t!==null&&t>0&&avg>0&&t/avg<0.7;});
-  const ydayIdx = dayIdx-1;
-  const ydayTotal = ydayIdx>=0 ? activeList.reduce((a,s)=>a+(s.daily[ydayIdx]||0),0) : 0;
+  const _rptAllD = Object.keys(_dmData).filter(k=>/^\d{4}-\d{2}-\d{2}$/.test(k)).sort();
+  const _rptTodI = _rptAllD.indexOf(_dmActiveDate);
+  const _rptYdDk = _rptTodI>0?_rptAllD[_rptTodI-1]:null;
+  const ydayTotal = _rptYdDk ? activeList.reduce((a,s)=>{const e=_dmData[_rptYdDk]?.[s.name];return a+((e?.mor??0)+(e?.eve??0));},0) : 0;
 
   const sh2=(id,v)=>{const e=document.getElementById(id);if(e)e.innerHTML=v;};
   // Section 1
@@ -3356,7 +3388,7 @@ function xlImportData() {
         dk = `${d.y}-${String(d.m).padStart(2,'0')}-${String(d.d).padStart(2,'0')}`;
       } else {
         const parsed = new Date(raw);
-        if (!isNaN(parsed)) dk = parsed.toISOString().split('T')[0];
+        if (!isNaN(parsed)) dk = parsed.getFullYear()+'-'+String(parsed.getMonth()+1).padStart(2,'0')+'-'+String(parsed.getDate()).padStart(2,'0');
       }
     }
     dates.add(dk);
@@ -3420,9 +3452,8 @@ function xlExportWorkbook() {
     dates.forEach(dk => {
       activeList.forEach(s => {
         const e = _dmData[dk]?.[s.name];
-        const dayIdx = dmDayIdx(dk);
-        const mor = e?.mor ?? (dayIdx>=0 ? Math.round(s.daily[dayIdx]*0.58*10)/10 : null);
-        const eve = e?.eve ?? (dayIdx>=0 ? Math.round(s.daily[dayIdx]*0.42*10)/10 : null);
+        const mor = e?.mor ?? null;
+        const eve = e?.eve ?? null;
         const tot = (mor||0)+(eve||0);
         const avg = dm7dayAvg(s);
         const pct = avg>0 ? Math.round(tot/avg*100) : 0;
@@ -3748,19 +3779,66 @@ async function gsFetchNow() {
 
     // ── Parse a date value from a cell ───────────────────────────
     function parseDate(raw) {
-      if (!raw && raw !== 0) return null;
-      if (typeof raw === 'number') {
-        try { const d = XLSX.SSF.parse_date_code(raw); return `${d.y}-${String(d.m).padStart(2,'0')}-${String(d.d).padStart(2,'0')}`; } catch(e) {}
+      if (raw === null || raw === undefined || raw === '') return null;
+
+      // Excel date serial number
+      if (typeof raw === 'number' && raw > 1000) {
+        try {
+          const d = XLSX.SSF.parse_date_code(raw);
+          return `${d.y}-${String(d.m).padStart(2,'0')}-${String(d.d).padStart(2,'0')}`;
+        } catch(e) {}
       }
+
       const s = raw.toString().trim();
-      // dd-mm-yyyy, dd/mm/yyyy, dd.mm.yyyy
+      if (!s) return null;
+
+      // Already ISO: yyyy-mm-dd
+      if (/^\d{4}-\d{2}-\d{2}$/.test(s)) return s;
+
+      // dd-mm-yyyy  /  dd/mm/yyyy  /  dd.mm.yyyy  (Indian standard)
       const dmy = s.match(/^(\d{1,2})[-\/\.](\d{1,2})[-\/\.](\d{2,4})$/);
-      if (dmy) { const y = dmy[3].length===2?'20'+dmy[3]:dmy[3]; return `${y}-${dmy[2].padStart(2,'0')}-${dmy[1].padStart(2,'0')}`; }
-      // yyyy-mm-dd
-      const iso = s.match(/^(\d{4})-(\d{2})-(\d{2})$/);
-      if (iso) return s;
-      // "01 Mar 2026", "1-Mar-26", etc.
-      const p = new Date(s); if (!isNaN(p)) return p.toISOString().split('T')[0];
+      if (dmy) {
+        const day = dmy[1].padStart(2,'0');
+        const mon = dmy[2].padStart(2,'0');
+        const yr  = dmy[3].length === 2 ? '20' + dmy[3] : dmy[3];
+        // Validate: month must be 1-12, day must be 1-31
+        if (parseInt(mon) >= 1 && parseInt(mon) <= 12 &&
+            parseInt(day) >= 1 && parseInt(day) <= 31) {
+          return `${yr}-${mon}-${day}`;
+        }
+        // If month>12 and day<=12, likely mm-dd-yyyy — swap
+        if (parseInt(dmy[1]) <= 12 && parseInt(dmy[2]) > 12) {
+          return `${yr}-${dmy[1].padStart(2,'0')}-${dmy[2].padStart(2,'0')}`;
+        }
+      }
+
+      // "1-Mar-26", "01-Mar-2026", "1 Mar 2026", "Mar 1", "Mar-01" etc.
+      const months = {jan:1,feb:2,mar:3,apr:4,may:5,jun:6,
+                      jul:7,aug:8,sep:9,oct:10,nov:11,dec:12};
+      const mname = s.match(/(\d{1,2})[\s\-\/]([a-zA-Z]{3})[\s\-\/]?(\d{2,4})?/);
+      if (mname) {
+        const day = mname[1].padStart(2,'0');
+        const mon = months[mname[2].toLowerCase().slice(0,3)];
+        if (mon) {
+          const yr = mname[3]
+            ? (mname[3].length === 2 ? '20' + mname[3] : mname[3])
+            : new Date().getFullYear().toString();
+          return `${yr}-${String(mon).padStart(2,'0')}-${day}`;
+        }
+      }
+      // "Mar 1" or "Mar-01" (no year — use current year)
+      const monly = s.match(/^([a-zA-Z]{3})[\s\-](\d{1,2})$/);
+      if (monly) {
+        const mon = months[monly[1].toLowerCase()];
+        if (mon) return `${new Date().getFullYear()}-${String(mon).padStart(2,'0')}-${monly[2].padStart(2,'0')}`;
+      }
+
+      // Fallback: let browser parse — but use local date components to avoid timezone shift
+      const p = new Date(s);
+      if (!isNaN(p)) {
+        // Use local year/month/day to avoid UTC-to-local offset stripping day
+        return `${p.getFullYear()}-${String(p.getMonth()+1).padStart(2,'0')}-${String(p.getDate()).padStart(2,'0')}`;
+      }
       return null;
     }
 
@@ -3846,7 +3924,7 @@ async function gsFetchNow() {
       }
 
       // Last resort: use today's date for any Mor column with no date
-      const today0 = new Date().toISOString().split('T')[0];
+      const today0 = (()=>{const _d=new Date();return _d.getFullYear()+'-'+String(_d.getMonth()+1).padStart(2,'0')+'-'+String(_d.getDate()).padStart(2,'0')})();
       if (Object.keys(colDateMap).length === 0) {
         for (let c = 0; c < subHdr.length; c++) {
           if (subHdr[c] === 'mor' || subHdr[c] === 'morning') {
@@ -3858,6 +3936,8 @@ async function gsFetchNow() {
       }
 
       gsLog(_gsSyncLogs, `Pivot: mapped ${Object.keys(colDateMap).length} data columns across ${new Set(Object.values(colDateMap).map(x=>x.date)).size} date(s)`, 'info');
+      const uniqueDates = [...new Set(Object.values(colDateMap).map(x=>x.date))].sort();
+      if (uniqueDates.length) gsLog(_gsSyncLogs, `Dates found: ${uniqueDates.slice(0,5).join(', ')}${uniqueDates.length>5?' … ('+uniqueDates.length+' total)':''}`, 'info');
 
       // Parse data rows
       const dataRows = rows.slice(firstDataIdx).filter(r => r.some(c => c !== ''));
@@ -3946,7 +4026,7 @@ async function gsFetchNow() {
     dmLsSave();
 
     // ── Advance active date to latest synced date ──
-    const today = new Date().toISOString().split('T')[0];
+    const today = (()=>{const _d=new Date();return _d.getFullYear()+'-'+String(_d.getMonth()+1).padStart(2,'0')+'-'+String(_d.getDate()).padStart(2,'0')})();
     if (dates.size > 0) {
       const latest = [...dates].sort().pop();
       _dmActiveDate = latest <= today ? latest : today;
@@ -4068,9 +4148,8 @@ async function gsPushToday() {
   const activeList = _ALL.filter(s=>s.total>0&&s.active_days>0);
   const rows = activeList.map(s=>{
     const e = _dmData[_dmActiveDate]?.[s.name];
-    const dayIdx = dmDayIdx(_dmActiveDate);
-    const mor = e?.mor ?? (dayIdx>=0?Math.round(s.daily[dayIdx]*0.58*10)/10:0);
-    const eve = e?.eve ?? (dayIdx>=0?Math.round(s.daily[dayIdx]*0.42*10)/10:0);
+    const mor = e?.mor ?? 0;
+    const eve = e?.eve ?? 0;
     const tot = (mor||0)+(eve||0);
     const avg = dm7dayAvg(s);
     const pct = avg>0?Math.round(tot/avg*100):0;
@@ -4086,7 +4165,9 @@ async function gsPushMonth() {
   for(const dk of _pushDates) {
     activeList.forEach(s=>{
       const e = _dmData[dk]?.[s.name];
-      const v = s.daily[di]||0;
+      // use _dmData directly for accuracy
+      const _xde = _dmData[dk]?.[s.name];
+      const v = _xde ? (((_xde.mor??0)+(_xde.eve??0))) : 0;
       const mor = e?.mor ?? Math.round(v*0.58*10)/10;
       const eve = e?.eve ?? Math.round(v*0.42*10)/10;
       const tot = (mor||0)+(eve||0);
@@ -4701,7 +4782,7 @@ async function fbPollAll() {
     if (changed) {
       dmLsSave();
       // Advance active date to the latest date in _dmData, never beyond today
-      const today = new Date().toISOString().split('T')[0];
+      const today = (()=>{const _d=new Date();return _d.getFullYear()+'-'+String(_d.getMonth()+1).padStart(2,'0')+'-'+String(_d.getDate()).padStart(2,'0')})();
       const allDates = Object.keys(_dmData).filter(k => /^\d{4}-\d{2}-\d{2}$/.test(k)).sort();
       if (allDates.length) {
         const latest = allDates[allDates.length - 1];
