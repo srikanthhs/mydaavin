@@ -3008,20 +3008,42 @@ let _xlActiveSheet = 0;
 
 // Expected column names (dashboard → possible Excel names)
 const XL_COL_ALIASES = {
-  date:    ['date','תאריך','día','datum','дата'],
-  society: ['society','name','centre','center','society name','milk society','village'],
-  morning: ['morning','mor','morning_l','morning(l)','am','am(l)','am collection','காலை'],
-  evening: ['evening','eve','evening_l','evening(l)','pm','pm(l)','pm collection','மாலை'],
-  total:   ['total','total_l','total(l)','daily total','collection'],
-  notes:   ['notes','note','remarks','comments','observation']
+  date:    ['date','தேதி','நாள்','dt','தேதி','day','fecha','datum','дата'],
+  society: ['society','society name','societyname','society_name',
+            'name','soc name','soc','centre','center','milk society',
+            'village','கிராமம்','சங்கம்','சொசைட்டி','mpcs','dcs',
+            'sl.no','s.no','society / dcs name','dcs name','society/dcs',
+            'sl no','slno','organisation','org'],
+  morning: ['morning','mor','morning_l','morning(l)','morning l',
+            'am','am(l)','am collection','காலை','காலை (லி)','காலை(லி)',
+            'mor(l)','morning shift','shift1','am shift'],
+  evening: ['evening','eve','evening_l','evening(l)','evening l',
+            'pm','pm(l)','pm collection','மாலை','மாலை (லி)','மாலை(லி)',
+            'eve(l)','evening shift','shift2','pm shift'],
+  total:   ['total','total_l','total(l)','total l','daily total',
+            'collection','மொத்தம்','tot','tot(l)','grand total',
+            'day total','quantity','qty','litres','liters','ltr'],
+  notes:   ['notes','note','remarks','comments','observation','குறிப்பு']
 };
 
 function xlFindCol(headers, dashKey) {
   const aliases = XL_COL_ALIASES[dashKey] || [dashKey];
   const h = headers.map(x => (x||'').toString().toLowerCase().trim());
+  // Pass 1: exact match
   for (const alias of aliases) {
     const idx = h.indexOf(alias.toLowerCase());
     if (idx >= 0) return idx;
+  }
+  // Pass 2: header contains alias (e.g. "Morning (Litres)" contains "morning")
+  for (const alias of aliases) {
+    const al = alias.toLowerCase();
+    const idx = h.findIndex(hdr => hdr.includes(al));
+    if (idx >= 0) return idx;
+  }
+  // Pass 3: alias contains header word (e.g. header "mor" matches alias "morning")
+  for (let i = 0; i < h.length; i++) {
+    if (!h[i]) continue;
+    if (aliases.some(a => a.toLowerCase().startsWith(h[i]) && h[i].length >= 3)) return i;
   }
   return -1;
 }
@@ -3461,12 +3483,22 @@ async function gsFetchNow() {
     const rows = XLSX.utils.sheet_to_json(ws, {header:1, defval:''});
     if(rows.length < 2) { gsLog(_gsSyncLogs,'Sheet appears empty','info'); gsRenderLog('gs-sync-log',_gsSyncLogs); return; }
 
-    const headers = rows[0];
+    // ── Auto-detect header row ──
+    // Scan up to first 10 rows for the one that contains a recognisable column name.
+    // This handles sheets where row 1 is a title/empty and data starts on row 2 or 3.
+    const allAliases = Object.values(XL_COL_ALIASES).flat().map(a => a.toLowerCase());
+    let headerRowIdx = 0;
+    for (let i = 0; i < Math.min(10, rows.length); i++) {
+      const candidate = rows[i].map(c => (c||'').toString().toLowerCase().trim());
+      const matched = candidate.filter(c => c && allAliases.includes(c)).length;
+      if (matched >= 1) { headerRowIdx = i; break; }
+    }
+    const headers  = rows[headerRowIdx].map(c => (c||'').toString().trim());
+    const dataRows = rows.slice(headerRowIdx + 1).filter(r => r.some(c => c !== ''));
+    gsLog(_gsSyncLogs, `Header row detected at row ${headerRowIdx + 1}: [${headers.filter(Boolean).join(' | ')}]`, 'info');
+
     _xlColMap = {};
     Object.keys(XL_COL_ALIASES).forEach(key => { _xlColMap[key] = xlFindCol(headers, key); });
-
-    // ── Diagnostic: log detected columns ──
-    gsLog(_gsSyncLogs, `Headers detected: [${headers.join(' | ')}]`, 'info');
     gsLog(_gsSyncLogs, `Column map → society:${_xlColMap.society} date:${_xlColMap.date} morning:${_xlColMap.morning} evening:${_xlColMap.evening} total:${_xlColMap.total}`, 'info');
 
     // ── Guard: society column must be found ──
@@ -3489,7 +3521,6 @@ async function gsFetchNow() {
 
     const overwrite = document.getElementById('gs-overwrite')?.checked ?? true; // default true
     let updated = 0, skipped = 0, noMatch = [], dates = new Set();
-    const dataRows = rows.slice(1).filter(r=>r.some(c=>c!==''));
 
     dataRows.forEach(row => {
       const socIdx  = _xlColMap.society;
