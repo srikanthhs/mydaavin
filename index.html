@@ -1665,7 +1665,33 @@ function goTab(id,el){
 }
 
 
-// ── CHART OPT ──
+// ── gsRenderAll: re-render whichever top-level tab is currently visible ──
+// Called after every GS sync or Firebase poll so the user sees live data
+// regardless of which tab they're on.
+function gsRenderAll() {
+  dmUpdateBadge();
+  // Always refresh Daily tab internals (they use _dmData)
+  const dailyPanel = document.getElementById('tab-daily');
+  if (dailyPanel && dailyPanel.classList.contains('act')) {
+    renderDE(); renderDMDashboard(); renderHeatmap(); renderAlerts(); renderReport();
+    return;
+  }
+  // For Overview / NDDB / Society tabs — recompute _ALL totals from _dmData then re-render
+  const AL = _ALL.filter(s=>s.total>0&&s.active_days>0);
+  const ZL = _ALL.filter(s=>!s.total||s.total===0);
+  const totL = _ALL.reduce((a,s)=>a+(s.total||0),0);
+  if (document.getElementById('tab-overview')?.classList.contains('act')) {
+    renderOV(_ALL,AL,ZL);
+  }
+  if (document.getElementById('tab-nddb')?.classList.contains('act')) {
+    renderNDDB(_ALL,AL,ZL,totL);
+  }
+  if (document.getElementById('tab-societies')?.classList.contains('act')) {
+    renderSoc(_ALL,AL);
+  }
+}
+
+
 const CO=(label,data,color)=>({label,data,borderColor:color,backgroundColor:color.replace(')',',0.06)').replace('rgb','rgba'),tension:0.35,pointRadius:2,borderWidth:2.5,fill:true});
 const CO2=(label,data,color,dash)=>({label,data,borderColor:color,tension:0.35,pointRadius:0,borderWidth:2,borderDash:dash||[]});
 const COPTS=(cb)=>({responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{ticks:{font:{size:11},autoSkip:true,maxRotation:0},grid:{display:false}},y:{ticks:{font:{size:11},callback:cb||null},grid:{color:'rgba(0,0,0,0.06)'}}}});
@@ -1972,6 +1998,8 @@ function boot(){
   const ov=document.getElementById('loader');if(ov){ov.style.opacity='0';setTimeout(()=>ov.style.display='none',500);}
   // Update sidebar badge with today's data state
   setTimeout(dmUpdateBadge, 100);
+  // Start Google Sheets auto-sync (reads from localStorage, no DOM needed)
+  setTimeout(gsBootInit, 1000);
   // Start Firebase sync (800ms delay so DOM is fully ready)
   setTimeout(fbInit, 800);
 }
@@ -3111,8 +3139,17 @@ function xlImportData() {
 
     if (socIdx < 0) return;
     const rawName = (row[socIdx] || '').toString().trim().toUpperCase();
-    const match = _ALL.find(s => s.name.toUpperCase() === rawName ||
-      s.name.toUpperCase().includes(rawName) || rawName.includes(s.name.toUpperCase().substring(0,6)));
+    if (!rawName) return;
+    const norm = s => s.toUpperCase().replace(/\s+/g,' ').trim();
+    const match = _ALL.find(s => {
+      const sn = norm(s.name), rn = norm(rawName);
+      if (sn === rn) return true;
+      if (sn.replace(/\s/g,'') === rn.replace(/\s/g,'')) return true;
+      if (sn.includes(rn) || rn.includes(sn)) return true;
+      const sw = sn.split(' ')[0], rw = rn.split(' ')[0];
+      if (sw.length >= 5 && sw === rw) return true;
+      return false;
+    });
     if (!match) { skipped++; return; }
 
     // Parse date
@@ -3148,7 +3185,7 @@ function xlImportData() {
       ${skipped>0?`<span style="color:var(--amber);margin-left:8px;">⚠ ${skipped} rows skipped (society name not matched)</span>`:''}`;
   }
   // Refresh current view
-  renderDE(); renderDMDashboard(); renderReport(); dmUpdateBadge();
+  gsRenderAll();
   toast(`✓ Imported ${imported} rows from Excel`);
 }
 
@@ -3268,39 +3305,64 @@ let _gsConnected  = false;
 let _gsSyncLogs   = [];
 let _gsPushLogs   = [];
 const GS_LSK      = 'myl_gs_v4';
+let _gsCfg        = { csvUrl:'', webhookUrl:'', interval:'0', autopush:false }; // in-memory config
 
-function gsLoad() {
+// ── gsBootInit: called at page boot — reads localStorage into memory, no DOM needed ──
+function gsBootInit() {
   try {
     const d = JSON.parse(localStorage.getItem(GS_LSK)||'{}');
-    if(d.csvUrl)   document.getElementById('gs-csv-url').value  = d.csvUrl;
-    if(d.webhookUrl) document.getElementById('gs-webhook-url').value = d.webhookUrl;
-    if(d.interval && document.getElementById('gs-interval')) document.getElementById('gs-interval').value = d.interval;
-    if(d.autopush !== undefined && document.getElementById('gs-autopush')) document.getElementById('gs-autopush').checked = d.autopush;
-    if(d.logs)     _gsSyncLogs = d.logs;
-    if(d.plogs)    _gsPushLogs = d.plogs;
-    gsRenderLog('gs-sync-log', _gsSyncLogs);
-    gsRenderLog('gs-push-log', _gsPushLogs);
-    // AUTO-RESUME: if a URL was saved, fetch immediately and restart timer
-    if(d.csvUrl) {
-      setTimeout(gsFetchNow, 1500); // fetch on startup after DOM settles
-      const iv = parseInt(d.interval||'0');
-      if(iv > 0) {
-        if(_gsTimer) clearInterval(_gsTimer);
+    _gsCfg.csvUrl     = d.csvUrl     || '';
+    _gsCfg.webhookUrl = d.webhookUrl || '';
+    _gsCfg.interval   = d.interval   || '0';
+    _gsCfg.autopush   = d.autopush   || false;
+    if (d.logs)  _gsSyncLogs = d.logs;
+    if (d.plogs) _gsPushLogs = d.plogs;
+
+    // Start auto-sync timer immediately if URL is saved
+    if (_gsCfg.csvUrl) {
+      setTimeout(gsFetchNow, 2000); // first fetch 2s after boot
+      const iv = parseInt(_gsCfg.interval || '0');
+      if (iv > 0) {
+        if (_gsTimer) clearInterval(_gsTimer);
         _gsTimer = setInterval(gsFetchNow, iv);
-        gsLog(_gsSyncLogs, '\u25b6 Auto-sync resumed (every ' + (iv/60000) + ' min) from saved settings', 'ok');
+        gsLog(_gsSyncLogs, '\u25b6 Auto-sync resumed (every ' + (iv/60000) + ' min)', 'ok');
       }
     }
   } catch(e) {}
 }
+
+function gsLoad() {
+  // Populate DOM from _gsCfg (safe to call any time, tab must be open)
+  try {
+    const d = JSON.parse(localStorage.getItem(GS_LSK)||'{}');
+    if(d.csvUrl)    { const el=document.getElementById('gs-csv-url');    if(el) el.value = d.csvUrl; }
+    if(d.webhookUrl){ const el=document.getElementById('gs-webhook-url');if(el) el.value = d.webhookUrl; }
+    if(d.interval)  { const el=document.getElementById('gs-interval');   if(el) el.value = d.interval; }
+    if(d.autopush !== undefined){ const el=document.getElementById('gs-autopush'); if(el) el.checked = d.autopush; }
+    if(d.logs)  _gsSyncLogs = d.logs;
+    if(d.plogs) _gsPushLogs = d.plogs;
+    gsRenderLog('gs-sync-log', _gsSyncLogs);
+    gsRenderLog('gs-push-log', _gsPushLogs);
+    // Sync _gsCfg from DOM now that DOM is populated
+    _gsCfg.csvUrl     = document.getElementById('gs-csv-url')?.value     || _gsCfg.csvUrl;
+    _gsCfg.webhookUrl = document.getElementById('gs-webhook-url')?.value || _gsCfg.webhookUrl;
+    _gsCfg.interval   = document.getElementById('gs-interval')?.value    || _gsCfg.interval;
+  } catch(e) {}
+}
 function gsSave() {
   try {
+    // Prefer DOM values; fall back to _gsCfg when tab is not open
+    const csvUrl     = document.getElementById('gs-csv-url')?.value     || _gsCfg.csvUrl;
+    const webhookUrl = document.getElementById('gs-webhook-url')?.value || _gsCfg.webhookUrl;
+    const interval   = document.getElementById('gs-interval')?.value    || _gsCfg.interval;
+    const autopush   = document.getElementById('gs-autopush')?.checked  ?? _gsCfg.autopush;
+    // Keep _gsCfg in sync
+    _gsCfg.csvUrl = csvUrl; _gsCfg.webhookUrl = webhookUrl;
+    _gsCfg.interval = interval; _gsCfg.autopush = autopush;
     localStorage.setItem(GS_LSK, JSON.stringify({
-      csvUrl:     document.getElementById('gs-csv-url')?.value||'',
-      webhookUrl: document.getElementById('gs-webhook-url')?.value||'',
-      interval:   document.getElementById('gs-interval')?.value||'0',
-      autopush:   document.getElementById('gs-autopush')?.checked||false,
-      logs:       _gsSyncLogs.slice(-30),
-      plogs:      _gsPushLogs.slice(-30)
+      csvUrl, webhookUrl, interval, autopush,
+      logs:  _gsSyncLogs.slice(-30),
+      plogs: _gsPushLogs.slice(-30)
     }));
   } catch(e){}
 }
@@ -3333,15 +3395,23 @@ function gsSetStatus(state) {
 }
 
 // ── CORS proxy: needed when file is opened locally (origin: null) ──────────
+// On Vercel/https the direct fetch works; only proxy when it genuinely fails.
 async function gsFetchUrl(rawUrl, opts={}) {
-  // Try direct first; on CORS/network failure, retry via corsproxy.io
+  // On a real https origin, try direct first without triggering proxy on 4xx
   try {
     const r = await fetch(rawUrl, opts);
-    if(r.ok) return r;
+    // 2xx/3xx — success
+    if (r.ok) return r;
+    // 4xx from Google (e.g. sheet not published) — real error, don't proxy
+    if (r.status >= 400 && r.status < 500) return r;
     throw new Error('HTTP ' + r.status);
   } catch(e) {
-    const proxy = 'https://corsproxy.io/?' + encodeURIComponent(rawUrl);
-    return fetch(proxy, {...opts, mode:'cors'});
+    // TypeError = network/CORS block (not a real HTTP response) → use proxy
+    if (e instanceof TypeError || location.protocol === 'file:') {
+      const proxy = 'https://corsproxy.io/?' + encodeURIComponent(rawUrl);
+      return fetch(proxy, {...opts, mode:'cors'});
+    }
+    throw e; // rethrow real errors
   }
 }
 
@@ -3369,8 +3439,11 @@ async function gsTestConnection() {
 }
 
 async function gsFetchNow() {
-  const url = document.getElementById('gs-csv-url')?.value?.trim();
+  // Read URL from DOM if available, else fall back to in-memory _gsCfg (tab may not be open)
+  const url = (document.getElementById('gs-csv-url')?.value?.trim()) || _gsCfg.csvUrl;
   if(!url) { toast('No CSV URL configured', true); return; }
+  // Keep _gsCfg in sync
+  _gsCfg.csvUrl = url;
   gsSetStatus('syncing');
   gsLog(_gsSyncLogs, 'Fetching data' + (location.protocol === 'file:' ? ' (via CORS proxy)' : '') + '…', 'info');
   gsRenderLog('gs-sync-log', _gsSyncLogs);
@@ -3388,30 +3461,82 @@ async function gsFetchNow() {
     _xlColMap = {};
     Object.keys(XL_COL_ALIASES).forEach(key => { _xlColMap[key] = xlFindCol(headers, key); });
 
-    const overwrite = document.getElementById('gs-overwrite')?.checked;
-    let updated = 0, dates = new Set();
+    // ── Diagnostic: log detected columns ──
+    gsLog(_gsSyncLogs, `Headers detected: [${headers.join(' | ')}]`, 'info');
+    gsLog(_gsSyncLogs, `Column map → society:${_xlColMap.society} date:${_xlColMap.date} morning:${_xlColMap.morning} evening:${_xlColMap.evening} total:${_xlColMap.total}`, 'info');
+
+    // ── Guard: society column must be found ──
+    if (_xlColMap.society < 0) {
+      gsLog(_gsSyncLogs, `✗ Cannot find society/name column. Sheet headers: [${headers.join(', ')}]. Expected one of: society, name, centre, village`, 'err');
+      gsSetStatus('warning');
+      gsRenderLog('gs-sync-log', _gsSyncLogs);
+      toast('Sync failed — no society/name column found. Check sheet headers.', true);
+      return;
+    }
+
+    // ── Guard: at least one value column must be found ──
+    if (_xlColMap.morning < 0 && _xlColMap.evening < 0 && _xlColMap.total < 0) {
+      gsLog(_gsSyncLogs, `✗ No value columns found (morning/evening/total). Sheet headers: [${headers.join(', ')}]`, 'err');
+      gsSetStatus('warning');
+      gsRenderLog('gs-sync-log', _gsSyncLogs);
+      toast('Sync failed — no morning/evening/total column found. Check sheet headers.', true);
+      return;
+    }
+
+    const overwrite = document.getElementById('gs-overwrite')?.checked ?? true; // default true
+    let updated = 0, skipped = 0, noMatch = [], dates = new Set();
     const dataRows = rows.slice(1).filter(r=>r.some(c=>c!==''));
 
     dataRows.forEach(row => {
-      const socIdx  = _xlColMap.society; if(socIdx<0) return;
+      const socIdx  = _xlColMap.society;
       const rawName = (row[socIdx]||'').toString().trim().toUpperCase();
-      const match   = _ALL.find(s=>s.name.toUpperCase()===rawName||rawName.includes(s.name.toUpperCase().slice(0,6)));
-      if(!match) return;
+      if (!rawName) return;
+
+      // ── Robust name matching (exact → normalised → partial) ──
+      const norm = s => s.toUpperCase().replace(/\s+/g,' ').trim();
+      const match = _ALL.find(s => {
+        const sn = norm(s.name), rn = norm(rawName);
+        if (sn === rn) return true;                          // exact
+        if (sn.replace(/\s/g,'') === rn.replace(/\s/g,'')) return true; // spaces ignored
+        if (sn.includes(rn) || rn.includes(sn)) return true; // one contains other
+        // first-word match (e.g. "KURAVALUR" matches "KURAVALUR MPCS")
+        const sw = sn.split(' ')[0], rw = rn.split(' ')[0];
+        if (sw.length >= 5 && sw === rw) return true;
+        return false;
+      });
+
+      if (!match) {
+        if (!noMatch.includes(rawName)) noMatch.push(rawName);
+        skipped++;
+        return;
+      }
 
       let dk = _dmActiveDate;
       const dateIdx = _xlColMap.date;
-      if(dateIdx>=0 && row[dateIdx]) {
-        const raw=row[dateIdx];
-        if(typeof raw==='number'){const d=XLSX.SSF.parse_date_code(raw);dk=`${d.y}-${String(d.m).padStart(2,'0')}-${String(d.d).padStart(2,'0')}`;}
-        else{const p=new Date(raw);if(!isNaN(p))dk=p.toISOString().split('T')[0];}
+      if (dateIdx >= 0 && row[dateIdx]) {
+        const raw = row[dateIdx];
+        if (typeof raw === 'number') {
+          const d = XLSX.SSF.parse_date_code(raw);
+          dk = `${d.y}-${String(d.m).padStart(2,'0')}-${String(d.d).padStart(2,'0')}`;
+        } else {
+          const p = new Date(raw);
+          if (!isNaN(p)) dk = p.toISOString().split('T')[0];
+        }
       }
       dates.add(dk);
-      if(!_dmData[dk]) _dmData[dk]={};
-      if(!overwrite && _dmData[dk][match.name]?.saved) return;
-      const morIdx=_xlColMap.morning, eveIdx=_xlColMap.evening, notIdx=_xlColMap.notes;
-      const mor=morIdx>=0?parseFloat(row[morIdx])||null:null;
-      const eve=eveIdx>=0?parseFloat(row[eveIdx])||null:null;
-      _dmData[dk][match.name]={mor,eve,note:notIdx>=0?(row[notIdx]||'').toString():'',saved:true};
+      if (!_dmData[dk]) _dmData[dk] = {};
+      if (!overwrite && _dmData[dk][match.name]?.saved) { skipped++; return; }
+
+      const morIdx = _xlColMap.morning, eveIdx = _xlColMap.evening;
+      const totIdx = _xlColMap.total,   notIdx = _xlColMap.notes;
+      let mor = morIdx >= 0 ? parseFloat(row[morIdx]) || null : null;
+      let eve = eveIdx >= 0 ? parseFloat(row[eveIdx]) || null : null;
+      // If only total column exists, split 58/42
+      if (mor === null && eve === null && totIdx >= 0) {
+        const tot = parseFloat(row[totIdx]) || null;
+        if (tot) { mor = Math.round(tot * 0.58 * 10) / 10; eve = Math.round(tot * 0.42 * 10) / 10; }
+      }
+      _dmData[dk][match.name] = { mor, eve, note: notIdx >= 0 ? (row[notIdx]||'').toString() : '', saved: true };
       updated++;
     });
 
@@ -3419,10 +3544,11 @@ async function gsFetchNow() {
     const sv2=(id,v)=>{const e=document.getElementById(id);if(e)e.textContent=v;};
     sv2('gs-last-sync', new Date().toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit'}));
     gsSetStatus('connected');
-    gsLog(_gsSyncLogs, `✓ Synced ${updated} rows across ${dates.size} date(s) from ${dataRows.length} total`, 'ok');
+    gsLog(_gsSyncLogs, `✓ Synced ${updated} rows across ${dates.size} date(s) from ${dataRows.length} total rows`, 'ok');
+    if (skipped > 0) gsLog(_gsSyncLogs, `⚠ Skipped ${skipped} rows — unmatched names: ${noMatch.slice(0,5).join(', ')}${noMatch.length>5?' …':''}`, 'err');
     gsSave();
-    renderDE(); renderDMDashboard(); renderReport(); dmUpdateBadge();
-    toast(`✓ Synced ${updated} rows from Google Sheets`);
+    gsRenderAll();
+    toast(updated > 0 ? `✓ Synced ${updated} rows from Google Sheets` : `⚠ 0 rows synced — check sync log for details`, updated > 0 ? undefined : true);
 
     // Show preview
     const pw = document.getElementById('gs-last-preview-wrap');
@@ -3444,6 +3570,9 @@ function gsStartSync() {
   if(_gsTimer) clearInterval(_gsTimer);
   const interval = parseInt(document.getElementById('gs-interval')?.value||'0');
   if(!interval) { toast('Select an interval first (not "Manual only")', true); return; }
+  // Persist URL and interval into _gsCfg so timer survives tab switches
+  _gsCfg.csvUrl   = document.getElementById('gs-csv-url')?.value?.trim() || _gsCfg.csvUrl;
+  _gsCfg.interval = String(interval);
   gsFetchNow();
   _gsTimer = setInterval(gsFetchNow, interval);
   gsLog(_gsSyncLogs, `▶ Auto-sync started every ${interval/60000} min`, 'ok');
@@ -3789,6 +3918,7 @@ async function fbPollAll() {
       const dp = document.getElementById('tab-daily');
       if (dp && dp.classList.contains('act')) {
         renderDE(); renderDMDashboard(); renderReport(); renderAlerts(); renderHeatmap();
+        dmUpdateBadge();
       }
       // Always update the sidebar badge regardless of active tab
       dmUpdateBadge();
