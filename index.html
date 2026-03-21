@@ -477,7 +477,7 @@ input[type=range]{accent-color:var(--blue);cursor:pointer;width:100%;height:4px;
     <div class="sb-sec">DAILY OPS</div>
     <div class="sb-item" onclick="goTab('daily',this)"><div class="sb-ico">📅</div><div class="sb-lbl">Daily Monitoring</div><div class="sb-bdg" id="dm-badge" style="background:#e6f4ea;color:#137333;">Today</div></div>
   </div>
-  <div class="sb-foot">Thanjavur DCMPU · NDDB Anand<br>Feb 2026 + 20th Livestock Census
+  <div class="sb-foot">Thanjavur DCMPU · NDDB Anand<br>Current data + 20th Livestock Census
     <div class="fb-indicator"><div class="fb-dot" id="fb-dot"></div><span id="fb-status-txt">Firebase: connecting…</span></div>
   </div>
 </div>
@@ -486,10 +486,10 @@ input[type=range]{accent-color:var(--blue);cursor:pointer;width:100%;height:4px;
   <div class="topbar">
     <button class="mob-ham" onclick="openMobSB()" aria-label="Open menu">☰</button>
     <div style="display:flex;align-items:center;gap:10px;min-width:0;flex:1;">
-      <div style="min-width:0;"><div class="pg-title" id="pgtitle">Overview — Feb 2026</div><div class="pg-sub">Mayiladuthurai District Milk Procurement</div></div>
+      <div style="min-width:0;"><div class="pg-title" id="pgtitle">Overview</div><div class="pg-sub">Mayiladuthurai District Milk Procurement</div></div>
     </div>
     <div class="tb-chips">
-      <span class="chip ch-b">Feb 2026</span>
+      <span class="chip ch-b" id="chip-period">—</span>
       <span class="chip ch-g" id="chip-act">50 Active</span>
       <span class="chip ch-r" id="chip-inact">13 Inactive</span>
       <span class="chip ch-a">238 Unserved</span>
@@ -506,7 +506,7 @@ input[type=range]{accent-color:var(--blue);cursor:pointer;width:100%;height:4px;
     <button onclick="clrFilt()" style="margin-left:auto;background:none;border:none;color:var(--blue);font-size:12px;font-weight:500;cursor:pointer;">✕ Clear</button>
   </div>
   <div class="g6">
-    <div class="kcard kc-b" onclick="tgFilt('all','kc-total')" id="kc-total"><div class="kc-lbl">Monthly Total</div><div class="kc-val kv-b" id="kv-total">—</div><div class="kc-sub">litres · Feb 2026</div></div>
+    <div class="kcard kc-b" onclick="tgFilt('all','kc-total')" id="kc-total"><div class="kc-lbl">Monthly Total</div><div class="kc-val kv-b" id="kv-total">—</div><div class="kc-sub">litres · current period</div></div>
     <div class="kcard kc-g" onclick="tgFilt('active','kc-active')" id="kc-active"><div class="kc-lbl">Active Centres</div><div class="kc-val kv-g" id="kv-active">—</div><div class="kc-sub">of 63 · click to filter</div></div>
     <div class="kcard kc-r" onclick="tgFilt('inactive','kc-inactive')" id="kc-inactive"><div class="kc-lbl">Inactive Centres</div><div class="kc-val kv-r" id="kv-inactive">—</div><div class="kc-sub">zero production</div></div>
     <div class="kcard kc-a" onclick="tgFilt('partial','kc-partial')" id="kc-partial"><div class="kc-lbl">Partial (&lt;80%)</div><div class="kc-val kv-a" id="kv-partial">—</div><div class="kc-sub">inconsistent</div></div>
@@ -561,28 +561,86 @@ input[type=range]{accent-color:var(--blue);cursor:pointer;width:100%;height:4px;
 
 <!-- COMPARISON -->
 <div id="tab-comparison" class="tab-panel">
+  <!-- Date selector row -->
+  <div class="frow" style="margin-bottom:12px;align-items:center;gap:10px;flex-wrap:wrap;">
+    <div style="font-size:13px;font-weight:500;color:var(--txt);">📅 Select Date for Comparison:</div>
+    <select id="comp-date-sel" class="ctrl" style="width:160px;" onchange="renderComp()">
+      <option value="">— pick a date —</option>
+    </select>
+    <div class="tb-chips" style="margin-left:auto;">
+      <span class="chip ch-b" id="comp-date-label">—</span>
+    </div>
+  </div>
+
+  <!-- KPI cards — all live from _dmData -->
   <div class="g4" style="margin-bottom:12px;">
-    <div class="kcard kc-b"><div class="kc-lbl">Mayiladuthurai</div><div class="kc-val kv-b" id="comp-myl">—</div><div class="kc-sub">63 societies</div></div>
-    <div class="kcard kc-a"><div class="kc-lbl">Thanjavur</div><div class="kc-val kv-a">7,27,578</div><div class="kc-sub">319 soc · 296 active</div></div>
-    <div class="kcard kc-g"><div class="kc-lbl">Tiruvarur</div><div class="kc-val kv-g">4,78,558</div><div class="kc-sub">68 soc · 45 active</div></div>
-    <div class="kcard kc-r"><div class="kc-lbl">Nagapattinam</div><div class="kc-val kv-r">19,159</div><div class="kc-sub">53 soc · 32 active</div></div>
+    <div class="kcard kc-b">
+      <div class="kc-lbl">MYL — Today</div>
+      <div class="kc-val kv-b" id="comp-myl-day">—</div>
+      <div class="kc-sub" id="comp-myl-soc">— societies reported</div>
+    </div>
+    <div class="kcard kc-a">
+      <div class="kc-lbl">MYL — Month Total</div>
+      <div class="kc-val kv-a" id="comp-myl-month">—</div>
+      <div class="kc-sub" id="comp-myl-days">— days of data</div>
+    </div>
+    <div class="kcard kc-g">
+      <div class="kc-lbl">Daily Avg (Active Soc)</div>
+      <div class="kc-val kv-g" id="comp-avg-soc">—</div>
+      <div class="kc-sub">litres per active society/day</div>
+    </div>
+    <div class="kcard kc-t">
+      <div class="kc-lbl">Morning : Evening</div>
+      <div class="kc-val kv-t" id="comp-ratio">—</div>
+      <div class="kc-sub">NDDB target: 55:45</div>
+    </div>
   </div>
-  <div class="g2">
-    <div class="card"><div class="card-t">Daily Trend — All Districts</div><div style="height:220px;"><canvas id="allDistChart"></canvas></div></div>
-    <div class="card"><div class="card-t">Per-Active-Society Avg (L/month)</div><div id="perSocBars"></div><div style="margin-top:10px;"><div class="sec-lbl">MYL Gap Analysis</div><div id="gapAnalysis"></div></div></div>
+
+  <!-- Day-wise trend chart -->
+  <div class="g2" style="margin-bottom:10px;">
+    <div class="card">
+      <div class="card-t">📈 Daily Collection Trend</div>
+      <div style="height:220px;"><canvas id="comp-trend-chart"></canvas></div>
+    </div>
+    <div class="card">
+      <div class="card-t">🏘️ Society-wise — Selected Day</div>
+      <div id="comp-soc-bars" style="max-height:220px;overflow-y:auto;"></div>
+    </div>
   </div>
-  <div class="card" style="margin-top:0;"><div class="card-t">MYL vs Tiruvarur — Normalised per Active Society/Day</div><div style="height:180px;"><canvas id="h2hChart"></canvas></div><div id="compNote" style="margin-top:8px;padding:9px 11px;background:var(--bdim);border-radius:var(--r);font-size:11px;line-height:1.7;color:var(--txt2);"></div></div>
+
+  <!-- Day-over-day comparison table -->
+  <div class="card">
+    <div class="card-t" style="justify-content:space-between;">
+      <span>📋 Date-wise Summary</span>
+      <span style="font-size:11px;color:var(--txt2);">Most recent 10 days</span>
+    </div>
+    <div class="tw">
+      <table class="tbl" id="comp-daily-table">
+        <thead><tr>
+          <th>Date</th><th>Total (L)</th><th>Morning (L)</th><th>Evening (L)</th>
+          <th>Societies</th><th>vs Prev Day</th><th>Avg/Soc</th>
+        </tr></thead>
+        <tbody id="comp-daily-tbody"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Block-wise breakdown for selected day -->
+  <div class="card" style="margin-top:10px;">
+    <div class="card-t">🗺️ Block-wise — Selected Day</div>
+    <div id="comp-block-bars"></div>
+  </div>
 </div>
 
 <!-- INACTIVE -->
 <div id="tab-inactive" class="tab-panel">
-  <div class="ibox"><div class="ib-t">⚠️ 13 Inactive Centres — Zero Collection Feb 2026</div><div class="ib-b">These enrolled societies produced <b>0 litres</b>. Combined reactivation potential: <em>10,000–15,000 L/month</em> within 60 days of field intervention.</div></div>
+  <div class="ibox"><div class="ib-t">⚠️ 13 Inactive Centres — Zero Collection — No Data Synced</div><div class="ib-b">These enrolled societies produced <b>0 litres</b>. Combined reactivation potential: <em>10,000–15,000 L/month</em> within 60 days of field intervention.</div></div>
   <div id="inactiveList"></div>
 </div>
 
 <!-- INSIGHTS -->
 <div id="tab-insights" class="tab-panel">
-  <div class="ibox"><div class="ib-t">💡 AI-Computed Procurement Insights — Feb 2026</div><div class="ib-b">Auto-derived from 63 society records using NDDB benchmarks, trend analysis, and 20th Livestock Census cross-reference.</div></div>
+  <div class="ibox"><div class="ib-t">💡 AI-Computed Procurement Insights — Live Data</div><div class="ib-b">Auto-derived from 63 society records using NDDB benchmarks, trend analysis, and 20th Livestock Census cross-reference.</div></div>
   <div id="insightsPanel"></div>
 </div>
 
@@ -759,7 +817,7 @@ input[type=range]{accent-color:var(--blue);cursor:pointer;width:100%;height:4px;
 <!-- SUMMARY KPI ROW -->
 <div class="g4" style="margin-bottom:14px;" id="ap-kpis">
   <div class="kcard kc-b"><div class="kc-lbl">Baseline (Feb 2025)</div><div class="kc-val kv-b">72,238 L</div><div class="kc-sub">50 active · 2,675 L/day</div></div>
-  <div class="kcard kc-g"><div class="kc-lbl">Year-End Target (Feb 2026)</div><div class="kc-val kv-g">1,80,000 L</div><div class="kc-sub">85 active · 6,667 L/day</div></div>
+  <div class="kcard kc-g"><div class="kc-lbl">Year-End Target</div><div class="kc-val kv-g">1,80,000 L</div><div class="kc-sub">85 active · 6,667 L/day</div></div>
   <div class="kcard kc-a"><div class="kc-lbl">New MPCS to Commission</div><div class="kc-val kv-a">22</div><div class="kc-sub">from 50 unserved villages</div></div>
   <div class="kcard kc-r"><div class="kc-lbl">Inactive to Reactivate</div><div class="kc-val kv-r">13</div><div class="kc-sub">by Month 3</div></div>
 </div>
@@ -1140,7 +1198,7 @@ input[type=range]{accent-color:var(--blue);cursor:pointer;width:100%;height:4px;
           <div style="font-size:11px;color:var(--txt2);margin-bottom:6px;">Export scope</div>
           <select id="xl-export-scope" class="ctrl" style="width:180px;">
             <option value="today">Today's data only</option>
-            <option value="month" selected>Full month (Feb 2026)</option>
+            <option value="month" selected>Current month</option>
             <option value="all">All saved dates</option>
           </select>
         </div>
@@ -1470,7 +1528,7 @@ function pri(ma){if(ma>=1500)return{c:'p1',l:'P1 CRITICAL'};if(ma>=800)return{c:
 function lsSave(){try{localStorage.setItem(LSK,JSON.stringify({t:_tgts,k:_kb}));}catch(e){}}
 function lsLoad(){try{const d=JSON.parse(localStorage.getItem(LSK)||'{}');if(d.t)_tgts=d.t;if(d.k)_kb=d.k;}catch(e){}}
 function toast(msg,err){const t=document.createElement('div');t.className='toast';t.textContent=msg;if(err)t.style.borderLeftColor='var(--red)';document.body.appendChild(t);setTimeout(()=>{t.style.opacity='0';setTimeout(()=>t.remove(),400);},2500);}
-const PGNAMES={overview:'Overview — Feb 2026',nddb:'NDDB Metrics',societies:'Society Tracker',comparison:'District Comparison',inactive:'Inactive Centres',insights:'AI Insights',expansion:'Expansion Plan',unserved:'Unserved Villages',newsoc:'New Societies',blocks:'Block Analysis',mapview:'Geocoded Map',routes:'Route Planner',targets:'Target Manager',actions:'Action Board',mgmt:'Management Hub',actionplan:'1-Year Action Plan',daily:'Daily Monitoring'};
+const PGNAMES={overview:'Overview',nddb:'NDDB Metrics',societies:'Society Tracker',comparison:'District Comparison',inactive:'Inactive Centres',insights:'AI Insights',expansion:'Expansion Plan',unserved:'Unserved Villages',newsoc:'New Societies',blocks:'Block Analysis',mapview:'Geocoded Map',routes:'Route Planner',targets:'Target Manager',actions:'Action Board',mgmt:'Management Hub',actionplan:'1-Year Action Plan',daily:'Daily Monitoring'};
 
 // ── SIDEBAR ──
 // ── SIDEBAR: desktop collapse / mobile drawer ──
@@ -1512,21 +1570,30 @@ function mobNav(id,btn){
 function goTab(id,el){
   document.querySelectorAll('.tab-panel').forEach(p=>p.classList.remove('act'));
   document.querySelectorAll('.sb-item').forEach(b=>b.classList.remove('act'));
-  const panel=document.getElementById('tab-'+id);if(panel)panel.classList.add('act');
-  el.classList.add('act');sv('pgtitle',PGNAMES[id]||id);
-  if(id==='mapview'&&!_lMap)setTimeout(initMap,120);
-  if(id==='routes'&&!_rMap)setTimeout(()=>{initRMap();planRoute();},120);
-  if(id==='targets')renderTgts('all');
-  if(id==='actions')renderKB();
-  if(id==='actionplan')renderAP();
-  if(id==='daily'){dmSetDate();renderDE();renderDMDashboard();renderHeatmap();renderAlerts();renderEscList();renderReport();}
-  // close mobile sidebar after navigation
-  if(isMobile())closeMobSB();
-  // sync bottom nav highlight
-  const mbnIds=['overview','daily','societies','mapview'];
-  document.querySelectorAll('.mbn-item').forEach(b=>b.classList.remove('act'));
+  const panel=document.getElementById('tab-'+id); if(panel) panel.classList.add('act');
+  el.classList.add('act'); sv('pgtitle', PGNAMES[id]||id);
+  if(id==='mapview'  && !_lMap) setTimeout(initMap,120);
+  if(id==='routes'   && !_rMap) setTimeout(()=>{initRMap();planRoute();},120);
+  const AL=_ALL.filter(s=>s.total>0&&s.active_days>0);
+  const ZL=_ALL.filter(s=>!s.total||!s.active_days);
+  const totL=_ALL.reduce((a,s)=>a+(s.total||0),0);
+  switch(id){
+    case 'daily':      dmSetDate();renderDE();renderDMDashboard();renderHeatmap();renderAlerts();renderEscList();renderReport(); break;
+    case 'overview':   renderOV(_ALL,AL,ZL); break;
+    case 'nddb':       renderNDDB(_ALL,AL,ZL,totL); break;
+    case 'societies':  renderTbl(); break;
+    case 'comparison': renderComp(); break;
+    case 'inactive':   renderInact(ZL,totL/(AL.length||1)); break;
+    case 'insights':   renderInsights(_ALL,AL,ZL,totL,0); break;
+    case 'targets':    renderTgts('all'); break;
+    case 'actions':    renderKB(); break;
+    case 'actionplan': renderAP(); break;
+    case 'mgmt':       renderSC(_ALL,AL,totL); break;
+  }
+  if(isMobile()) closeMobSB();
   const mbnEl=document.getElementById('mbn-'+id);
-  if(mbnEl)mbnEl.classList.add('act');
+  document.querySelectorAll('.mbn-item').forEach(b=>b.classList.remove('act'));
+  if(mbnEl) mbnEl.classList.add('act');
 }
 
 
@@ -1608,6 +1675,15 @@ function rebuildAllFromDmData() {
     DAYS.push(d.toLocaleDateString('en-IN', { day:'numeric', month:'short' }));
   });
 
+  // Update period chip in topbar
+  if (windowDates.length) {
+    const first = new Date(windowDates[0]+'T00:00:00');
+    const last  = new Date(windowDates[windowDates.length-1]+'T00:00:00');
+    const fmt = d => d.toLocaleDateString('en-IN',{day:'numeric',month:'short'});
+    const el = document.getElementById('chip-period');
+    if (el) el.textContent = fmt(first) + ' – ' + fmt(last);
+  }
+
   // Recompute morPct from last 7 days of actual data
   let totalMor = 0, totalEve = 0;
   allDates.slice(-7).forEach(dk => {
@@ -1621,47 +1697,32 @@ function rebuildAllFromDmData() {
 }
 
 function gsRenderAll() {
-  // Always recompute _ALL from latest _dmData before rendering any tab
   rebuildAllFromDmData();
 
-  const AL  = _ALL.filter(s => s.total > 0 && s.active_days > 0);
-  const ZL  = _ALL.filter(s => !s.total || s.total === 0);
+  const AL   = _ALL.filter(s => s.total > 0 && s.active_days > 0);
+  const ZL   = _ALL.filter(s => !s.total || s.total === 0);
   const totL = _ALL.reduce((a, s) => a + (s.total || 0), 0);
 
   dmUpdateBadge();
-  sv('chip-act', '✓ ' + AL.length + ' Active');
+  sv('chip-act',   '✓ ' + AL.length + ' Active');
   sv('chip-inact', '✗ ' + ZL.length + ' Inactive');
-
-  // Persist updated _ALL + META to Firestore so all users get live data
   fbSaveAppState();
 
-  // Re-render whichever top-level tab is currently active
-  if (document.getElementById('tab-daily')?.classList.contains('act')) {
-    renderDE(); renderDMDashboard(); renderHeatmap(); renderAlerts(); renderReport();
-    return;
+  const activeTab = document.querySelector('.tab-panel.act');
+  const tid = activeTab?.id?.replace('tab-', '') || '';
+
+  switch(tid) {
+    case 'daily':      renderDE(); renderDMDashboard(); renderHeatmap(); renderAlerts(); renderReport(); break;
+    case 'overview':   renderOV(_ALL, AL, ZL); break;
+    case 'nddb':       renderNDDB(_ALL, AL, ZL, totL); break;
+    case 'societies':  renderTbl(); break;
+    case 'comparison': renderComp(); break;
+    case 'inactive':   renderInact(ZL, totL / (AL.length || 1)); break;
+    case 'targets':    renderTgts('all'); break;
+    case 'mgmt':       renderSC(_ALL, AL, totL); break;
+    case 'insights':   renderInsights(_ALL, AL, ZL, totL, 0); break;
+    default:           renderOV(_ALL, AL, ZL);
   }
-  if (document.getElementById('tab-overview')?.classList.contains('act')) {
-    renderOV(_ALL, AL, ZL); return;
-  }
-  if (document.getElementById('tab-nddb')?.classList.contains('act')) {
-    renderNDDB(_ALL, AL, ZL, totL); return;
-  }
-  if (document.getElementById('tab-societies')?.classList.contains('act')) {
-    renderTbl(); return;
-  }
-  if (document.getElementById('tab-comparison')?.classList.contains('act')) {
-    renderComp(totL, AL.length); return;
-  }
-  if (document.getElementById('tab-inactive')?.classList.contains('act')) {
-    renderInact(ZL, totL / (AL.length || 1)); return;
-  }
-  if (document.getElementById('tab-targets')?.classList.contains('act')) {
-    renderTgts('all'); return;
-  }
-  if (document.getElementById('tab-mgmt')?.classList.contains('act')) {
-    renderSC(_ALL, AL, totL); return;
-  }
-  renderOV(_ALL, AL, ZL);
 }
 
 
@@ -1733,7 +1794,7 @@ function renderTbl(){
   data.sort((a,b)=>{let va,vb;if(col==='name')return dir==='asc'?a.name.localeCompare(b.name):b.name.localeCompare(a.name);if(col==='risk'){va=rkv(a._r);vb=rkv(b._r);}else if(col==='grade'){va={A:4,B:3,C:2,D:1}[a._g]||0;vb={A:4,B:3,C:2,D:1}[b._g]||0;}else if(col==='trend'){va=a.trend==='up'?3:a.trend==='stable'?2:1;vb=b.trend==='up'?3:b.trend==='stable'?2:1;}else{va=a[col]||0;vb=b[col]||0;}return dir==='asc'?va-vb:vb-va;});
   sv('rowct',data.length+'/'+_ALL.length);
   Object.values(_sCharts).forEach(c=>{try{c.destroy();}catch(e){}});_sCharts={};
-  sh('socBody',data.map((s,i)=>`<tr><td style="font-size:11px;color:var(--txt2);">${s._i}</td><td style="font-weight:600;max-width:150px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${s.name}</td><td style="font-family:var(--mono);">${s.total.toLocaleString()}</td><td style="font-family:var(--mono);">${s.daily_avg}</td><td>${s.active_days}/27</td><td>${s.consistency}%</td><td>${s.trend==='up'?'<span style="color:var(--green)">↑</span>':s.trend==='down'?'<span style="color:var(--red)">↓</span>':'<span style="color:var(--amber)">→</span>'}</td><td style="font-size:11px;color:${rkv(s._r)>=3?'var(--red)':rkv(s._r)===2?'var(--amber)':'var(--green)'};">${s._r}</td><td><canvas id="sp${i}" class="spark" width="68" height="24"></canvas></td><td><span class="nddb-${s._g}">${s._g}</span></td></tr>`).join(''));
+  sh('socBody',data.map((s,i)=>`<tr><td style="font-size:11px;color:var(--txt2);">${s._i}</td><td style="font-weight:600;max-width:150px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${s.name}</td><td style="font-family:var(--mono);">${s.total.toLocaleString()}</td><td style="font-family:var(--mono);">${s.daily_avg}</td><td>${s.active_days}/${s.daily?.length||'-'}</td><td>${s.consistency}%</td><td>${s.trend==='up'?'<span style="color:var(--green)">↑</span>':s.trend==='down'?'<span style="color:var(--red)">↓</span>':'<span style="color:var(--amber)">→</span>'}</td><td style="font-size:11px;color:${rkv(s._r)>=3?'var(--red)':rkv(s._r)===2?'var(--amber)':'var(--green)'};">${s._r}</td><td><canvas id="sp${i}" class="spark" width="68" height="24"></canvas></td><td><span class="nddb-${s._g}">${s._g}</span></td></tr>`).join(''));
   requestAnimationFrame(()=>data.forEach((s,i)=>{const c=document.getElementById('sp'+i);if(!c)return;_sCharts['s'+i]=new Chart(c,{type:'line',data:{labels:s.daily.map((_,j)=>j),datasets:[{data:s.daily,borderColor:s.trend==='up'?'#1e8e3e':s.trend==='down'?'#d93025':'#f9ab00',borderWidth:1.5,pointRadius:0,tension:0.3}]},options:{responsive:false,animation:false,plugins:{legend:{display:false},tooltip:{enabled:false}},scales:{x:{display:false},y:{display:false}}}});}));
 }
 function thSort(col){if(_sCol===col)_sDir=_sDir==='asc'?'desc':'asc';else{_sCol=col;_sDir='desc';}document.getElementById('soc-sort').value=_sCol;document.getElementById('soc-dir').value=_sDir;renderTbl();}
@@ -1751,16 +1812,170 @@ function tgFilt(key,cid){
 function clrFilt(){_kFilt='none';document.querySelectorAll('.kcard').forEach(c=>c.classList.remove('filt'));const fb=document.getElementById('filtbar');if(fb)fb.style.display='none';renderTbl();}
 
 // ── COMPARISON ──
-function renderComp(totL,ac){
-  if(!ac) return;
-  sv('comp-myl',totL.toLocaleString('en-IN'));
-  const leg={display:true,labels:{font:{size:11},color:'#5f6368',boxWidth:7,padding:7}};
-  mc('allDistChart',{type:'line',data:{labels:DAYS,datasets:[CO2('MYL',META.myl,'#1a73e8'),CO2('Tiruvarur',META.tvr,'#1e8e3e'),CO2('Thanjavur',META.tnj,'#f9ab00',[4,3]),CO2('Nagapattinam',META.nag,'#d93025',[2,2])]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:leg},scales:{x:{ticks:{font:{size:11},autoSkip:true,maxRotation:0},grid:{display:false}},y:{ticks:{font:{size:11},callback:v=>(v/1000).toFixed(0)+'K'},grid:{color:'rgba(0,0,0,0.06)'}}}}});
-  const mp=Math.round(totL/ac),tp=Math.round(478558/45),jp=Math.round(727578/296),np=Math.round(19159/32),mx=Math.max(mp,tp,jp,np);
-  sh('perSocBars',[['MYL','#1a73e8',mp],['Tiruvarur','#1e8e3e',tp],['Thanjavur','#f9ab00',jp],['Nagapattinam','#d93025',np]].map(([n,c,v])=>`<div style="display:flex;align-items:center;gap:7px;margin-bottom:7px;"><div style="width:85px;font-size:11px;">${n}</div><div style="flex:1;background:var(--bg);border-radius:100px;height:8px;overflow:hidden;"><div style="width:${Math.round(v/mx*100)}%;height:100%;background:${c};border-radius:100px;"></div></div><div style="font-size:12px;font-family:var(--mono);width:52px;text-align:right;color:var(--txt2);">${v.toLocaleString()}</div></div>`).join(''));
-  sh('gapAnalysis',`<div style="font-size:11px;line-height:1.9;"><div>MYL/soc/month: <b>${mp.toLocaleString()} L</b></div><div style="color:var(--txt2);">Thanjavur benchmark: <span style="color:var(--amber)">${jp.toLocaleString()}</span> L — gap: <span style="color:var(--red)">${(jp-mp).toLocaleString()}</span> L/soc</div><div style="color:var(--txt2);">If matched Thanjavur: <span style="color:var(--green)">${(jp*ac).toLocaleString()}</span> L/month</div></div>`);
-  mc('h2hChart',{type:'line',data:{labels:DAYS,datasets:[CO2('MYL (÷'+ac+')',META.myl.map(d=>d/ac),'#1a73e8'),CO2('Tiruvarur (÷45)',META.tvr.map(d=>d/45),'#1e8e3e',[4,3])]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:leg},scales:{x:{ticks:{font:{size:11},autoSkip:true,maxRotation:0},grid:{display:false}},y:{ticks:{font:{size:10},callback:v=>v.toFixed(0)+' L'},grid:{color:'rgba(0,0,0,0.06)'}}}}});
-  sh('compNote',`MYL averages <b>${(totL/ac/27).toFixed(1)} L/soc/day</b> vs Tiruvarur's <b>${(478558/45/27).toFixed(1)} L</b> — a <b>${Math.round((478558/45/27)/(totL/ac/27))}× gap</b>. Reaching Thanjavur benchmark (${(727578/296/27).toFixed(1)} L/soc/day) requires expanded coverage and intensified member enrollment.`);
+function renderComp(totL, ac) {
+  // Gather all dates from _dmData
+  const allDates = Object.keys(_dmData)
+    .filter(k => /^\d{4}-\d{2}-\d{2}$/.test(k)).sort();
+  if (!allDates.length) {
+    sh('comp-daily-tbody','<tr><td colspan="7" style="text-align:center;padding:20px;color:var(--txt3);">No data synced yet — configure Google Sheet sync first.</td></tr>');
+    return;
+  }
+
+  // Populate date selector
+  const sel = document.getElementById('comp-date-sel');
+  if (sel) {
+    const existing = new Set([...sel.options].map(o => o.value));
+    allDates.slice().reverse().forEach(dk => {
+      if (!existing.has(dk)) {
+        const opt = document.createElement('option');
+        opt.value = dk;
+        const d = new Date(dk + 'T00:00:00');
+        opt.textContent = d.toLocaleDateString('en-IN', {weekday:'short', day:'numeric', month:'short', year:'numeric'});
+        sel.appendChild(opt);
+      }
+    });
+    // Default to latest date
+    if (!sel.value || !allDates.includes(sel.value))
+      sel.value = allDates[allDates.length - 1];
+  }
+
+  const selDate = sel?.value || allDates[allDates.length - 1];
+  const d = new Date(selDate + 'T00:00:00');
+  const dateLabel = d.toLocaleDateString('en-IN', {weekday:'long', day:'numeric', month:'long', year:'numeric'});
+  sv('comp-date-label', dateLabel);
+
+  // ── KPIs for selected date ──
+  const dayData = _dmData[selDate] || {};
+  let dayMor = 0, dayEve = 0, daySocCount = 0;
+  Object.values(dayData).forEach(e => {
+    dayMor += e.mor ?? 0;
+    dayEve += e.eve ?? 0;
+    if ((e.mor ?? 0) + (e.eve ?? 0) > 0) daySocCount++;
+  });
+  const dayTotal = dayMor + dayEve;
+
+  // Month total from all dates in same month as selDate
+  const selMonth = selDate.slice(0, 7); // YYYY-MM
+  const monthDates = allDates.filter(dk => dk.startsWith(selMonth));
+  let monthTotal = 0;
+  monthDates.forEach(dk => {
+    Object.values(_dmData[dk] || {}).forEach(e => {
+      monthTotal += (e.mor ?? 0) + (e.eve ?? 0);
+    });
+  });
+
+  const activeSocs = _ALL.filter(s => s.total > 0 && s.active_days > 0).length || 1;
+  const avgPerSoc = daySocCount > 0 ? (dayTotal / daySocCount).toFixed(1) : '—';
+  const morPct = dayTotal > 0 ? Math.round(dayMor / dayTotal * 100) : META.morPct;
+
+  sv('comp-myl-day',   Math.round(dayTotal).toLocaleString('en-IN') + ' L');
+  sv('comp-myl-soc',   daySocCount + ' of ' + _ALL.length + ' reported');
+  sv('comp-myl-month', Math.round(monthTotal).toLocaleString('en-IN') + ' L');
+  sv('comp-myl-days',  monthDates.length + ' days (' + selMonth.replace('-', '/') + ')');
+  sv('comp-avg-soc',   avgPerSoc + ' L');
+  sv('comp-ratio',     morPct + ' : ' + (100 - morPct));
+
+  // ── Trend chart — daily totals across all dates ──
+  const trendLabels = allDates.slice(-27).map(dk => {
+    const dd = new Date(dk + 'T00:00:00');
+    return dd.toLocaleDateString('en-IN', {day:'numeric', month:'short'});
+  });
+  const trendData = allDates.slice(-27).map(dk => {
+    return Math.round(Object.values(_dmData[dk] || {}).reduce((s, e) => s + (e.mor ?? 0) + (e.eve ?? 0), 0) * 10) / 10;
+  });
+  // Highlight selected date
+  const selIdx = allDates.slice(-27).indexOf(selDate);
+  const ptColors = trendData.map((_, i) => i === selIdx ? '#d93025' : 'rgba(26,115,232,0.15)');
+  const ptRadius = trendData.map((_, i) => i === selIdx ? 6 : 2);
+  mc('comp-trend-chart', {
+    type: 'bar',
+    data: {
+      labels: trendLabels,
+      datasets: [{
+        label: 'Total (L)', data: trendData,
+        backgroundColor: ptColors,
+        borderColor: ptColors.map((c, i) => i === selIdx ? '#d93025' : '#1a73e8'),
+        borderWidth: 1, borderRadius: 3
+      }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { display: false } },
+      scales: {
+        x: { ticks: { font: { size: 10 }, autoSkip: true, maxRotation: 0 }, grid: { display: false } },
+        y: { ticks: { font: { size: 10 }, callback: v => v >= 1000 ? (v/1000).toFixed(1)+'K' : v }, grid: { color: 'rgba(0,0,0,0.05)' } }
+      }
+    }
+  });
+
+  // ── Society-wise bars for selected day ──
+  const socEntries = _ALL
+    .map(s => ({ name: s.name, tot: ((dayData[s.name]?.mor ?? 0) + (dayData[s.name]?.eve ?? 0)) }))
+    .filter(x => x.tot > 0)
+    .sort((a, b) => b.tot - a.tot);
+  const maxSoc = socEntries[0]?.tot || 1;
+  sh('comp-soc-bars', socEntries.length ? socEntries.map((x, i) =>
+    `<div style="display:flex;align-items:center;gap:6px;margin-bottom:5px;">
+      <div style="font-size:10px;color:var(--txt2);width:14px;text-align:right;">${i+1}</div>
+      <div style="font-size:11px;flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${x.name}</div>
+      <div style="width:80px;background:var(--bg);border-radius:100px;height:5px;overflow:hidden;">
+        <div style="width:${Math.round(x.tot/maxSoc*100)}%;height:100%;background:var(--blue);border-radius:100px;"></div>
+      </div>
+      <div style="font-size:11px;font-family:var(--mono);width:46px;text-align:right;color:var(--txt2);">${x.tot.toFixed(1)}</div>
+    </div>`
+  ).join('') : '<div style="padding:16px;text-align:center;color:var(--txt3);font-size:12px;">No collection data for this date</div>');
+
+  // ── Date-wise summary table — last 10 days ──
+  const tableDates = allDates.slice(-10).reverse();
+  let prevTotal = null;
+  const rows = tableDates.map(dk => {
+    let mor = 0, eve = 0, socs = 0;
+    Object.values(_dmData[dk] || {}).forEach(e => {
+      mor += e.mor ?? 0; eve += e.eve ?? 0;
+      if ((e.mor ?? 0) + (e.eve ?? 0) > 0) socs++;
+    });
+    const tot = mor + eve;
+    const diff = prevTotal !== null ? tot - prevTotal : null;
+    const diffHtml = diff === null ? '—'
+      : diff > 0 ? `<span style="color:var(--green)">▲ ${Math.round(diff).toLocaleString()}</span>`
+      : diff < 0 ? `<span style="color:var(--red)">▼ ${Math.abs(Math.round(diff)).toLocaleString()}</span>`
+      : `<span style="color:var(--txt3)">—</span>`;
+    const avgSoc = socs > 0 ? (tot / socs).toFixed(1) : '—';
+    const dd = new Date(dk + 'T00:00:00');
+    const isSelected = dk === selDate;
+    prevTotal = tot;
+    return `<tr style="${isSelected ? 'background:rgba(26,115,232,0.06);font-weight:500;' : ''}">
+      <td>${dd.toLocaleDateString('en-IN',{day:'numeric',month:'short',weekday:'short'})}</td>
+      <td style="font-family:var(--mono);font-weight:500;">${Math.round(tot).toLocaleString()}</td>
+      <td style="font-family:var(--mono);color:var(--blue);">${Math.round(mor).toLocaleString()}</td>
+      <td style="font-family:var(--mono);color:var(--amber);">${Math.round(eve).toLocaleString()}</td>
+      <td>${socs}</td>
+      <td>${diffHtml}</td>
+      <td style="font-family:var(--mono);">${avgSoc}</td>
+    </tr>`;
+  });
+  sh('comp-daily-tbody', rows.join(''));
+
+  // ── Block-wise breakdown for selected day ──
+  const blockColors = {Kollidam:'#1a73e8',Sembanarkoil:'#d93025',Mayiladuthurai:'#1e8e3e',Sirkali:'#129eaf',Kuthalam:'#8430ce'};
+  const blockTotals = {};
+  Object.entries(DM_BLOCK_SOC).forEach(([block, socs]) => {
+    let tot = 0;
+    socs.forEach(name => { tot += (dayData[name]?.mor ?? 0) + (dayData[name]?.eve ?? 0); });
+    blockTotals[block] = Math.round(tot * 10) / 10;
+  });
+  const maxBlock = Math.max(...Object.values(blockTotals), 1);
+  sh('comp-block-bars', Object.entries(blockTotals).map(([block, tot]) => {
+    const color = blockColors[block] || '#1a73e8';
+    const pct = Math.round(tot / maxBlock * 100);
+    return `<div style="display:flex;align-items:center;gap:10px;margin-bottom:8px;">
+      <div style="width:110px;font-size:12px;font-weight:500;color:var(--txt);">${block}</div>
+      <div style="flex:1;background:var(--bg);border-radius:100px;height:8px;overflow:hidden;">
+        <div style="width:${pct}%;height:100%;background:${color};border-radius:100px;transition:width .6s;"></div>
+      </div>
+      <div style="font-size:13px;font-family:var(--mono);font-weight:500;color:${color};width:70px;text-align:right;">${tot.toLocaleString()} L</div>
+    </div>`;
+  }).join(''));
 }
 
 // ── INACTIVE ──
@@ -1774,7 +1989,7 @@ function renderInsights(S,AL,ZL,totL,gPct){
   const top3=S.filter(s=>s.total>0).sort((a,b)=>b.total-a.total).slice(0,3);
   const hid=S.filter(s=>s.total>0&&s.daily_avg<20&&s.consistency>=90);
   const its=[
-    {t:'blue',i:'📊',h:'Overall Performance — Feb 2026',d:`Total: <b style="color:var(--green)">${totL.toLocaleString()} L</b> across ${AL.length} active societies. Avg ${(totL/AL.length/27).toFixed(1)} L/soc/day. Intra-month: <b style="color:${parseFloat(gPct)>0?'var(--green)':'var(--red)'}">${parseFloat(gPct)>0?'+':''}${gPct}%</b>.`},
+    {t:'blue',i:'📊',h:'Overall Performance — ' + (DAYS.length ? DAYS[0]+' to '+DAYS[DAYS.length-1] : 'Current Period'),d:`Total: <b style="color:var(--green)">${totL.toLocaleString()} L</b> across ${AL.length} active societies. Avg ${(totL/AL.length/Math.max(DAYS.length,1)).toFixed(1)} L/soc/day. Intra-month: <b style="color:${parseFloat(gPct)>0?'var(--green)':'var(--red)'}">${parseFloat(gPct)>0?'+':''}${gPct}%</b>.`},
     {t:'red',i:'📉',h:`${dec.length} Societies on Downward Trend`,d:`${dec.map(s=>s.name).join(', ')}. KATHIRUPPU & SITHAMALLI need immediate field visits.`},
     {t:'green',i:'🏆',h:'Star Performers',d:`Top 3: ${top3.map((s,i)=>`${i+1}. <b>${s.name}</b> (${s.total.toLocaleString()} L, ${s.trend==='up'?'↑':'→'}, ${s.consistency}% cons.)`).join('; ')}.`},
     {t:'amber',i:'⚠️',h:`${ZL.length} Inactive Societies`,d:`${ZL.map(s=>s.name).join(', ')} — 0 L Feb. Full reactivation: ~<b style="color:var(--green)">${Math.round(ZL.length*totL/AL.length*0.7).toLocaleString()} L/month</b> potential.`},
@@ -1949,7 +2164,7 @@ function addToCol(col){const soc=prompt('Society:');if(!soc)return;const act=pro
 function renderSC(S,AL,totL){if(!S.length)return;const eff=Math.round(AL.length/Math.max(S.length,1)*100),gA=S.filter(s=>grd(s)==='A').length,cons=AL.length?Math.round(AL.reduce((a,s)=>a+s.consistency,0)/AL.length):0;const rows=[{k:'Monthly Collection',v:nf(totL)+' L',t:'1,00,000 L',ok:totL>=100000},{k:'Active Society Rate',v:eff+'%',t:'≥85%',ok:eff>=85},{k:'Grade A Societies',v:gA+'',t:'≥30',ok:gA>=30},{k:'New Societies Formed',v:'0',t:'5/quarter',ok:false},{k:'Inactive Reactivations',v:'0',t:'All 13 in 60d',ok:false},{k:'Avg Consistency',v:cons+'%',t:'≥85%',ok:cons>=85},{k:'Member Enrollment Growth',v:'Existing',t:'20% by Q2',ok:false}];sh('kpiSC',rows.map(r=>`<tr><td style="font-weight:500;">${r.k}</td><td style="font-family:var(--mono);font-weight:500;">${r.v}</td><td style="color:var(--txt2);">${r.t}</td><td style="color:var(--txt2);">Monthly</td><td style="color:var(--txt2);">Block Officers</td><td>${r.ok?'<span style="color:var(--green)">✓ On Track</span>':'<span style="color:var(--red)">✗ Action Needed</span>'}</td></tr>`).join(''));}
 
 // ── EXPORT/IMPORT ──
-function exportCSV(){const h=['#','Society','Monthly L','Daily Avg','Active Days','Consistency','Trend','Grade','Risk','Target L'];const rows=_ALL.map((s,i)=>[i+1,'"'+s.name+'"',s.total||0,s.daily_avg||0,s.active_days||0,s.consistency||0,s.trend,grd(s),rsk(s),_tgts[s.name]||0].join(','));const b=new Blob([[h.join(','),...rows].join('\n')],{type:'text/csv'});const a=document.createElement('a');a.href=URL.createObjectURL(b);a.download='MYL_Feb2026.csv';a.click();toast('Exported '+_ALL.length+' societies!');}
+function exportCSV(){const h=['#','Society','Monthly L','Daily Avg','Active Days','Consistency','Trend','Grade','Risk','Target L'];const rows=_ALL.map((s,i)=>[i+1,'"'+s.name+'"',s.total||0,s.daily_avg||0,s.active_days||0,s.consistency||0,s.trend,grd(s),rsk(s),_tgts[s.name]||0].join(','));const b=new Blob([[h.join(','),...rows].join('\n')],{type:'text/csv'});const a=document.createElement('a');a.href=URL.createObjectURL(b);a.download='MYL_'+new Date().toISOString().slice(0,7)+'.csv';a.click();toast('Exported '+_ALL.length+' societies!');}
 function importCSV(inp){const f=inp.files[0];if(!f)return;const r=new FileReader();r.onload=e=>{try{const ls=e.target.result.trim().split('\n'),hs=ls[0].split(',').map(h=>h.replace(/"/g,'').trim().toLowerCase()),ni=hs.indexOf('society'),ti=hs.indexOf('monthly l');if(ni<0){toast('Need Society column',true);return;}_ALL=ls.slice(1).map(l=>{const cs=l.split(',').map(c=>c.replace(/"/g,'').trim()),b=SEED.find(s=>s.name.toLowerCase()===cs[ni]?.toLowerCase())||SEED[0];return{...b,name:cs[ni]||b.name,total:parseFloat(cs[ti])||b.total};});boot();toast('Imported '+_ALL.length+' societies!');}catch(err){toast('Import failed: '+err.message,true);}inp.value='';};r.readAsText(f);}
 
 // ── BOOT ──
@@ -2178,7 +2393,7 @@ function renderAPMonth(i){
         <div style="margin-top:14px;background:#f8f9fa;border-radius:8px;padding:12px;">
           <div style="font-size:11px;color:#5f6368;margin-bottom:6px;">Monthly Target</div>
           <div style="font-size:22px;font-weight:500;color:${m.color};">${m.target.toLocaleString('en-IN')} <span style="font-size:12px;color:#5f6368;">L/mo</span></div>
-          <div style="font-size:12px;color:#5f6368;">+${addL.toLocaleString('en-IN')} L vs prev · ${Math.round(m.target/27).toLocaleString('en-IN')} L/day · ${pct}% of year-end target</div>
+          <div style="font-size:12px;color:#5f6368;">+${addL.toLocaleString('en-IN')} L vs prev · ${Math.round(m.target/30).toLocaleString('en-IN')} L/day · ${pct}% of year-end target</div>
           <div class="pbar" style="height:5px;margin-top:8px;"><div class="pfill" style="width:${pct}%;background:${m.color};"></div></div>
         </div>
       </div>
@@ -2328,9 +2543,15 @@ function dmDateChange() {
 }
 
 // Get the "day index" (0-26) for a YYYY-MM-DD date in Feb 2026
+// Returns index of dateStr within the current windowDates (sorted dates in _dmData)
+// Used to look up s.daily[] which is aligned to windowDates
 function dmDayIdx(dateStr) {
-  if (!dateStr || !dateStr.startsWith('2026-02-')) return -1;
-  return parseInt(dateStr.split('-')[2], 10) - 1; // 0-indexed
+  if (!dateStr) return -1;
+  const allDates = Object.keys(_dmData)
+    .filter(k => /^\d{4}-\d{2}-\d{2}$/.test(k)).sort();
+  const windowDates = allDates.slice(-27);
+  const idx = windowDates.indexOf(dateStr);
+  return idx; // -1 if not found
 }
 
 // Get entry for a society on the active date
@@ -3188,7 +3409,7 @@ function xlExportWorkbook() {
   if (scope === 'today') {
     dates = [_dmActiveDate];
   } else if (scope === 'month') {
-    dates = Array.from({length:27},(_,i)=>`2026-02-${String(i+1).padStart(2,'0')}`);
+    dates = [...new Set(Object.keys(_dmData).filter(k=>/^\d{4}-\d{2}-\d{2}$/.test(k)))].sort().filter(k=>k.startsWith(_dmActiveDate.slice(0,7)));
   } else {
     dates = Object.keys(_dmData).sort();
   }
@@ -3861,8 +4082,8 @@ async function gsPushToday() {
 async function gsPushMonth() {
   const activeList = _ALL.filter(s=>s.total>0&&s.active_days>0);
   const allRows = [];
-  for(let di=0;di<27;di++) {
-    const dk = `2026-02-${String(di+1).padStart(2,'0')}`;
+  const _pushDates = Object.keys(_dmData).filter(k=>/^\d{4}-\d{2}-\d{2}$/.test(k)).sort();
+  for(const dk of _pushDates) {
     activeList.forEach(s=>{
       const e = _dmData[dk]?.[s.name];
       const v = s.daily[di]||0;
@@ -3874,7 +4095,7 @@ async function gsPushMonth() {
       allRows.push({date:dk,society:s.name,morning:mor,evening:eve,total:tot,avg7day:avg,pctOfAvg:pct+'%',status:tot===0?'Missed':pct<70?'Low':'Normal',notes:e?.note||''});
     });
   }
-  await gsDoPush({type:'daily', date:'2026-02', rows:allRows}, `full month (${allRows.length} rows)`);
+  await gsDoPush({type:'daily', date:_dmActiveDate.slice(0,7), rows:allRows}, `full month (${allRows.length} rows)`);
 }
 
 async function gsPushEscalations() {
