@@ -3420,24 +3420,45 @@ function gsSetStatus(state) {
   _gsConnected = state === 'connected';
 }
 
-// ── CORS proxy: needed when file is opened locally (origin: null) ──────────
-// On Vercel/https the direct fetch works; only proxy when it genuinely fails.
+// ── CORS-safe fetch for Google Sheets CSV URLs ──────────────────────────────
+// Google Sheets published CSV URLs often return a 307 redirect to a
+// different Google domain. fetch() cannot follow cross-origin 307s from
+// a hosted page (CORS blocks it). Solution: always route Sheets URLs
+// through corsproxy.io which follows the redirect server-side.
+function gsIsGoogleUrl(url) {
+  return /docs\.google\.com|drive\.google\.com|spreadsheets\.google/i.test(url);
+}
+
 async function gsFetchUrl(rawUrl, opts={}) {
-  // On a real https origin, try direct first without triggering proxy on 4xx
+  // Always proxy Google Sheets/Drive URLs — the 307 redirect is cross-origin
+  // and cannot be followed by fetch() in a browser.
+  if (gsIsGoogleUrl(rawUrl)) {
+    // Strip _t cache-buster before proxying (Google sometimes rejects it)
+    const cleanUrl = rawUrl.replace(/[?&]_t=\d+/, '').replace(/&&/, '&').replace(/\?&/, '?');
+    const proxy = 'https://corsproxy.io/?' + encodeURIComponent(cleanUrl);
+    try {
+      const r = await fetch(proxy, {...opts, mode:'cors'});
+      if (r.ok) return r;
+      // If proxy also fails, log and throw
+      throw new Error('Proxy returned HTTP ' + r.status);
+    } catch(e) {
+      // Try allorigins as a secondary proxy fallback
+      const proxy2 = 'https://api.allorigins.win/raw?url=' + encodeURIComponent(cleanUrl);
+      return fetch(proxy2, {...opts, mode:'cors'});
+    }
+  }
+  // Non-Google URLs: try direct, proxy on CORS failure
   try {
     const r = await fetch(rawUrl, opts);
-    // 2xx/3xx — success
     if (r.ok) return r;
-    // 4xx from Google (e.g. sheet not published) — real error, don't proxy
-    if (r.status >= 400 && r.status < 500) return r;
+    if (r.status >= 400 && r.status < 500) return r; // real error, don't proxy
     throw new Error('HTTP ' + r.status);
   } catch(e) {
-    // TypeError = network/CORS block (not a real HTTP response) → use proxy
     if (e instanceof TypeError || location.protocol === 'file:') {
       const proxy = 'https://corsproxy.io/?' + encodeURIComponent(rawUrl);
       return fetch(proxy, {...opts, mode:'cors'});
     }
-    throw e; // rethrow real errors
+    throw e;
   }
 }
 
@@ -3471,11 +3492,11 @@ async function gsFetchNow() {
   // Keep _gsCfg in sync
   _gsCfg.csvUrl = url;
   gsSetStatus('syncing');
-  gsLog(_gsSyncLogs, 'Fetching data' + (location.protocol === 'file:' ? ' (via CORS proxy)' : '') + '…', 'info');
+  gsLog(_gsSyncLogs, 'Fetching data via proxy…', 'info');
   gsRenderLog('gs-sync-log', _gsSyncLogs);
 
   try {
-    const resp = await gsFetchUrl(url + (url.includes('?') ? '&' : '?') + '_t=' + Date.now(), {cache:'no-store'});
+    const resp = await gsFetchUrl(url, {cache:'no-store'});
     if(!resp.ok) throw new Error('HTTP ' + resp.status);
     const text = await resp.text();
     const wb = XLSX.read(text, {type:'string'});
@@ -3483,128 +3504,248 @@ async function gsFetchNow() {
     const rows = XLSX.utils.sheet_to_json(ws, {header:1, defval:''});
     if(rows.length < 2) { gsLog(_gsSyncLogs,'Sheet appears empty','info'); gsRenderLog('gs-sync-log',_gsSyncLogs); return; }
 
-    // ── Auto-detect header row ──
-    // Scan up to first 10 rows for the one that contains a recognisable column name.
-    // This handles sheets where row 1 is a title/empty and data starts on row 2 or 3.
-    const allAliases = Object.values(XL_COL_ALIASES).flat().map(a => a.toLowerCase());
-    let headerRowIdx = 0;
-    for (let i = 0; i < Math.min(10, rows.length); i++) {
-      const candidate = rows[i].map(c => (c||'').toString().toLowerCase().trim());
-      const matched = candidate.filter(c => c && allAliases.includes(c)).length;
-      if (matched >= 1) { headerRowIdx = i; break; }
-    }
-    const headers  = rows[headerRowIdx].map(c => (c||'').toString().trim());
-    const dataRows = rows.slice(headerRowIdx + 1).filter(r => r.some(c => c !== ''));
-    gsLog(_gsSyncLogs, `Header row detected at row ${headerRowIdx + 1}: [${headers.filter(Boolean).join(' | ')}]`, 'info');
-
-    _xlColMap = {};
-    Object.keys(XL_COL_ALIASES).forEach(key => { _xlColMap[key] = xlFindCol(headers, key); });
-    gsLog(_gsSyncLogs, `Column map → society:${_xlColMap.society} date:${_xlColMap.date} morning:${_xlColMap.morning} evening:${_xlColMap.evening} total:${_xlColMap.total}`, 'info');
-
-    // ── Guard: society column must be found ──
-    if (_xlColMap.society < 0) {
-      gsLog(_gsSyncLogs, `✗ Cannot find society/name column. Sheet headers: [${headers.join(', ')}]. Expected one of: society, name, centre, village`, 'err');
-      gsSetStatus('warning');
-      gsRenderLog('gs-sync-log', _gsSyncLogs);
-      toast('Sync failed — no society/name column found. Check sheet headers.', true);
-      return;
-    }
-
-    // ── Guard: at least one value column must be found ──
-    if (_xlColMap.morning < 0 && _xlColMap.evening < 0 && _xlColMap.total < 0) {
-      gsLog(_gsSyncLogs, `✗ No value columns found (morning/evening/total). Sheet headers: [${headers.join(', ')}]`, 'err');
-      gsSetStatus('warning');
-      gsRenderLog('gs-sync-log', _gsSyncLogs);
-      toast('Sync failed — no morning/evening/total column found. Check sheet headers.', true);
-      return;
-    }
-
-    const overwrite = document.getElementById('gs-overwrite')?.checked ?? true; // default true
+    const overwrite = document.getElementById('gs-overwrite')?.checked ?? true;
     let updated = 0, skipped = 0, noMatch = [], dates = new Set();
 
-    dataRows.forEach(row => {
-      const socIdx  = _xlColMap.society;
-      const rawName = (row[socIdx]||'').toString().trim().toUpperCase();
-      if (!rawName) return;
-
-      // ── Robust name matching (exact → normalised → partial) ──
-      const norm = s => s.toUpperCase().replace(/\s+/g,' ').trim();
-      const match = _ALL.find(s => {
-        const sn = norm(s.name), rn = norm(rawName);
-        if (sn === rn) return true;                          // exact
-        if (sn.replace(/\s/g,'') === rn.replace(/\s/g,'')) return true; // spaces ignored
-        if (sn.includes(rn) || rn.includes(sn)) return true; // one contains other
-        // first-word match (e.g. "KURAVALUR" matches "KURAVALUR MPCS")
+    // ── Robust society name matcher ──────────────────────────────
+    const normName = s => (s||'').toString().toUpperCase().replace(/\s+/g,' ').trim();
+    function matchSociety(rawName) {
+      const rn = normName(rawName);
+      if (!rn || rn.length < 2) return null;
+      return _ALL.find(s => {
+        const sn = normName(s.name);
+        if (sn === rn) return true;
+        if (sn.replace(/\s/g,'') === rn.replace(/\s/g,'')) return true;
+        if (sn.includes(rn) || rn.includes(sn)) return true;
         const sw = sn.split(' ')[0], rw = rn.split(' ')[0];
         if (sw.length >= 5 && sw === rw) return true;
         return false;
       });
+    }
 
-      if (!match) {
-        if (!noMatch.includes(rawName)) noMatch.push(rawName);
-        skipped++;
-        return;
+    // ── Parse a date value from a cell ───────────────────────────
+    function parseDate(raw) {
+      if (!raw && raw !== 0) return null;
+      if (typeof raw === 'number') {
+        try { const d = XLSX.SSF.parse_date_code(raw); return `${d.y}-${String(d.m).padStart(2,'0')}-${String(d.d).padStart(2,'0')}`; } catch(e) {}
       }
+      const s = raw.toString().trim();
+      // dd-mm-yyyy, dd/mm/yyyy, dd.mm.yyyy
+      const dmy = s.match(/^(\d{1,2})[-\/\.](\d{1,2})[-\/\.](\d{2,4})$/);
+      if (dmy) { const y = dmy[3].length===2?'20'+dmy[3]:dmy[3]; return `${y}-${dmy[2].padStart(2,'0')}-${dmy[1].padStart(2,'0')}`; }
+      // yyyy-mm-dd
+      const iso = s.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+      if (iso) return s;
+      // "01 Mar 2026", "1-Mar-26", etc.
+      const p = new Date(s); if (!isNaN(p)) return p.toISOString().split('T')[0];
+      return null;
+    }
 
-      let dk = _dmActiveDate;
-      const dateIdx = _xlColMap.date;
-      if (dateIdx >= 0 && row[dateIdx]) {
-        const raw = row[dateIdx];
-        if (typeof raw === 'number') {
-          const d = XLSX.SSF.parse_date_code(raw);
-          dk = `${d.y}-${String(d.m).padStart(2,'0')}-${String(d.d).padStart(2,'0')}`;
-        } else {
-          const p = new Date(raw);
-          if (!isNaN(p)) dk = p.toISOString().split('T')[0];
+    // ── Detect sheet format ───────────────────────────────────────
+    // PIVOT: Row 1 has dates across columns, Row 2 has Mor/Eve/Total sub-headers,
+    //        Col A/B has society names — each row = one society, columns = daily data.
+    // SIMPLE: Each row = one entry with date, society, morning, evening columns.
+
+    // Check if this looks like a pivot sheet:
+    // Signs: row 2 or 3 has many "mor"/"eve"/"total" repeating; col A has society names in data rows
+    const subHeaderRow = rows.slice(0, 5).find(r => {
+      const vals = r.map(c => (c||'').toString().toLowerCase().trim());
+      const morCount = vals.filter(v => v === 'mor' || v === 'morning').length;
+      return morCount >= 3; // 3+ "Mor" in a row = pivot format
+    });
+    const isPivot = !!subHeaderRow;
+
+    gsLog(_gsSyncLogs, `Sheet format: ${isPivot ? 'PIVOT (wide matrix)' : 'SIMPLE (row per entry)'}`, 'info');
+
+    if (isPivot) {
+      // ── PIVOT FORMAT PARSER ──────────────────────────────────────
+      // Structure:
+      //   Row 0 (or 1): [blank, blank, date1, blank, blank, date2, blank, blank, ...]
+      //   Row 1 (or 2): [Sl, Society, Mor, Eve, Total, Mor, Eve, Total, ...]
+      //   Row 2+:       [1, KAVERIPOOM, 270, 158, 428, 398, ...]
+
+      // Find the sub-header row index
+      const subHdrIdx = rows.indexOf(subHeaderRow);
+
+      // Find the date row (row just above sub-headers, has actual date values)
+      const dateRowIdx = subHdrIdx > 0 ? subHdrIdx - 1 : 0;
+      const dateRow = rows[dateRowIdx];
+
+      // Find society name column: scan data rows for col that matches a known society
+      const firstDataIdx = subHdrIdx + 1;
+      let socCol = -1;
+      // Try each column in first few data rows
+      for (let col = 0; col < Math.min(5, (rows[firstDataIdx]||[]).length); col++) {
+        for (let r = firstDataIdx; r < Math.min(firstDataIdx + 5, rows.length); r++) {
+          const val = (rows[r][col]||'').toString().trim();
+          if (val && matchSociety(val)) { socCol = col; break; }
+        }
+        if (socCol >= 0) break;
+      }
+      // Fallback: try col 1 then col 0
+      if (socCol < 0) socCol = 1;
+
+      gsLog(_gsSyncLogs, `Pivot: society col=${socCol}, sub-header row=${subHdrIdx+1}, date row=${dateRowIdx+1}`, 'info');
+
+      // Build column → date map from date row + sub-header row
+      // subHeader cells: Mor=0, Eve=1, Total=2 cycling
+      const subHdr = subHeaderRow.map(c => (c||'').toString().toLowerCase().trim());
+      let lastDate = null;
+      const colDateMap = {}; // colIdx → {date, field:'mor'|'eve'|'total'}
+
+      // Fill in dates: date row has date values at the start of each 3-col group
+      let fillDate = null;
+      for (let c = 0; c < dateRow.length; c++) {
+        const dv = parseDate(dateRow[c]);
+        if (dv) fillDate = dv;
+        const sub = subHdr[c];
+        if ((sub === 'mor' || sub === 'morning') && fillDate) {
+          colDateMap[c]   = { date: fillDate, field: 'mor'   };
+          colDateMap[c+1] = { date: fillDate, field: 'eve'   };
+          colDateMap[c+2] = { date: fillDate, field: 'total' };
         }
       }
-      dates.add(dk);
-      if (!_dmData[dk]) _dmData[dk] = {};
-      if (!overwrite && _dmData[dk][match.name]?.saved) { skipped++; return; }
 
-      const morIdx = _xlColMap.morning, eveIdx = _xlColMap.evening;
-      const totIdx = _xlColMap.total,   notIdx = _xlColMap.notes;
-      let mor = morIdx >= 0 ? parseFloat(row[morIdx]) || null : null;
-      let eve = eveIdx >= 0 ? parseFloat(row[eveIdx]) || null : null;
-      // If only total column exists, split 58/42
-      if (mor === null && eve === null && totIdx >= 0) {
-        const tot = parseFloat(row[totIdx]) || null;
-        if (tot) { mor = Math.round(tot * 0.58 * 10) / 10; eve = Math.round(tot * 0.42 * 10) / 10; }
+      // If date row approach didn't work, try reading dates from sub-header row columns
+      // where a date appears directly
+      if (Object.keys(colDateMap).length === 0) {
+        let fd = null;
+        for (let c = 0; c < subHdr.length; c++) {
+          const dv = parseDate(dateRow[c]) || parseDate(subHeaderRow[c]);
+          if (dv) fd = dv;
+          const sub = subHdr[c];
+          if (fd && (sub === 'mor' || sub === 'morning')) {
+            colDateMap[c]   = { date: fd, field: 'mor'   };
+            colDateMap[c+1] = { date: fd, field: 'eve'   };
+            colDateMap[c+2] = { date: fd, field: 'total' };
+          }
+        }
       }
-      _dmData[dk][match.name] = { mor, eve, note: notIdx >= 0 ? (row[notIdx]||'').toString() : '', saved: true };
-      updated++;
-    });
+
+      // Last resort: use today's date for any Mor column with no date
+      const today0 = new Date().toISOString().split('T')[0];
+      if (Object.keys(colDateMap).length === 0) {
+        for (let c = 0; c < subHdr.length; c++) {
+          if (subHdr[c] === 'mor' || subHdr[c] === 'morning') {
+            colDateMap[c]   = { date: today0, field: 'mor'   };
+            colDateMap[c+1] = { date: today0, field: 'eve'   };
+            colDateMap[c+2] = { date: today0, field: 'total' };
+          }
+        }
+      }
+
+      gsLog(_gsSyncLogs, `Pivot: mapped ${Object.keys(colDateMap).length} data columns across ${new Set(Object.values(colDateMap).map(x=>x.date)).size} date(s)`, 'info');
+
+      // Parse data rows
+      const dataRows = rows.slice(firstDataIdx).filter(r => r.some(c => c !== ''));
+      dataRows.forEach(row => {
+        const rawName = (row[socCol]||'').toString().trim();
+        if (!rawName || /^\d+$/.test(rawName)) return; // skip serial numbers
+        const match = matchSociety(rawName);
+        if (!match) { if (!noMatch.includes(normName(rawName))) noMatch.push(normName(rawName)); skipped++; return; }
+
+        // Collect all date entries for this row
+        const byDate = {};
+        Object.entries(colDateMap).forEach(([colIdx, {date, field}]) => {
+          const val = parseFloat(row[colIdx]);
+          if (isNaN(val) || val < 0) return;
+          if (!byDate[date]) byDate[date] = {mor:null, eve:null, total:null};
+          if (field === 'mor')   byDate[date].mor   = val;
+          if (field === 'eve')   byDate[date].eve   = val;
+          if (field === 'total') byDate[date].total = val;
+        });
+
+        Object.entries(byDate).forEach(([dk, vals]) => {
+          if (vals.mor === null && vals.eve === null && vals.total === null) return;
+          dates.add(dk);
+          if (!_dmData[dk]) _dmData[dk] = {};
+          if (!overwrite && _dmData[dk][match.name]?.saved) return;
+          let mor = vals.mor, eve = vals.eve;
+          if (mor === null && eve === null && vals.total) {
+            mor = Math.round(vals.total * 0.58 * 10) / 10;
+            eve = Math.round(vals.total * 0.42 * 10) / 10;
+          }
+          _dmData[dk][match.name] = { mor, eve, note: '', saved: true };
+          updated++;
+        });
+      });
+
+    } else {
+      // ── SIMPLE FORMAT PARSER ─────────────────────────────────────
+      // Each row = one entry: date, society, morning, evening, total
+
+      const allAliases = Object.values(XL_COL_ALIASES).flat().map(a => a.toLowerCase());
+      let headerRowIdx = 0;
+      for (let i = 0; i < Math.min(10, rows.length); i++) {
+        const candidate = rows[i].map(c => (c||'').toString().toLowerCase().trim());
+        if (candidate.filter(c => c && allAliases.includes(c)).length >= 1) { headerRowIdx = i; break; }
+      }
+      const headers  = rows[headerRowIdx].map(c => (c||'').toString().trim());
+      const dataRows = rows.slice(headerRowIdx + 1).filter(r => r.some(c => c !== ''));
+      gsLog(_gsSyncLogs, `Simple: header at row ${headerRowIdx+1}: [${headers.filter(Boolean).slice(0,8).join(' | ')}]`, 'info');
+
+      _xlColMap = {};
+      Object.keys(XL_COL_ALIASES).forEach(key => { _xlColMap[key] = xlFindCol(headers, key); });
+      gsLog(_gsSyncLogs, `Column map → society:${_xlColMap.society} date:${_xlColMap.date} morning:${_xlColMap.morning} evening:${_xlColMap.evening} total:${_xlColMap.total}`, 'info');
+
+      if (_xlColMap.society < 0) {
+        gsLog(_gsSyncLogs, `✗ Cannot find society column. Headers: [${headers.filter(Boolean).join(', ')}]`, 'err');
+        gsSetStatus('warning'); gsRenderLog('gs-sync-log', _gsSyncLogs);
+        toast('Sync failed — cannot find society column.', true); return;
+      }
+
+      dataRows.forEach(row => {
+        const rawName = (row[_xlColMap.society]||'').toString().trim();
+        if (!rawName) return;
+        const match = matchSociety(rawName);
+        if (!match) { if (!noMatch.includes(normName(rawName))) noMatch.push(normName(rawName)); skipped++; return; }
+
+        let dk = _dmActiveDate;
+        if (_xlColMap.date >= 0 && row[_xlColMap.date]) dk = parseDate(row[_xlColMap.date]) || dk;
+        dates.add(dk);
+        if (!_dmData[dk]) _dmData[dk] = {};
+        if (!overwrite && _dmData[dk][match.name]?.saved) { skipped++; return; }
+
+        let mor = _xlColMap.morning >= 0 ? parseFloat(row[_xlColMap.morning])||null : null;
+        let eve = _xlColMap.evening >= 0 ? parseFloat(row[_xlColMap.evening])||null : null;
+        if (mor === null && eve === null && _xlColMap.total >= 0) {
+          const tot = parseFloat(row[_xlColMap.total])||null;
+          if (tot) { mor = Math.round(tot*0.58*10)/10; eve = Math.round(tot*0.42*10)/10; }
+        }
+        _dmData[dk][match.name] = { mor, eve, note: _xlColMap.notes>=0?(row[_xlColMap.notes]||'').toString():'', saved:true };
+        updated++;
+      });
+    }
 
     dmLsSave();
 
-    // ── Always advance active date to latest date in synced data ──
+    // ── Advance active date to latest synced date ──
     const today = new Date().toISOString().split('T')[0];
     if (dates.size > 0) {
-      const latestFromSheet = [...dates].sort().pop();
-      // Use latest sheet date, but never go beyond today
-      _dmActiveDate = latestFromSheet <= today ? latestFromSheet : today;
+      const latest = [...dates].sort().pop();
+      _dmActiveDate = latest <= today ? latest : today;
     } else {
-      // No date column — data was stored under _dmActiveDate (today)
       _dmActiveDate = today;
     }
-    dmSetDate(); // always update UI date label + input
+    dmSetDate();
 
     const sv2=(id,v)=>{const e=document.getElementById(id);if(e)e.textContent=v;};
     sv2('gs-last-sync', new Date().toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit'}));
     gsSetStatus('connected');
-    gsLog(_gsSyncLogs, `✓ Synced ${updated} rows across ${dates.size} date(s) from ${dataRows.length} total rows`, 'ok');
-    if (skipped > 0) gsLog(_gsSyncLogs, `⚠ Skipped ${skipped} rows — unmatched names: ${noMatch.slice(0,5).join(', ')}${noMatch.length>5?' …':''}`, 'err');
+    gsLog(_gsSyncLogs, `✓ Synced ${updated} entries across ${dates.size} date(s) from ${rows.length} total rows`, 'ok');
+    if (skipped > 0) gsLog(_gsSyncLogs, `⚠ Skipped ${skipped} — unmatched: ${noMatch.slice(0,5).join(', ')}${noMatch.length>5?' …':''}`, 'err');
     gsSave();
     gsRenderAll();
-    toast(updated > 0 ? `✓ Synced ${updated} rows from Google Sheets` : `⚠ 0 rows synced — check sync log for details`, updated > 0 ? undefined : true);
+    toast(updated > 0 ? `✓ Synced ${updated} entries from Google Sheets` : `⚠ 0 entries synced — check sync log`, updated > 0 ? undefined : true);
 
-    // Show preview
+    // Preview
     const pw = document.getElementById('gs-last-preview-wrap');
     const pt = document.getElementById('gs-last-preview');
     if(pw&&pt) {
       pw.style.display='block';
-      pt.innerHTML = `<thead><tr>${headers.map(h=>`<th>${h}</th>`).join('')}</tr></thead><tbody>` +
-        rows.slice(1,11).map(r=>`<tr>${headers.map((_,i)=>`<td>${r[i]??''}</td>`).join('')}</tr>`).join('') + '</tbody>';
+      const previewRows = rows.slice(0, 6);
+      const maxCols = Math.min(12, Math.max(...previewRows.map(r=>r.length)));
+      pt.innerHTML = '<tbody>' + previewRows.map(r=>`<tr>${Array.from({length:maxCols},(_,i)=>`<td>${r[i]??''}</td>`).join('')}</tr>`).join('') + '</tbody>';
     }
   } catch(err) {
     gsSetStatus('warning');
