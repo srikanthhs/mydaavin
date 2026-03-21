@@ -1410,130 +1410,9 @@ input[type=range]{accent-color:var(--blue);cursor:pointer;width:100%;height:4px;
 <script>
 const DAYS=Array.from({length:27},(_,i)=>'Feb '+(i+1));
 const LSK='myl_v4';
-const SEED=[
-{name:"KAVERIPOOMPATTINAM",total:11540.2,active_days:27,daily_avg:427.4,trend:"up",consistency:100,daily:[270,398.4,368.3,358.7,424.7,361.2,373.5,404,431,466.5,507.8,465.3,420.5,363.1,197.2,430.3,433.8,444.5,421.9,476.5,507.6,566.5,572.8,481.2,473.2,497.2,424.5]},
-{name:"KOORAINADU",total:11277.9,active_days:27,daily_avg:417.7,trend:"up",consistency:100,daily:[399.3,433.2,434.5,447.3,410.3,392.4,429.6,413.2,394.2,357,398.4,415,360.6,374.3,292.2,288.3,389.4,503.3,364.6,484.2,445.8,517.8,531.1,490.3,399.5,439,473.1]},
-{name:"VAITHEESWARANKOVIL",total:6800.2,active_days:27,daily_avg:251.9,trend:"up",consistency:100,daily:[84.8,224.5,247.4,252.7,248.7,235.4,248.6,259.4,239.5,223,256.2,239,269.5,160,151.7,190.5,257.2,295.7,269,336.4,303.3,328.1,375.8,324.1,277.4,147.1,355.2]},
-{name:"AACHALPURAM",total:3110.4,active_days:27,daily_avg:115.2,trend:"stable",consistency:100,daily:[47.2,101.8,117.7,116.4,117.4,117.5,119.3,147,100.5,132,135.6,138.7,120.5,93,80.4,107,108.1,116.8,119.1,119.2,111.4,135.3,96.7,122.9,139.8,127.2,121.9]},
-{name:"SITHAMALLI",total:2482.4,active_days:27,daily_avg:91.9,trend:"down",consistency:100,daily:[103.4,101.3,103.3,107.9,105.7,93.2,117,121.6,113.6,94.4,97.1,103,88.5,68.5,44.3,104.5,85,96,97.3,91.6,93.1,78,81,46.9,87.4,85.6,73.2]},
-{name:"NALLAVUR",total:2228.4,active_days:27,daily_avg:82.5,trend:"up",consistency:100,daily:[71.8,73.2,70.4,73.1,75.4,80,78.7,74.4,78.9,77.1,83.4,84.9,84.1,87.9,89.4,85.4,86.5,89.2,84.9,91.1,89.3,87.5,83.4,84.9,90.9,84.2,88.4]},
-{name:"ATHIYUR",total:1680.6,active_days:27,daily_avg:62.2,trend:"up",consistency:100,daily:[77.3,51.5,53.2,47.4,58.6,53,81,56.6,61.5,55,57.2,58.5,62.4,92.4,50.2,55.3,61,59.6,58.9,63.8,57.8,57.2,65.9,61.2,75.6,66.9,81.6]},
-{name:"KATHIRUPPU",total:1610.1,active_days:27,daily_avg:59.6,trend:"down",consistency:100,daily:[70.7,69.4,70.9,71.2,68.7,77.7,73.7,74.8,70.5,69,72.5,65.6,74.6,72.6,69.4,70.4,72.9,78,19.7,30.9,38.6,40.9,39.5,37.8,36,37.9,36.2]},
-{name:"CHIDAMBARANATHAPURAM",total:1584.3,active_days:27,daily_avg:58.7,trend:"up",consistency:100,daily:[47.8,52,53.4,54.9,58.1,55.5,58.1,56.5,58.8,60.6,57.9,60.5,61.5,57.1,33.9,62.5,66.1,68.3,70.6,58,63.1,57.9,55.8,59.3,65.6,64.1,66.4]},
-{name:"KARAIKANDAM",total:1551.8,active_days:23,daily_avg:67.5,trend:"up",consistency:85,daily:[57.4,66.9,61.8,62.9,60.3,61.7,0,0,0,0,72.1,74.1,72,70.9,65.4,39.7,76.6,71.7,74.9,80.4,73.5,75,77.2,73.9,32.7,72.4,78.3]},
-{name:"KUNNAM",total:1528.9,active_days:27,daily_avg:56.6,trend:"stable",consistency:100,daily:[42.7,58.7,58.3,56.4,55.3,59.2,55.2,57.7,58.1,57,60.3,63.3,61.8,63.2,44.4,59.2,60.5,53.9,59.8,54.9,56.9,58.8,58.8,53.8,50.7,54,56]},
-{name:"GOPALASAMUTHIRAM",total:1523,active_days:27,daily_avg:56.4,trend:"stable",consistency:100,daily:[49.5,58.2,52.5,52.3,56.3,53.8,54.8,57.5,55.5,54.9,56.5,57.7,58,57.2,36.5,54.2,58.7,60,64.8,56.2,59.4,65.5,60.8,58.1,57.5,61.2,55.4]},
-{name:"MUTHALAIMEDU THITTU",total:1412.3,active_days:27,daily_avg:52.3,trend:"up",consistency:100,daily:[40.8,48.2,52.6,52.7,47.4,46.3,53.5,46.7,53.4,53.9,51.3,52,53,51.5,44.7,45.7,52.8,53.2,48.2,58.8,57.3,57.6,56.1,55.9,57.8,59,61.9]},
-{name:"KEELAMOOLAI",total:1156.6,active_days:27,daily_avg:42.8,trend:"down",consistency:100,daily:[42,43.2,42.6,45,42.7,46.4,46.4,43.5,45.8,46,44.8,46.1,44.6,43.8,42.3,41.9,42.4,40.3,41.9,38.5,39.1,40.8,40.4,41.2,42.6,41.6,40.7]},
-{name:"MATHIRIVELLUR",total:1126,active_days:27,daily_avg:41.7,trend:"down",consistency:100,daily:[29.5,63,50.4,50.6,43,27.6,50.9,43,48.1,31.3,40.2,45.9,40.9,27.6,36.1,29.3,39.4,40.8,43.2,39.3,39.9,29.6,46.3,50.9,48.5,48.3,42.4]},
-{name:"NALLUR",total:1101.9,active_days:27,daily_avg:40.8,trend:"up",consistency:100,daily:[24.4,32.6,29.9,30.8,35.1,38.8,38.8,30.9,36.6,38.5,39.3,42.7,35.4,38.1,41.5,45.3,45.3,49.2,47.7,47.2,48.7,46.8,51.3,46.4,47.4,45.5,47.7]},
-{name:"JOTHIYAKUDI",total:1090.3,active_days:27,daily_avg:40.4,trend:"down",consistency:100,daily:[12,46.4,46.8,48.6,40.3,51.2,41.3,43.8,43.8,45,43.6,48.2,31.2,35.1,4.8,27.9,25.7,43.7,38,49.5,47.8,51.2,49.4,44.4,45.7,45.8,39.1]},
-{name:"KADALANKUDI",total:1055.8,active_days:27,daily_avg:39.1,trend:"up",consistency:100,daily:[35.9,25.2,25,36,42.2,33.9,34.5,37.3,41.4,37.5,36.7,37.5,31.8,35.8,40.5,45.3,45,53.2,45.1,38.4,18.7,43.3,45.9,50.1,50.9,45.4,43.3]},
-{name:"KADAVASAL",total:1020.1,active_days:24,daily_avg:42.5,trend:"up",consistency:89,daily:[0,0,0,31.4,30.8,5.2,37.5,7.9,29.4,30.3,63.7,47.5,45,29.1,7.5,11.4,65.2,56.8,85.1,42.6,52.2,79.6,64.4,41.4,58.4,65.5,32.2]},
-{name:"KURAVALUR MPCS",total:1008.6,active_days:27,daily_avg:37.4,trend:"up",consistency:100,daily:[13.8,43,24.7,38,42,34.1,36.6,32,40.5,29.9,39.5,38.9,37.4,19.2,11.9,49.3,43,48.1,45.8,48.8,40.8,39.8,47.2,39.7,39.7,38,46.9]},
-{name:"NEPPATHUR",total:1006.4,active_days:27,daily_avg:37.3,trend:"up",consistency:100,daily:[22.5,34.8,27.2,27,37.5,30.3,51.8,22,44,33.5,17,60.1,46,44.8,22,46.5,48.4,49.3,43.7,39.6,34.2,35.5,42.8,40.8,37.5,41.6,26]},
-{name:"VADARENGAM",total:974.9,active_days:26,daily_avg:37.5,trend:"down",consistency:96,daily:[17.5,43.6,38.5,46,41.6,39.6,46.7,30.4,34.7,40.1,45.5,44.3,50.7,26.7,0,39.9,23,34.6,48,45.1,29.9,31.6,35,27.4,42.5,45.4,26.6]},
-{name:"PACHAIPERUMALNALLUR",total:914.9,active_days:27,daily_avg:33.9,trend:"up",consistency:100,daily:[4,22.1,25,26.7,23,23.9,21.9,15.5,21.2,25.7,40,40.3,37,25.8,23.7,29.5,44.2,51.8,49,44.6,32,38.8,45.9,43.2,51.9,53,55.2]},
-{name:"KEELMATHUR",total:908.6,active_days:27,daily_avg:33.7,trend:"up",consistency:100,daily:[15.5,33.6,34.6,35.4,31.7,31.2,35.1,39.1,27.4,33.7,34.6,35,20.5,29.3,19.9,24,28.5,36.4,39.6,39.2,36.7,43.4,39.7,38,45,44.9,36.6]},
-{name:"KONDAL",total:825.5,active_days:23,daily_avg:35.9,trend:"up",consistency:85,daily:[0,34.8,32.6,33.4,33.3,35.4,33.8,0,0,0,36.4,39.7,36.5,38.5,30.3,35,34,36.9,37.6,36.1,32.2,39,37.2,36.4,42.7,37.4,36.3]},
-{name:"KURICHI",total:823.5,active_days:25,daily_avg:32.9,trend:"up",consistency:93,daily:[30.8,39.6,34.6,34.7,35.7,31.5,36.4,0,0,34.6,30.2,31.6,35,21.6,22.6,32,32.3,39.1,36,34.5,35.4,35.5,33.5,27.9,33.8,29.9,34.7]},
-{name:"MELAYUR",total:793.6,active_days:27,daily_avg:29.4,trend:"up",consistency:100,daily:[20,8,19.4,25.4,27.6,23.5,28.8,48.6,29.1,24.3,35.5,12,15.4,25.1,15.4,26.8,24.5,23.2,31.3,66.4,38.6,45.6,35.2,37.7,37.5,39.3,29.4]},
-{name:"PULIYANTHURAI",total:731.6,active_days:26,daily_avg:28.1,trend:"up",consistency:96,daily:[26.8,28.1,29.1,27.1,29.8,30.3,27,23.4,28.9,30.2,27.7,0,23.5,22,20.8,34.3,24.4,34.3,35.7,31.5,23.4,28.8,18.6,31.3,32,32.3,30.3]},
-{name:"VILANTHIDASAMUTHIRAM",total:712.4,active_days:25,daily_avg:28.5,trend:"up",consistency:93,daily:[0,14.8,35.8,20.9,12,15.2,17.5,2,9.5,15.5,36.6,29.5,22.6,20.9,0,13.9,11.1,25.5,40.7,30.8,30.6,34,73.1,37.3,49.5,46.3,66.8]},
-{name:"THIRUMULLAIVASAL",total:706.1,active_days:27,daily_avg:26.2,trend:"down",consistency:100,daily:[30.3,28.5,28.2,26.4,27,24.5,29.5,27.1,26.4,26.3,25.8,25.1,24.1,26.1,25,24.9,27.4,28.3,27.1,25.9,25.7,26.4,22.5,21.9,24.9,24,26.8]},
-{name:"MUDIKANDANALLUR",total:692.2,active_days:27,daily_avg:25.6,trend:"up",consistency:100,daily:[27,25.9,25.1,27.3,25.2,23.5,25.9,24.4,24.9,24.2,24.2,21.5,23.4,26.6,22.7,29,19,25.1,24,27.7,28.1,27.5,29.3,27.9,28.2,26.3,28.3]},
-{name:"KONARIRAJAPURAM",total:662.8,active_days:25,daily_avg:26.5,trend:"down",consistency:93,daily:[31.9,29.2,29.6,29.3,32,26,17.2,27.1,27.2,38.4,36.4,42.1,22.6,11.2,20.3,0,0,7.4,10.4,14,14.4,34,24.8,47.6,11.9,39.6,38.2]},
-{name:"MANGAIMADAM",total:599.3,active_days:27,daily_avg:22.2,trend:"up",consistency:100,daily:[10.3,4,5.7,11.6,13,15.1,12.2,13,19.5,19.6,19.2,25.5,25.8,23.2,17.3,24.5,29.7,32.3,30.5,32.6,22.7,36.8,33.9,32.5,34.3,20.8,33.7]},
-{name:"THIRUVAVADUTHURAI",total:594.5,active_days:27,daily_avg:22,trend:"up",consistency:100,daily:[10.7,23.2,21,15,25.1,19.5,18.7,14.5,16.9,15.5,20.6,27.8,29.8,26.5,24.6,18.2,22.9,26.6,24,28.8,23.4,19.5,25.7,23.2,26,24.4,22.4]},
-{name:"THIRUVALI",total:569.7,active_days:25,daily_avg:22.8,trend:"down",consistency:93,daily:[0,26.7,24,28.4,32.1,29,22.7,32.9,26,26.2,35,30.4,12.7,30.6,7.3,0,24,23.1,18.1,20,12,19.8,15.5,19.9,17.8,17.8,17.7]},
-{name:"KEELSATANATHAPURAM",total:539.2,active_days:26,daily_avg:20.7,trend:"up",consistency:96,daily:[0,19.2,15.6,15.7,19,17.8,20,12.1,22.8,24.9,18,29.6,19.8,22.2,12.7,22.2,18,27.9,25,25.8,20.8,22.1,19.6,18,26.2,26.8,17.4]},
-{name:"PANAMANGALAM",total:536.2,active_days:27,daily_avg:19.9,trend:"down",consistency:100,daily:[20,25.3,26.5,26.5,23.5,24.1,25.5,22.7,17.5,11.1,18,18,16.9,16.8,25.3,6.6,22.8,27.1,23.7,21.7,24.8,17.8,21.6,13.3,7.6,12.9,18.6]},
-{name:"KEERANKUDI",total:474.8,active_days:27,daily_avg:17.6,trend:"up",consistency:100,daily:[12,15.6,18.5,19,17.3,16.4,17.5,13.8,17,17.4,14,17.2,14.4,17.1,15.9,16.5,16.5,18.5,18.6,17.7,19.4,20.3,22,20.2,20.9,20.6,20.5]},
-{name:"THALAICHANGADU",total:463.4,active_days:27,daily_avg:17.2,trend:"up",consistency:100,daily:[9.2,21.5,11.8,10.4,10.4,11.8,23,15.9,17.3,16.5,17.5,14.8,13.6,11.2,11.5,9.6,15.2,12.6,13.3,22.5,18,21.3,26.3,6.7,36,36.3,29.2]},
-{name:"OTHAVANTHANKUDI",total:429.4,active_days:27,daily_avg:15.9,trend:"up",consistency:100,daily:[11.2,14.5,10.3,12.9,15.7,16.8,17.6,16.4,16.6,16,10.9,18.1,15.2,18,19.6,12,14.3,21.5,19.2,16.2,18.4,15.5,18.9,19.2,13.5,15.3,15.6]},
-{name:"EURUKKUR",total:423.9,active_days:27,daily_avg:15.7,trend:"down",consistency:100,daily:[17.9,16.3,24.1,21.2,25.2,24.6,24.2,14,21.4,20.4,28.8,14.7,18.6,7.9,10.7,11.4,11.6,5.2,15,15.3,15.4,10,8,10.1,14.4,10.2,7.3]},
-{name:"KEEZHAIYUR",total:392.3,active_days:14,daily_avg:28,trend:"down",consistency:52,daily:[12.2,50.5,36.1,40.8,49,19.6,44.2,50,24.3,16.3,5,19.9,0,0,0,0,0,0,0,0,0,0,7.9,16.5,0,0,0]},
-{name:"ARASUR",total:358.7,active_days:23,daily_avg:15.6,trend:"up",consistency:85,daily:[13.2,19,18.5,19.5,16.3,13.8,0,0,0,0,16.2,16.9,14.8,14.4,12.5,14.1,13.9,13.8,14.5,13.4,13.1,14.2,16.6,14.6,18,18.3,19.1]},
-{name:"POOTHANGUDI",total:288.1,active_days:25,daily_avg:11.5,trend:"up",consistency:93,daily:[0,12.4,9.5,0,9.8,8.5,9.6,8,8.7,10.5,8.8,10,8,7,42.4,7.1,9.4,10.2,12.1,12.3,10.7,10.6,13,12.3,13.5,13.5,10.2]},
-{name:"MUTHALAIMEDU",total:230.8,active_days:27,daily_avg:8.5,trend:"stable",consistency:100,daily:[8.7,8.5,8.1,8.5,9.2,6.8,10.3,9,7.8,9.1,9.8,8,9.1,9,8,6.5,4,6.4,8.9,8.1,9.3,8.1,8,9,11.5,11.5,9.6]},
-{name:"SATTANATHAPURAM",total:184.6,active_days:20,daily_avg:9.2,trend:"up",consistency:74,daily:[0,0,0,6,5.4,6,6,5.1,5.8,0,7.1,11.7,6,7.3,0,10.6,6.3,10.6,15.3,25.6,7.4,0,14.8,0,9.1,9.1,9.4]},
-{name:"UMAIYALPATHI",total:174.5,active_days:22,daily_avg:7.9,trend:"up",consistency:81,daily:[0,0,5.6,6.4,7,6.5,7.5,5,6,6.8,7,7.5,7.5,5.5,6.5,5.6,0,7.9,6.1,9.5,0,16.5,0,16.2,8,9.2,10.7]},
-{name:"KUCHIPALAYAM",total:148.5,active_days:18,daily_avg:8.2,trend:"up",consistency:67,daily:[0,5.3,6.4,5.3,4.4,0,0,0,0,9.9,4.3,8.7,5.5,7,6.4,0,0,13,9.1,9.1,10.6,9.8,11.2,11.3,0,0,11.2]},
-{name:"ELAYAMATHUKOODAM",total:111.3,active_days:10,daily_avg:11.1,trend:"down",consistency:37,daily:[0,11,6,6.7,2.7,17.1,8.6,18,24.6,5.2,11.4,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]},
-{name:"ARAPALLAM",total:76.5,active_days:13,daily_avg:5.9,trend:"down",consistency:48,daily:[6,6,6.4,6,0,6.2,5.6,6,5.5,5.2,5,5.8,6.6,6.2,0,0,0,0,0,0,0,0,0,0,0,0,0]},
-{name:"MADAPURAM",total:0,active_days:0,daily_avg:0,trend:"stable",consistency:0,daily:Array(27).fill(0)},
-{name:"PERUNTHOTTAM",total:0,active_days:0,daily_avg:0,trend:"stable",consistency:0,daily:Array(27).fill(0)},
-{name:"THENNAMPATTINAM",total:0,active_days:0,daily_avg:0,trend:"stable",consistency:0,daily:Array(27).fill(0)},
-{name:"RADHANALLUR",total:0,active_days:0,daily_avg:0,trend:"stable",consistency:0,daily:Array(27).fill(0)},
-{name:"THILLAIVIDANGAN",total:0,active_days:0,daily_avg:0,trend:"stable",consistency:0,daily:Array(27).fill(0)},
-{name:"MANALMEDU",total:0,active_days:0,daily_avg:0,trend:"stable",consistency:0,daily:Array(27).fill(0)},
-{name:"ALAKUDI",total:0,active_days:0,daily_avg:0,trend:"stable",consistency:0,daily:Array(27).fill(0)},
-{name:"SEEYALAM",total:0,active_days:0,daily_avg:0,trend:"stable",consistency:0,daily:Array(27).fill(0)},
-{name:"KATTUR",total:0,active_days:0,daily_avg:0,trend:"stable",consistency:0,daily:Array(27).fill(0)},
-{name:"NAGAMBADI",total:0,active_days:0,daily_avg:0,trend:"stable",consistency:0,daily:Array(27).fill(0)},
-{name:"THIRUVALANGADU",total:0,active_days:0,daily_avg:0,trend:"stable",consistency:0,daily:Array(27).fill(0)},
-{name:"KADALANGUDI",total:0,active_days:0,daily_avg:0,trend:"stable",consistency:0,daily:Array(27).fill(0)},
-{name:"SENNIYANALLUR",total:0,active_days:0,daily_avg:0,trend:"stable",consistency:0,daily:Array(27).fill(0)}
-];
-const META={
-  myl:[1878,2612.7,2577.5,2653.8,2704.5,2518.6,2673.8,2523.8,2532.1,2516,2860.6,2850.2,2634.9,2388.9,1827.7,2344.1,2640,2970.9,2777,3020.3,2831.5,3119.6,3200.4,2924.8,2871.5,2832.6,2952.2],
-  tvr:[11898.7,17624.3,17552.8,18572.5,17623.1,17246.9,17913.8,17831.7,17605,17850.4,18265.6,18590.2,18235.5,16971.3,12809.6,18227,18289.8,18872.8,18933.3,18779,18562.7,19133.5,17503.2,18270.8,18677.5,18800.3,17916.8],
-  tnj:[22859.3,26282.3,26477.6,27101.7,26509.6,26780,26495.7,27438.6,26854.5,26804,27401.1,27649.3,27694.4,25854.6,22759,27302,27413.5,27436.6,28039,28576.9,27768.3,28116.6,27621.9,27662.3,27792.9,27780.5,27106.3],
-  nag:[510,760,720,750,730,670,710,640,700,720,770,730,670,610,570,700,710,780,760,780,740,810,790,730,720,710,740],
-  morPct:58
-};
-const UNSERVED=[
-{v:"Koothiyampettai",b:"Kollidam",fc:3112,fb:0,ma:3112,vet:"Mathanam",lat:11.368,lng:79.848},
-{v:"Eduthukkatti",b:"Sembanarkoil",fc:2755,fb:0,ma:2755,vet:"Thillaiyadi",lat:11.018,lng:79.912},
-{v:"Thandavankulam",b:"Kollidam",fc:2620,fb:0,ma:2620,vet:"Mathanm",lat:11.352,lng:79.861},
-{v:"Alakkudy",b:"Kollidam",fc:2320,fb:67,ma:2387,vet:"Muthalaimedu",lat:11.339,lng:79.843},
-{v:"Mudhalaimedu",b:"Kollidam",fc:1934,fb:84,ma:2018,vet:"Muthalaimedu",lat:11.321,lng:79.828},
-{v:"Melaiyur",b:"Sirkali",fc:1633,fb:108,ma:1741,vet:"Poombuhar",lat:11.219,lng:79.763},
-{v:"Thirukkalacheri",b:"Sembanarkoil",fc:1552,fb:164,ma:1716,vet:"Poraiyar",lat:11.036,lng:79.903},
-{v:"Palayapalayam",b:"Kollidam",fc:1694,fb:0,ma:1694,vet:"Mathanm",lat:11.341,lng:79.851},
-{v:"Mahendrapalli",b:"Kollidam",fc:1680,fb:0,ma:1680,vet:"Muthalaimedu",lat:11.331,lng:79.831},
-{v:"Thalaiyudaiyarar Koil Pathy",b:"Sembanarkoil",fc:1426,fb:52,ma:1478,vet:"Thalachankadu",lat:11.024,lng:79.893},
-{v:"Manikkapangu",b:"Sembanarkoil",fc:1459,fb:0,ma:1459,vet:"Poraiyar",lat:11.029,lng:79.908},
-{v:"Kalamanallur",b:"Sembanarkoil",fc:1456,fb:0,ma:1456,vet:"Thillaiyadi",lat:11.022,lng:79.898},
-{v:"Kesingan",b:"Mayiladuthurai",fc:1425,fb:15,ma:1440,vet:"Kadalangudi",lat:11.118,lng:79.668},
-{v:"Alalasundram",b:"Kollidam",fc:1278,fb:33,ma:1311,vet:"Muthalaimedu",lat:11.308,lng:79.821},
-{v:"Thiruvalaputhur",b:"Mayiladuthurai",fc:1196,fb:0,ma:1196,vet:"Kilay",lat:11.131,lng:79.671},
-{v:"Kidarankondan",b:"Sembanarkoil",fc:1190,fb:0,ma:1190,vet:"Thalachankadu",lat:11.012,lng:79.886},
-{v:"Pillaiperumalnallur",b:"Sembanarkoil",fc:1123,fb:0,ma:1123,vet:"Poraiyar",lat:11.033,lng:79.913},
-{v:"Mamakudi",b:"Sembanarkoil",fc:1091,fb:9,ma:1100,vet:"Thalachankadu",lat:11.027,lng:79.899},
-{v:"Kaduvangudi",b:"Mayiladuthurai",fc:1059,fb:32,ma:1091,vet:"Thalainayaru",lat:11.112,lng:79.658},
-{v:"Melaperumpallam",b:"Sembanarkoil",fc:1022,fb:30,ma:1052,vet:"Thalachankadu",lat:11.021,lng:79.895},
-{v:"Talainayar",b:"Mayiladuthurai",fc:1047,fb:0,ma:1047,vet:"Thalainayaru",lat:11.104,lng:79.656},
-{v:"Varadampattu",b:"Mayiladuthurai",fc:986,fb:0,ma:986,vet:"Kilay",lat:11.139,lng:79.677},
-{v:"Tiruvaduthurai",b:"Kuthalam",fc:976,fb:7,ma:983,vet:"Thiruvaduthurai",lat:11.071,lng:79.574},
-{v:"Kizhaperumpallam",b:"Sembanarkoil",fc:914,fb:62,ma:976,vet:"Thalachankadu",lat:11.017,lng:79.891},
-{v:"Madhanam",b:"Kollidam",fc:973,fb:0,ma:973,vet:"Mathanam",lat:11.362,lng:79.841},
-{v:"Komal - East",b:"Kuthalam",fc:918,fb:0,ma:918,vet:"Komal",lat:11.082,lng:79.558},
-{v:"Elanthoppu",b:"Mayiladuthurai",fc:915,fb:0,ma:915,vet:"Thalainayaru",lat:11.108,lng:79.661},
-{v:"Keelamathur",b:"Kollidam",fc:910,fb:4,ma:914,vet:"Kollidam",lat:11.347,lng:79.837},
-{v:"Attur",b:"Mayiladuthurai",fc:899,fb:8,ma:907,vet:"Kadalangudi",lat:11.115,lng:79.667},
-{v:"Siddamalli",b:"Mayiladuthurai",fc:896,fb:4,ma:900,vet:"Thalainayaru",lat:11.098,lng:79.654},
-{v:"Perambur",b:"Sembanarkoil",fc:841,fb:0,ma:841,vet:"Perambur",lat:11.011,lng:79.879},
-{v:"Villiyanallur",b:"Kuthalam",fc:785,fb:23,ma:808,vet:"Kuthalam",lat:11.088,lng:79.547},
-{v:"Korukkai",b:"Mayiladuthurai",fc:749,fb:2,ma:751,vet:"Kilay",lat:11.127,lng:79.675},
-{v:"Vettangudy",b:"Kollidam",fc:739,fb:0,ma:739,vet:"Edamanal",lat:11.331,lng:79.857},
-{v:"Thalancheri",b:"Mayiladuthurai",fc:736,fb:0,ma:736,vet:"Kilay",lat:11.142,lng:79.681},
-{v:"Kattucheri",b:"Sembanarkoil",fc:530,fb:184,ma:714,vet:"Poraiyar",lat:11.041,lng:79.907},
-{v:"Thiruvengadu",b:"Sirkali",fc:703,fb:1,ma:704,vet:"Thiruvengadu",lat:11.201,lng:79.749},
-{v:"Pandaravadaimappadugai",b:"Mayiladuthurai",fc:690,fb:0,ma:690,vet:"Pandaravadai",lat:11.095,lng:79.661},
-{v:"Thirumailadi",b:"Kollidam",fc:648,fb:5,ma:653,vet:"Kollidam",lat:11.339,lng:79.841},
-{v:"Odhavanthangudy",b:"Kollidam",fc:646,fb:0,ma:646,vet:"Mathanam",lat:11.327,lng:79.829},
-{v:"Keelaiyur",b:"Sirkali",fc:638,fb:0,ma:638,vet:"Poombuhar",lat:11.212,lng:79.757},
-{v:"Parasalur",b:"Sembanarkoil",fc:625,fb:0,ma:625,vet:"Sembanarkoil",lat:11.008,lng:79.869},
-{v:"Kadambakkam",b:"Mayiladuthurai",fc:620,fb:0,ma:620,vet:"Kadallangudi",lat:11.098,lng:79.668},
-{v:"Vanagiri",b:"Sirkali",fc:619,fb:0,ma:619,vet:"Poombuhar",lat:11.218,lng:79.753},
-{v:"Vanathirajapuram",b:"Kuthalam",fc:588,fb:0,ma:588,vet:"Kuthalam",lat:11.078,lng:79.538},
-{v:"Sembathaniruppu",b:"Sirkali",fc:575,fb:0,ma:575,vet:"Nangoor",lat:11.224,lng:79.759},
-{v:"Sembanarkoil",b:"Sembanarkoil",fc:563,fb:4,ma:567,vet:"Sembanarkoil",lat:11.019,lng:79.893},
-{v:"Pandur",b:"Mayiladuthurai",fc:555,fb:0,ma:555,vet:"Kali",lat:11.102,lng:79.663},
-{v:"Erukkur",b:"Kollidam",fc:545,fb:9,ma:554,vet:"Kollidam",lat:11.331,lng:79.839},
-{v:"Nadukkarai Melpathi",b:"Sembanarkoil",fc:551,fb:0,ma:551,vet:"Sembanarkoil",lat:11.013,lng:79.883}
-];
+const SEED=[];  // loaded from Firestore: appState/seed
+const META={myl:[],tvr:[],tnj:[],nag:[],morPct:58};  // loaded from Firestore
+const UNSERVED=[];  // loaded from Firestore: appState/unserved
 const SOC_COORDS={
 "KAVERIPOOMPATTINAM":[11.1996,79.8614],"KOORAINADU":[11.1756,79.7934],"VAITHEESWARANKOVIL":[11.1456,79.6236],
 "AACHALPURAM":[11.1089,79.6712],"SITHAMALLI":[11.1634,79.7023],"NALLAVUR":[11.0934,79.6634],
@@ -1571,21 +1450,7 @@ const BLK={
   Sirkali:{total:15691,villages:42,served:9,avg:374,color:"#129eaf",note:"Best coverage (21%). Melaiyur(1741) top unserved. Coastal buffalo milk premium opportunity."},
   Kuthalam:{total:15444,villages:53,served:3,avg:291,color:"#8430ce",note:"Temple economy zone — dairy income diversification key pitch. Tiruvaduthurai(983) viable."}
 };
-const INACT_ACT={
-"MADAPURAM":"Field visit → verify active members → issue first-purchase guarantee letter",
-"PERUNTHOTTAM":"Survey milch animals → if >200 found, restart with NDDB incentives",
-"THENNAMPATTINAM":"Vet dispensary coordination → farmer contact list → gram sabha meeting",
-"RADHANALLUR":"Investigate cause (price/transport/operator) → address → restart",
-"THILLAIVIDANGAN":"Nearest active: KATHIRUPPU. If reactivation fails, merge route",
-"MANALMEDU":"Contact original members → offer 3-month procurement bonus",
-"ALAKUDI":"Critical Kollidam gap → immediate reactivation or new society",
-"SEEYALAM":"Vet visit needed → possible disease impact → verify herd",
-"KATTUR":"Transport route issue → review chilling centre logistics",
-"NAGAMBADI":"Low count → consider federation with neighboring village",
-"THIRUVALANGADU":"Investigate dropout reason → restart with price transparency drive",
-"KADALANGUDI":"HQ block gap → nearby high-potential villages → expand coverage",
-"SENNIYANALLUR":"Recent formation → assign MPCS mentor for first 3 months"
-};
+const INACT_ACT={};  // loaded from Firestore: appState/inactAct
 
 // ── STATE ──
 let _ALL=[],_kFilt='none',_sCol='total',_sDir='desc';
@@ -1668,27 +1533,137 @@ function goTab(id,el){
 // ── gsRenderAll: re-render whichever top-level tab is currently visible ──
 // Called after every GS sync or Firebase poll so the user sees live data
 // regardless of which tab they're on.
+// ════════════════════════════════════════════════════════════════
+//  rebuildAllFromDmData — recomputes _ALL stats from _dmData
+//  Called after every GS sync or Firebase poll so all tabs show
+//  the latest real data instead of the hardcoded SEED values.
+// ════════════════════════════════════════════════════════════════
+function rebuildAllFromDmData() {
+  if (!_dmData || !Object.keys(_dmData).length) return;
+
+  // Gather all dates in _dmData, sorted
+  const allDates = Object.keys(_dmData)
+    .filter(k => /^\d{4}-\d{2}-\d{2}$/.test(k))
+    .sort();
+  if (!allDates.length) return;
+
+  // Use the most recent N days (up to 27) for stats
+  const windowDates = allDates.slice(-27);
+  const N = windowDates.length;
+
+  // Rebuild each society in _ALL
+  _ALL.forEach(s => {
+    const dailyTotals = windowDates.map(dk => {
+      const e = _dmData[dk]?.[s.name];
+      if (!e) return null;
+      const mor = e.mor ?? 0;
+      const eve = e.eve ?? 0;
+      return (mor + eve) > 0 ? Math.round((mor + eve) * 10) / 10 : null;
+    });
+
+    const recorded = dailyTotals.filter(v => v !== null);
+    if (recorded.length === 0) return; // no data yet, keep SEED
+
+    // total: sum of all recorded days
+    s.total = Math.round(recorded.reduce((a, b) => a + b, 0) * 10) / 10;
+
+    // active_days: days with >0 collection
+    s.active_days = recorded.filter(v => v > 0).length;
+
+    // daily_avg: average over active days
+    s.daily_avg = s.active_days > 0
+      ? Math.round(s.total / s.active_days * 10) / 10
+      : 0;
+
+    // consistency: % of window days with data
+    s.consistency = Math.round(recorded.length / N * 100);
+
+    // daily[]: fill array aligned to windowDates (0 for missing days)
+    s.daily = dailyTotals.map(v => v === null ? 0 : v);
+
+    // trend: compare last 7 days avg vs previous 7 days avg
+    const last7  = s.daily.slice(-7).filter(v => v > 0);
+    const prev7  = s.daily.slice(-14, -7).filter(v => v > 0);
+    const avgL   = last7.length  ? last7.reduce((a,b)=>a+b,0)/last7.length   : 0;
+    const avgP   = prev7.length  ? prev7.reduce((a,b)=>a+b,0)/prev7.length   : 0;
+    s.trend = avgP === 0 ? 'stable'
+            : avgL > avgP * 1.05 ? 'up'
+            : avgL < avgP * 0.95 ? 'down'
+            : 'stable';
+  });
+
+  // Rebuild META.myl (district daily totals) from _dmData
+  const distDailyTotals = windowDates.map(dk => {
+    const dayData = _dmData[dk] || {};
+    return Object.values(dayData).reduce((sum, e) => {
+      return sum + ((e.mor ?? 0) + (e.eve ?? 0));
+    }, 0);
+  });
+  META.myl = distDailyTotals.map(v => Math.round(v * 10) / 10);
+
+  // Update DAYS labels to match window
+  const dayLabels = windowDates.map(dk => {
+    const d = new Date(dk + 'T00:00:00');
+    return d.toLocaleDateString('en-IN', { day:'numeric', month:'short' });
+  });
+  // DAYS is const so we mutate in place
+  DAYS.length = 0;
+  dayLabels.forEach(l => DAYS.push(l));
+
+  // Update morPct from actual data
+  let totalMor = 0, totalEve = 0;
+  allDates.slice(-7).forEach(dk => {
+    Object.values(_dmData[dk] || {}).forEach(e => {
+      totalMor += e.mor ?? 0;
+      totalEve += e.eve ?? 0;
+    });
+  });
+  if (totalMor + totalEve > 0)
+    META.morPct = Math.round(totalMor / (totalMor + totalEve) * 100);
+}
+
 function gsRenderAll() {
+  // Always recompute _ALL from latest _dmData before rendering any tab
+  rebuildAllFromDmData();
+
+  const AL  = _ALL.filter(s => s.total > 0 && s.active_days > 0);
+  const ZL  = _ALL.filter(s => !s.total || s.total === 0);
+  const totL = _ALL.reduce((a, s) => a + (s.total || 0), 0);
+
   dmUpdateBadge();
-  // Always refresh Daily tab internals (they use _dmData)
-  const dailyPanel = document.getElementById('tab-daily');
-  if (dailyPanel && dailyPanel.classList.contains('act')) {
+  sv('chip-act', '✓ ' + AL.length + ' Active');
+  sv('chip-inact', '✗ ' + ZL.length + ' Inactive');
+
+  // Persist updated _ALL + META to Firestore so all users get live data
+  fbSaveAppState();
+
+  // Re-render whichever top-level tab is currently active
+  if (document.getElementById('tab-daily')?.classList.contains('act')) {
     renderDE(); renderDMDashboard(); renderHeatmap(); renderAlerts(); renderReport();
     return;
   }
-  // For Overview / NDDB / Society tabs — recompute _ALL totals from _dmData then re-render
-  const AL = _ALL.filter(s=>s.total>0&&s.active_days>0);
-  const ZL = _ALL.filter(s=>!s.total||s.total===0);
-  const totL = _ALL.reduce((a,s)=>a+(s.total||0),0);
   if (document.getElementById('tab-overview')?.classList.contains('act')) {
-    renderOV(_ALL,AL,ZL);
+    renderOV(_ALL, AL, ZL); return;
   }
   if (document.getElementById('tab-nddb')?.classList.contains('act')) {
-    renderNDDB(_ALL,AL,ZL,totL);
+    renderNDDB(_ALL, AL, ZL, totL); return;
   }
   if (document.getElementById('tab-societies')?.classList.contains('act')) {
-    renderSoc(_ALL,AL);
+    renderTbl(); return;
   }
+  if (document.getElementById('tab-comparison')?.classList.contains('act')) {
+    renderComp(totL, AL.length); return;
+  }
+  if (document.getElementById('tab-inactive')?.classList.contains('act')) {
+    renderInact(ZL, totL / (AL.length || 1)); return;
+  }
+  if (document.getElementById('tab-targets')?.classList.contains('act')) {
+    renderTgts('all'); return;
+  }
+  if (document.getElementById('tab-mgmt')?.classList.contains('act')) {
+    renderSC(_ALL, AL, totL); return;
+  }
+  renderOV(_ALL, AL, ZL);
 }
 
 
@@ -1698,9 +1673,13 @@ const COPTS=(cb)=>({responsive:true,maintainAspectRatio:false,plugins:{legend:{d
 
 // ── OVERVIEW ──
 function renderOV(S,AL,ZL){
-  const MYL=META.myl,totL=S.reduce((a,s)=>a+(s.total||0),0);
-  const h1=MYL.slice(0,13).reduce((a,b)=>a+b,0)/13,h2=MYL.slice(13).reduce((a,b)=>a+b,0)/14;
-  const gPct=((h2-h1)/h1*100).toFixed(1),pk=Math.max(...MYL),pkD=DAYS[MYL.indexOf(pk)];
+  if(!S.length){ sh('top10bars','<div style="padding:24px;text-align:center;color:var(--txt3);font-size:13px;">Loading data from Firestore…</div>'); return; }
+  const MYL=META.myl.length?META.myl:[0];
+  const totL=S.reduce((a,s)=>a+(s.total||0),0);
+  const h1=MYL.slice(0,Math.floor(MYL.length/2)).reduce((a,b)=>a+b,0)/Math.max(Math.floor(MYL.length/2),1);
+  const h2=MYL.slice(Math.floor(MYL.length/2)).reduce((a,b)=>a+b,0)/Math.max(MYL.length-Math.floor(MYL.length/2),1);
+  const gPct=h1>0?((h2-h1)/h1*100).toFixed(1):'0.0';
+  const pk=Math.max(...MYL)||0, pkD=DAYS[MYL.indexOf(pk)]||'';
   const eff=Math.round(AL.length/S.length*100);
   sv('kv-total',totL.toLocaleString('en-IN'));sv('kv-active',AL.length);sv('kv-inactive',ZL.length);
   sv('kv-partial',S.filter(s=>s.consistency>0&&s.consistency<80).length);
@@ -1722,7 +1701,9 @@ function renderOV(S,AL,ZL){
 
 // ── NDDB ──
 function renderNDDB(S,AL,ZL,totL){
-  const eff=Math.round(AL.length/S.length*100),MYL=META.myl;
+  if(!S.length) return;
+  const MYL=META.myl.length?META.myl:[0];
+  const eff=Math.round(AL.length/Math.max(S.length,1)*100);
   const mn=MYL.reduce((a,b)=>a+b,0)/MYL.length,cv=Math.round(Math.sqrt(MYL.reduce((a,b)=>a+Math.pow(b-mn,2),0)/MYL.length)/mn*100);
   sv('ne-eff',eff+'%');document.getElementById('ne-eff-bar').style.width=eff+'%';
   sh('ne-effs',eff>=85?'<span style="color:var(--green)">✓ Met</span>':'<span style="color:var(--red)">✗ Gap</span>');
@@ -1974,89 +1955,50 @@ function importCSV(inp){const f=inp.files[0];if(!f)return;const r=new FileReader
 
 // ── BOOT ──
 function boot(){
-  lsLoad();dmLsLoad();_ALL=SEED.map(s=>({...s}));
-  // Always set active date to TODAY — never allow a hardcoded past date
+  lsLoad(); dmLsLoad();
+  // _ALL starts empty — will be populated from Firestore in fbLoadAppState()
+  _ALL = SEED.length ? SEED.map(s=>({...s})) : [];
+  // Always set active date to TODAY
   _dmActiveDate = new Date().toISOString().split('T')[0];
-  const AL=_ALL.filter(s=>s.total>0&&s.active_days>0),ZL=_ALL.filter(s=>!s.total||!s.active_days);
+  // Recompute _ALL from any locally cached _dmData immediately (offline support)
+  if (_ALL.length) rebuildAllFromDmData();
+  // Render a skeleton UI immediately so the page isn't blank
+  _bootRender();
+  sv('chip-act','✓ '+_ALL.filter(s=>s.total>0).length+' Active');
+  sv('chip-inact','✗ '+_ALL.filter(s=>!s.total).length+' Inactive');
+  const ov=document.getElementById('loader');
+  if(ov){ov.style.opacity='0';setTimeout(()=>ov.style.display='none',500);}
+  setTimeout(dmUpdateBadge, 100);
+  // Start Firebase (loads app state, then starts polling)
+  setTimeout(fbInit, 800);
+  // Start GS auto-sync after Firebase is ready
+  setTimeout(gsBootInit, 2000);
+}
+
+function _bootRender() {
+  const AL=_ALL.filter(s=>s.total>0&&s.active_days>0);
+  const ZL=_ALL.filter(s=>!s.total||!s.active_days);
   const totL=_ALL.reduce((a,s)=>a+(s.total||0),0);
-  const MYL=META.myl,h1=MYL.slice(0,13).reduce((a,b)=>a+b,0)/13,h2=MYL.slice(13).reduce((a,b)=>a+b,0)/14;
-  const gPct=((h2-h1)/h1*100).toFixed(1);
+  const MYL=META.myl;
+  const gPct = MYL.length >= 14
+    ? (((MYL.slice(13).reduce((a,b)=>a+b,0)/Math.max(MYL.slice(13).length,1))
+       -(MYL.slice(0,13).reduce((a,b)=>a+b,0)/13))
+      /(MYL.slice(0,13).reduce((a,b)=>a+b,0)/13)*100).toFixed(1)
+    : '0.0';
   renderOV(_ALL,AL,ZL);
   renderNDDB(_ALL,AL,ZL,totL);
   renderTbl();
   renderComp(totL,AL.length);
-  renderInact(ZL,totL/AL.length);
+  renderInact(ZL,totL/(AL.length||1));
   renderInsights(_ALL,AL,ZL,totL,parseFloat(gPct));
   renderExp();filtUV();renderNS();renderBlk();
   initTgts(_ALL);renderTgts('all');
   initKB(_ALL);
   renderSC(_ALL,AL,totL);
-  // Pre-seed escalations for inactive societies if empty
-  if(_escalations.length===0){
-    ZL.slice(0,5).forEach(s=>_escalations.push({id:Date.now()+Math.random(),date:'2026-02-27',soc:s.name,issue:'Zero collection all of February 2026',action:INACT_ACT[s.name]||'Field visit required',officer:'Block Officer',level:'H',status:'O'}));
-    dmLsSave();
-  }
-  sv('chip-act','✓ '+AL.length+' Active');sv('chip-inact','✗ '+ZL.length+' Inactive');
-  const ov=document.getElementById('loader');if(ov){ov.style.opacity='0';setTimeout(()=>ov.style.display='none',500);}
-  // Update sidebar badge with today's data state
-  setTimeout(dmUpdateBadge, 100);
-  // Start Google Sheets auto-sync (reads from localStorage, no DOM needed)
-  setTimeout(gsBootInit, 1000);
-  // Start Firebase sync (800ms delay so DOM is fully ready)
-  setTimeout(fbInit, 800);
 }
 window.addEventListener('DOMContentLoaded',()=>{document.getElementById('ldtxt').textContent='Computing metrics…';setTimeout(boot,300);});
 // ── ACTION PLAN DATA ──
-const AP_MONTHS=[
-{n:1,name:'Mar 2025',phase:'Stabilise & Diagnose',color:'#1a73e8',bg:'#e8f0fe',target:75000,prev:72238,newSoc:0,react:0,
- focus:'Stop the bleeding on 14 declining societies; full vet audit of all 13 inactive centres.',
- actions:['Vet visit to all 14 declining societies — identify root cause (disease / operator / price)','Issue reactivation notices to 13 inactive centres; set 30-day response deadline','Re-engage SITHAMALLI & KATHIRUPPU (combined 4,092 L/mo at risk)','Deploy field officer to Kollidam block — highest concentration of issues','GPS mapping: photograph and record co-ordinates for all 63 enrolled societies','Set individual targets in MYL Milk Intel for all active societies'],
- kpis:['Daily procurement ≥ 2,750 L','Vet visits: 14/14 declining societies complete','13 inactive centres formally notified','SITHAMALLI decline reversed (↑ from 92 L/day)']},
-{n:2,name:'Apr 2025',phase:'Reactivation Sprint',color:'#f9ab00',bg:'#fef7e0',target:82000,prev:75000,newSoc:0,react:5,
- focus:'Reactivate first 5 inactive centres. Target easiest cases first.',
- actions:['Reactivate MADAPURAM & SENNIYANALLUR — newly formed / field-visit ready','Reactivate NAGAMBADI & THIRUVALANGADU — HQ proximity, straightforward logistics','Reactivate THENNAMPATTINAM — vet coordination in pipeline from Month 1','Begin farmer enrollment at Koothiyampettai (3,112 milch animals — top P1 site)','Submit new society formation application for Koothiyampettai to DCMPU','Conduct farmer awareness camp at Thandavankulam (2,620 milch, Kollidam block)'],
- kpis:['5 inactive → active','Daily procurement ≥ 2,980 L','Koothiyampettai: ≥50 farmer members enrolled','Reactivated centres: ≥80% collection consistency']},
-{n:3,name:'May 2025',phase:'First New Societies',color:'#1e8e3e',bg:'#e6f4ea',target:92000,prev:82000,newSoc:1,react:8,
- focus:'Register first 2 new MPCS societies. Reactivate remaining 8 inactive centres.',
- actions:['Operationalise Koothiyampettai MPCS (3,112 milch → 1,961 L/day potential)','Reactivate ALAKUDI — critical Kollidam gap; offer 3-month procurement bonus','Reactivate MANALMEDU, RADHANALLUR, THILLAIVIDANGAN, KATTUR, SEEYALAM','Reactivate PERUNTHOTTAM & KADALANGUDI (final 2 inactive centres)','Begin farmer enrollment at Eduthukkatti (2,755 milch, Sembanarkoil block)','Route re-optimisation for Kollidam block to absorb new Koothiyampettai volumes'],
- kpis:['1 new MPCS commissioned (Koothiyampettai)','All 13 inactive centres reactivated','Daily procurement ≥ 3,380 L','Koothiyampettai: ≥400 L/day by month end']},
-{n:4,name:'Jun 2025',phase:'Sembanarkoil Push',color:'#1e8e3e',bg:'#e6f4ea',target:105000,prev:92000,newSoc:3,react:0,
- focus:'Commission 3 new societies in Sembanarkoil block — most under-served block (67 villages).',
- actions:['Commission Eduthukkatti MPCS (2,755 milch → 1,736 L/day)','Commission Thirukkalacheri MPCS (1,716 milch → 1,081 L/day)','Commission Thandavankulam MPCS (2,620 milch → 1,651 L/day)','Sembanarkoil farmer felicitation event — best producer incentive ₹500/month for 3 months','NDDB fat/SNF testing equipment installed at all new societies','Member enrollment campaign: target 70+ members per new MPCS'],
- kpis:['3 new MPCS commissioned in Sembanarkoil','Daily procurement ≥ 3,880 L','New societies: ≥80% collection days','Total active centres: 54+']},
-{n:5,name:'Jul 2025',phase:'Kollidam Saturation',color:'#129eaf',bg:'#e6f7f9',target:118000,prev:105000,newSoc:4,react:0,
- focus:'Complete Kollidam block coverage. Commission all remaining P1 sites.',
- actions:['Commission Alakkudy MPCS (2,387 milch → 1,504 L/day)','Commission Mudhalaimedu MPCS (2,018 milch → 1,271 L/day)','Commission Palayapalayam & Mahendrapalli MPCS (Kollidam P1 completions)','Kollidam block route re-optimised — 12+ active societies in single block','Chilling vehicle capacity review — add auxiliary if daily volumes exceed 4,500 L','Vet camp: all Kollidam societies — pregnancy diagnosis & herd health check'],
- kpis:['4 new MPCS in Kollidam','Daily procurement ≥ 4,360 L','Kollidam block: 12 of 43 villages covered (28%)','All new societies: first full month operating']},
-{n:6,name:'Aug 2025',phase:'6-Month Review',color:'#8430ce',bg:'#f3e8fd',target:128000,prev:118000,newSoc:2,react:0,
- focus:'Mid-year performance review. Commission 2 key Mayiladuthurai block societies.',
- actions:['Commission Kesingan MPCS (1,440 milch → 907 L/day) — Mayiladuthurai block','Commission Thiruvalaputhur MPCS (1,196 milch → 753 L/day)','Full district NDDB benchmark audit — grade all active societies A/B/C/D','Mid-year board presentation: actual vs target procurement comparison','Begin PMKSY fodder development linkage for top 10 societies','Flag Grade D societies for intensive 90-day turnaround plan'],
- kpis:['2 new MPCS in Mayiladuthurai','Daily procurement ≥ 4,740 L','6-month actual vs 1,18,000 L/mo target review','Grade A societies: ≥25% of active base']},
-{n:7,name:'Sep 2025',phase:'Sirkali & Quality Drive',color:'#129eaf',bg:'#e6f7f9',target:138000,prev:128000,newSoc:3,react:0,
- focus:'Commission Melaiyur and 2 more Sirkali villages. Launch district-wide quality campaign.',
- actions:['Commission Melaiyur MPCS (1,741 milch → 1,097 L/day) — Sirkali block anchor','Commission 2 additional Sirkali P2 villages (≥800 milch animals each)','District Quality Month: SNF/fat compliance checks at all 60+ societies','Adulteration screening drive at all chilling centres','Introduce two-axis fat+SNF payment calculator in MYL Milk Intel','Livestock insurance enrollment camp at new Sirkali societies'],
- kpis:['3 new MPCS in Sirkali','Daily procurement ≥ 5,110 L','Quality: ≥90% societies at fat ≥3.0% & SNF ≥8.5%','Sirkali block: 5+ active societies']},
-{n:8,name:'Oct 2025',phase:'Harvest Season Buffer',color:'#f9ab00',bg:'#fef7e0',target:142000,prev:138000,newSoc:2,react:0,
- focus:'Samba harvest season — protect existing volumes. Commission 2 P2 Kuthalam villages.',
- actions:['Commission Thalaiyudaiyarar Koil Pathy + Manikkapangu (Kuthalam block)','Harvest incentive: ₹0.10/L bonus for societies maintaining ≥ previous month volume','Deploy mobile vet team to 14 previously-declining societies for preventive check','Kuthalam block farmer camp — price transparency & fat+SNF payment explanation','Arrange relief vehicle for Kollidam block during harvest period','Pre-position fodder advisory with agriculture dept for post-harvest livestock care'],
- kpis:['2 new MPCS in Kuthalam','Daily procurement ≥ 5,260 L (protect from harvest dip)','Zero active societies going inactive during harvest','Kuthalam block: 4+ active societies']},
-{n:9,name:'Nov 2025',phase:'Sembanarkoil Completion',color:'#1e8e3e',bg:'#e6f4ea',target:152000,prev:142000,newSoc:3,react:0,
- focus:'Commission remaining Sembanarkoil P2 villages to complete block saturation.',
- actions:['Commission Kalamanallur MPCS (1,456 milch → 917 L/day)','Commission Alalasundram & one more Sembanarkoil P2 village','Sembanarkoil block 8+ active societies — introduce block-level route planning','Dairy farmer federation meeting for all Sembanarkoil societies','NDDB Anand model workshop for all society secretaries','Digital payment rollout: all societies to offer direct bank transfer to farmers'],
- kpis:['3 new MPCS commissioned','Daily procurement ≥ 5,630 L','Sembanarkoil block: 8 active societies','Digital payments: ≥80% societies operational']},
-{n:10,name:'Dec 2025',phase:'Year-End Acceleration',color:'#1a73e8',bg:'#e8f0fe',target:162000,prev:152000,newSoc:3,react:0,
- focus:'Commission 3 more societies. Aggressive member enrollment drives before year-end.',
- actions:['Commission 3 new societies from remaining P2 villages across all blocks','Year-end member enrollment drive: target 50+ new members per society district-wide','DCMPU annual review meeting: present 10-month progress vs plan','Grade all 70+ active societies — A performers identified for scale-up investment','Felicitation ceremony: top 3 by volume, top 3 by consistency','Plan Year 2 strategy: remaining P2 and P3 village conversion pipeline'],
- kpis:['3 new MPCS commissioned','Daily procurement ≥ 6,000 L','70+ active societies in district','Member enrollment: +500 new farmers district-wide']},
-{n:11,name:'Jan 2026',phase:'Kuthalam Completion',color:'#129eaf',bg:'#e6f7f9',target:172000,prev:162000,newSoc:3,react:0,
- focus:'Complete Kuthalam block. Begin P3 village conversions. Push toward 1,75,000 L/mo.',
- actions:['Commission 3 Kuthalam block P3 villages (500–799 milch animals)','P3 incentive model: DCMPU provides shared vet services for small societies','All 5 blocks now have ≥5 active societies — convene block-level federation meetings','Annual physical audit of all society infrastructure: weighing machines, chilling units','Train next cohort of society secretaries (succession planning)','Route rationalisation: consolidate micro-routes in blocks with 8+ societies'],
- kpis:['3 new MPCS commissioned','Daily procurement ≥ 6,370 L','Kuthalam block: 7+ active societies','All 5 blocks: block federation meeting held']},
-{n:12,name:'Feb 2026',phase:'1,80,000 L Target',color:'#1e8e3e',bg:'#e6f4ea',target:180000,prev:172000,newSoc:2,react:0,
- focus:'Cross 1,80,000 L/month. Finalise Year 2 plan. Validate all data in MYL Milk Intel.',
- actions:['Commission final 2 societies to cross 80 active centres milestone','Cross 1,80,000 L/month — 2.49× growth from Feb 2025 baseline','Full data validation in MYL Milk Intel: all 80+ societies with updated co-ordinates','Submit annual report to DCMPU Thanjavur: volume, coverage, NDDB benchmarks','Set Year 2 targets: 2,50,000 L/month by Feb 2027','District Dairy Farmers Day: mass felicitation, media coverage, best society awards'],
- kpis:['2 new MPCS commissioned','≥ 1,80,000 L/month achieved','80+ active societies in district','NDDB Grade A societies: ≥30% of active base']}
-];
+const AP_MONTHS=[];  // loaded from Firestore: appState/apMonths
 
 const AP_PIPELINE=[
   {mo:'M3',v:'Koothiyampettai',b:'Kollidam',ma:3112,dl:1961,pri:'P1'},
@@ -3790,6 +3732,7 @@ async function gsFetchNow() {
     if (skipped > 0) gsLog(_gsSyncLogs, `⚠ Skipped ${skipped} — unmatched: ${noMatch.slice(0,5).join(', ')}${noMatch.length>5?' …':''}`, 'err');
     gsSave();
     gsRenderAll();
+    fbSaveAppState(); // persist rebuilt _ALL + META to Firestore
     toast(updated > 0 ? `✓ Synced ${updated} entries from Google Sheets` : `⚠ 0 entries synced — check sync log`, updated > 0 ? undefined : true);
 
     // Preview
@@ -4081,6 +4024,351 @@ function fbBanner(type, msg) {
   if (t && msg) t.textContent = msg;
 }
 
+// ════════════════════════════════════════════════════════════════
+//  FIRESTORE APP STATE — societies, meta, unserved, action plan
+// ════════════════════════════════════════════════════════════════
+
+
+// ── Static reference data (one-time Firestore seed) ──────────────────────
+// These are embedded only to populate Firestore on first run.
+// After first upload they are never used again — Firestore is the source.
+const _STATIC_UNSERVED = [
+{v:"Koothiyampettai",b:"Kollidam",fc:3112,fb:0,ma:3112,vet:"Mathanam",lat:11.368,lng:79.848},
+{v:"Eduthukkatti",b:"Sembanarkoil",fc:2755,fb:0,ma:2755,vet:"Thillaiyadi",lat:11.018,lng:79.912},
+{v:"Thandavankulam",b:"Kollidam",fc:2620,fb:0,ma:2620,vet:"Mathanm",lat:11.352,lng:79.861},
+{v:"Alakkudy",b:"Kollidam",fc:2320,fb:67,ma:2387,vet:"Muthalaimedu",lat:11.339,lng:79.843},
+{v:"Mudhalaimedu",b:"Kollidam",fc:1934,fb:84,ma:2018,vet:"Muthalaimedu",lat:11.321,lng:79.828},
+{v:"Melaiyur",b:"Sirkali",fc:1633,fb:108,ma:1741,vet:"Poombuhar",lat:11.219,lng:79.763},
+{v:"Thirukkalacheri",b:"Sembanarkoil",fc:1552,fb:164,ma:1716,vet:"Poraiyar",lat:11.036,lng:79.903},
+{v:"Palayapalayam",b:"Kollidam",fc:1694,fb:0,ma:1694,vet:"Mathanm",lat:11.341,lng:79.851},
+{v:"Mahendrapalli",b:"Kollidam",fc:1680,fb:0,ma:1680,vet:"Muthalaimedu",lat:11.331,lng:79.831},
+{v:"Thalaiyudaiyarar Koil Pathy",b:"Sembanarkoil",fc:1426,fb:52,ma:1478,vet:"Thalachankadu",lat:11.024,lng:79.893},
+{v:"Manikkapangu",b:"Sembanarkoil",fc:1459,fb:0,ma:1459,vet:"Poraiyar",lat:11.029,lng:79.908},
+{v:"Kalamanallur",b:"Sembanarkoil",fc:1456,fb:0,ma:1456,vet:"Thillaiyadi",lat:11.022,lng:79.898},
+{v:"Kesingan",b:"Mayiladuthurai",fc:1425,fb:15,ma:1440,vet:"Kadalangudi",lat:11.118,lng:79.668},
+{v:"Alalasundram",b:"Kollidam",fc:1278,fb:33,ma:1311,vet:"Muthalaimedu",lat:11.308,lng:79.821},
+{v:"Thiruvalaputhur",b:"Mayiladuthurai",fc:1196,fb:0,ma:1196,vet:"Kilay",lat:11.131,lng:79.671},
+{v:"Kidarankondan",b:"Sembanarkoil",fc:1190,fb:0,ma:1190,vet:"Thalachankadu",lat:11.012,lng:79.886},
+{v:"Pillaiperumalnallur",b:"Sembanarkoil",fc:1123,fb:0,ma:1123,vet:"Poraiyar",lat:11.033,lng:79.913},
+{v:"Mamakudi",b:"Sembanarkoil",fc:1091,fb:9,ma:1100,vet:"Thalachankadu",lat:11.027,lng:79.899},
+{v:"Kaduvangudi",b:"Mayiladuthurai",fc:1059,fb:32,ma:1091,vet:"Thalainayaru",lat:11.112,lng:79.658},
+{v:"Melaperumpallam",b:"Sembanarkoil",fc:1022,fb:30,ma:1052,vet:"Thalachankadu",lat:11.021,lng:79.895},
+{v:"Talainayar",b:"Mayiladuthurai",fc:1047,fb:0,ma:1047,vet:"Thalainayaru",lat:11.104,lng:79.656},
+{v:"Varadampattu",b:"Mayiladuthurai",fc:986,fb:0,ma:986,vet:"Kilay",lat:11.139,lng:79.677},
+{v:"Tiruvaduthurai",b:"Kuthalam",fc:976,fb:7,ma:983,vet:"Thiruvaduthurai",lat:11.071,lng:79.574},
+{v:"Kizhaperumpallam",b:"Sembanarkoil",fc:914,fb:62,ma:976,vet:"Thalachankadu",lat:11.017,lng:79.891},
+{v:"Madhanam",b:"Kollidam",fc:973,fb:0,ma:973,vet:"Mathanam",lat:11.362,lng:79.841},
+{v:"Komal - East",b:"Kuthalam",fc:918,fb:0,ma:918,vet:"Komal",lat:11.082,lng:79.558},
+{v:"Elanthoppu",b:"Mayiladuthurai",fc:915,fb:0,ma:915,vet:"Thalainayaru",lat:11.108,lng:79.661},
+{v:"Keelamathur",b:"Kollidam",fc:910,fb:4,ma:914,vet:"Kollidam",lat:11.347,lng:79.837},
+{v:"Attur",b:"Mayiladuthurai",fc:899,fb:8,ma:907,vet:"Kadalangudi",lat:11.115,lng:79.667},
+{v:"Siddamalli",b:"Mayiladuthurai",fc:896,fb:4,ma:900,vet:"Thalainayaru",lat:11.098,lng:79.654},
+{v:"Perambur",b:"Sembanarkoil",fc:841,fb:0,ma:841,vet:"Perambur",lat:11.011,lng:79.879},
+{v:"Villiyanallur",b:"Kuthalam",fc:785,fb:23,ma:808,vet:"Kuthalam",lat:11.088,lng:79.547},
+{v:"Korukkai",b:"Mayiladuthurai",fc:749,fb:2,ma:751,vet:"Kilay",lat:11.127,lng:79.675},
+{v:"Vettangudy",b:"Kollidam",fc:739,fb:0,ma:739,vet:"Edamanal",lat:11.331,lng:79.857},
+{v:"Thalancheri",b:"Mayiladuthurai",fc:736,fb:0,ma:736,vet:"Kilay",lat:11.142,lng:79.681},
+{v:"Kattucheri",b:"Sembanarkoil",fc:530,fb:184,ma:714,vet:"Poraiyar",lat:11.041,lng:79.907},
+{v:"Thiruvengadu",b:"Sirkali",fc:703,fb:1,ma:704,vet:"Thiruvengadu",lat:11.201,lng:79.749},
+{v:"Pandaravadaimappadugai",b:"Mayiladuthurai",fc:690,fb:0,ma:690,vet:"Pandaravadai",lat:11.095,lng:79.661},
+{v:"Thirumailadi",b:"Kollidam",fc:648,fb:5,ma:653,vet:"Kollidam",lat:11.339,lng:79.841},
+{v:"Odhavanthangudy",b:"Kollidam",fc:646,fb:0,ma:646,vet:"Mathanam",lat:11.327,lng:79.829},
+{v:"Keelaiyur",b:"Sirkali",fc:638,fb:0,ma:638,vet:"Poombuhar",lat:11.212,lng:79.757},
+{v:"Parasalur",b:"Sembanarkoil",fc:625,fb:0,ma:625,vet:"Sembanarkoil",lat:11.008,lng:79.869},
+{v:"Kadambakkam",b:"Mayiladuthurai",fc:620,fb:0,ma:620,vet:"Kadallangudi",lat:11.098,lng:79.668},
+{v:"Vanagiri",b:"Sirkali",fc:619,fb:0,ma:619,vet:"Poombuhar",lat:11.218,lng:79.753},
+{v:"Vanathirajapuram",b:"Kuthalam",fc:588,fb:0,ma:588,vet:"Kuthalam",lat:11.078,lng:79.538},
+{v:"Sembathaniruppu",b:"Sirkali",fc:575,fb:0,ma:575,vet:"Nangoor",lat:11.224,lng:79.759},
+{v:"Sembanarkoil",b:"Sembanarkoil",fc:563,fb:4,ma:567,vet:"Sembanarkoil",lat:11.019,lng:79.893},
+{v:"Pandur",b:"Mayiladuthurai",fc:555,fb:0,ma:555,vet:"Kali",lat:11.102,lng:79.663},
+{v:"Erukkur",b:"Kollidam",fc:545,fb:9,ma:554,vet:"Kollidam",lat:11.331,lng:79.839},
+{v:"Nadukkarai Melpathi",b:"Sembanarkoil",fc:551,fb:0,ma:551,vet:"Sembanarkoil",lat:11.013,lng:79.883}
+];
+const _STATIC_INACT = {
+"MADAPURAM":"Field visit → verify active members → issue first-purchase guarantee letter",
+"PERUNTHOTTAM":"Survey milch animals → if >200 found, restart with NDDB incentives",
+"THENNAMPATTINAM":"Vet dispensary coordination → farmer contact list → gram sabha meeting",
+"RADHANALLUR":"Investigate cause (price/transport/operator) → address → restart",
+"THILLAIVIDANGAN":"Nearest active: KATHIRUPPU. If reactivation fails, merge route",
+"MANALMEDU":"Contact original members → offer 3-month procurement bonus",
+"ALAKUDI":"Critical Kollidam gap → immediate reactivation or new society",
+"SEEYALAM":"Vet visit needed → possible disease impact → verify herd",
+"KATTUR":"Transport route issue → review chilling centre logistics",
+"NAGAMBADI":"Low count → consider federation with neighboring village",
+"THIRUVALANGADU":"Investigate dropout reason → restart with price transparency drive",
+"KADALANGUDI":"HQ block gap → nearby high-potential villages → expand coverage",
+"SENNIYANALLUR":"Recent formation → assign MPCS mentor for first 3 months"
+};
+const _STATIC_META = {
+  myl:[1878,2612.7,2577.5,2653.8,2704.5,2518.6,2673.8,2523.8,2532.1,2516,2860.6,2850.2,2634.9,2388.9,1827.7,2344.1,2640,2970.9,2777,3020.3,2831.5,3119.6,3200.4,2924.8,2871.5,2832.6,2952.2],
+  tvr:[11898.7,17624.3,17552.8,18572.5,17623.1,17246.9,17913.8,17831.7,17605,17850.4,18265.6,18590.2,18235.5,16971.3,12809.6,18227,18289.8,18872.8,18933.3,18779,18562.7,19133.5,17503.2,18270.8,18677.5,18800.3,17916.8],
+  tnj:[22859.3,26282.3,26477.6,27101.7,26509.6,26780,26495.7,27438.6,26854.5,26804,27401.1,27649.3,27694.4,25854.6,22759,27302,27413.5,27436.6,28039,28576.9,27768.3,28116.6,27621.9,27662.3,27792.9,27780.5,27106.3],
+  nag:[510,760,720,750,730,670,710,640,700,720,770,730,670,610,570,700,710,780,760,780,740,810,790,730,720,710,740],
+  morPct:58
+};
+const _STATIC_SEED = [
+{name:"KAVERIPOOMPATTINAM",total:11540.2,active_days:27,daily_avg:427.4,trend:"up",consistency:100,daily:[270,398.4,368.3,358.7,424.7,361.2,373.5,404,431,466.5,507.8,465.3,420.5,363.1,197.2,430.3,433.8,444.5,421.9,476.5,507.6,566.5,572.8,481.2,473.2,497.2,424.5]},
+{name:"KOORAINADU",total:11277.9,active_days:27,daily_avg:417.7,trend:"up",consistency:100,daily:[399.3,433.2,434.5,447.3,410.3,392.4,429.6,413.2,394.2,357,398.4,415,360.6,374.3,292.2,288.3,389.4,503.3,364.6,484.2,445.8,517.8,531.1,490.3,399.5,439,473.1]},
+{name:"VAITHEESWARANKOVIL",total:6800.2,active_days:27,daily_avg:251.9,trend:"up",consistency:100,daily:[84.8,224.5,247.4,252.7,248.7,235.4,248.6,259.4,239.5,223,256.2,239,269.5,160,151.7,190.5,257.2,295.7,269,336.4,303.3,328.1,375.8,324.1,277.4,147.1,355.2]},
+{name:"AACHALPURAM",total:3110.4,active_days:27,daily_avg:115.2,trend:"stable",consistency:100,daily:[47.2,101.8,117.7,116.4,117.4,117.5,119.3,147,100.5,132,135.6,138.7,120.5,93,80.4,107,108.1,116.8,119.1,119.2,111.4,135.3,96.7,122.9,139.8,127.2,121.9]},
+{name:"SITHAMALLI",total:2482.4,active_days:27,daily_avg:91.9,trend:"down",consistency:100,daily:[103.4,101.3,103.3,107.9,105.7,93.2,117,121.6,113.6,94.4,97.1,103,88.5,68.5,44.3,104.5,85,96,97.3,91.6,93.1,78,81,46.9,87.4,85.6,73.2]},
+{name:"NALLAVUR",total:2228.4,active_days:27,daily_avg:82.5,trend:"up",consistency:100,daily:[71.8,73.2,70.4,73.1,75.4,80,78.7,74.4,78.9,77.1,83.4,84.9,84.1,87.9,89.4,85.4,86.5,89.2,84.9,91.1,89.3,87.5,83.4,84.9,90.9,84.2,88.4]},
+{name:"ATHIYUR",total:1680.6,active_days:27,daily_avg:62.2,trend:"up",consistency:100,daily:[77.3,51.5,53.2,47.4,58.6,53,81,56.6,61.5,55,57.2,58.5,62.4,92.4,50.2,55.3,61,59.6,58.9,63.8,57.8,57.2,65.9,61.2,75.6,66.9,81.6]},
+{name:"KATHIRUPPU",total:1610.1,active_days:27,daily_avg:59.6,trend:"down",consistency:100,daily:[70.7,69.4,70.9,71.2,68.7,77.7,73.7,74.8,70.5,69,72.5,65.6,74.6,72.6,69.4,70.4,72.9,78,19.7,30.9,38.6,40.9,39.5,37.8,36,37.9,36.2]},
+{name:"CHIDAMBARANATHAPURAM",total:1584.3,active_days:27,daily_avg:58.7,trend:"up",consistency:100,daily:[47.8,52,53.4,54.9,58.1,55.5,58.1,56.5,58.8,60.6,57.9,60.5,61.5,57.1,33.9,62.5,66.1,68.3,70.6,58,63.1,57.9,55.8,59.3,65.6,64.1,66.4]},
+{name:"KARAIKANDAM",total:1551.8,active_days:23,daily_avg:67.5,trend:"up",consistency:85,daily:[57.4,66.9,61.8,62.9,60.3,61.7,0,0,0,0,72.1,74.1,72,70.9,65.4,39.7,76.6,71.7,74.9,80.4,73.5,75,77.2,73.9,32.7,72.4,78.3]},
+{name:"KUNNAM",total:1528.9,active_days:27,daily_avg:56.6,trend:"stable",consistency:100,daily:[42.7,58.7,58.3,56.4,55.3,59.2,55.2,57.7,58.1,57,60.3,63.3,61.8,63.2,44.4,59.2,60.5,53.9,59.8,54.9,56.9,58.8,58.8,53.8,50.7,54,56]},
+{name:"GOPALASAMUTHIRAM",total:1523,active_days:27,daily_avg:56.4,trend:"stable",consistency:100,daily:[49.5,58.2,52.5,52.3,56.3,53.8,54.8,57.5,55.5,54.9,56.5,57.7,58,57.2,36.5,54.2,58.7,60,64.8,56.2,59.4,65.5,60.8,58.1,57.5,61.2,55.4]},
+{name:"MUTHALAIMEDU THITTU",total:1412.3,active_days:27,daily_avg:52.3,trend:"up",consistency:100,daily:[40.8,48.2,52.6,52.7,47.4,46.3,53.5,46.7,53.4,53.9,51.3,52,53,51.5,44.7,45.7,52.8,53.2,48.2,58.8,57.3,57.6,56.1,55.9,57.8,59,61.9]},
+{name:"KEELAMOOLAI",total:1156.6,active_days:27,daily_avg:42.8,trend:"down",consistency:100,daily:[42,43.2,42.6,45,42.7,46.4,46.4,43.5,45.8,46,44.8,46.1,44.6,43.8,42.3,41.9,42.4,40.3,41.9,38.5,39.1,40.8,40.4,41.2,42.6,41.6,40.7]},
+{name:"MATHIRIVELLUR",total:1126,active_days:27,daily_avg:41.7,trend:"down",consistency:100,daily:[29.5,63,50.4,50.6,43,27.6,50.9,43,48.1,31.3,40.2,45.9,40.9,27.6,36.1,29.3,39.4,40.8,43.2,39.3,39.9,29.6,46.3,50.9,48.5,48.3,42.4]},
+{name:"NALLUR",total:1101.9,active_days:27,daily_avg:40.8,trend:"up",consistency:100,daily:[24.4,32.6,29.9,30.8,35.1,38.8,38.8,30.9,36.6,38.5,39.3,42.7,35.4,38.1,41.5,45.3,45.3,49.2,47.7,47.2,48.7,46.8,51.3,46.4,47.4,45.5,47.7]},
+{name:"JOTHIYAKUDI",total:1090.3,active_days:27,daily_avg:40.4,trend:"down",consistency:100,daily:[12,46.4,46.8,48.6,40.3,51.2,41.3,43.8,43.8,45,43.6,48.2,31.2,35.1,4.8,27.9,25.7,43.7,38,49.5,47.8,51.2,49.4,44.4,45.7,45.8,39.1]},
+{name:"KADALANKUDI",total:1055.8,active_days:27,daily_avg:39.1,trend:"up",consistency:100,daily:[35.9,25.2,25,36,42.2,33.9,34.5,37.3,41.4,37.5,36.7,37.5,31.8,35.8,40.5,45.3,45,53.2,45.1,38.4,18.7,43.3,45.9,50.1,50.9,45.4,43.3]},
+{name:"KADAVASAL",total:1020.1,active_days:24,daily_avg:42.5,trend:"up",consistency:89,daily:[0,0,0,31.4,30.8,5.2,37.5,7.9,29.4,30.3,63.7,47.5,45,29.1,7.5,11.4,65.2,56.8,85.1,42.6,52.2,79.6,64.4,41.4,58.4,65.5,32.2]},
+{name:"KURAVALUR MPCS",total:1008.6,active_days:27,daily_avg:37.4,trend:"up",consistency:100,daily:[13.8,43,24.7,38,42,34.1,36.6,32,40.5,29.9,39.5,38.9,37.4,19.2,11.9,49.3,43,48.1,45.8,48.8,40.8,39.8,47.2,39.7,39.7,38,46.9]},
+{name:"NEPPATHUR",total:1006.4,active_days:27,daily_avg:37.3,trend:"up",consistency:100,daily:[22.5,34.8,27.2,27,37.5,30.3,51.8,22,44,33.5,17,60.1,46,44.8,22,46.5,48.4,49.3,43.7,39.6,34.2,35.5,42.8,40.8,37.5,41.6,26]},
+{name:"VADARENGAM",total:974.9,active_days:26,daily_avg:37.5,trend:"down",consistency:96,daily:[17.5,43.6,38.5,46,41.6,39.6,46.7,30.4,34.7,40.1,45.5,44.3,50.7,26.7,0,39.9,23,34.6,48,45.1,29.9,31.6,35,27.4,42.5,45.4,26.6]},
+{name:"PACHAIPERUMALNALLUR",total:914.9,active_days:27,daily_avg:33.9,trend:"up",consistency:100,daily:[4,22.1,25,26.7,23,23.9,21.9,15.5,21.2,25.7,40,40.3,37,25.8,23.7,29.5,44.2,51.8,49,44.6,32,38.8,45.9,43.2,51.9,53,55.2]},
+{name:"KEELMATHUR",total:908.6,active_days:27,daily_avg:33.7,trend:"up",consistency:100,daily:[15.5,33.6,34.6,35.4,31.7,31.2,35.1,39.1,27.4,33.7,34.6,35,20.5,29.3,19.9,24,28.5,36.4,39.6,39.2,36.7,43.4,39.7,38,45,44.9,36.6]},
+{name:"KONDAL",total:825.5,active_days:23,daily_avg:35.9,trend:"up",consistency:85,daily:[0,34.8,32.6,33.4,33.3,35.4,33.8,0,0,0,36.4,39.7,36.5,38.5,30.3,35,34,36.9,37.6,36.1,32.2,39,37.2,36.4,42.7,37.4,36.3]},
+{name:"KURICHI",total:823.5,active_days:25,daily_avg:32.9,trend:"up",consistency:93,daily:[30.8,39.6,34.6,34.7,35.7,31.5,36.4,0,0,34.6,30.2,31.6,35,21.6,22.6,32,32.3,39.1,36,34.5,35.4,35.5,33.5,27.9,33.8,29.9,34.7]},
+{name:"MELAYUR",total:793.6,active_days:27,daily_avg:29.4,trend:"up",consistency:100,daily:[20,8,19.4,25.4,27.6,23.5,28.8,48.6,29.1,24.3,35.5,12,15.4,25.1,15.4,26.8,24.5,23.2,31.3,66.4,38.6,45.6,35.2,37.7,37.5,39.3,29.4]},
+{name:"PULIYANTHURAI",total:731.6,active_days:26,daily_avg:28.1,trend:"up",consistency:96,daily:[26.8,28.1,29.1,27.1,29.8,30.3,27,23.4,28.9,30.2,27.7,0,23.5,22,20.8,34.3,24.4,34.3,35.7,31.5,23.4,28.8,18.6,31.3,32,32.3,30.3]},
+{name:"VILANTHIDASAMUTHIRAM",total:712.4,active_days:25,daily_avg:28.5,trend:"up",consistency:93,daily:[0,14.8,35.8,20.9,12,15.2,17.5,2,9.5,15.5,36.6,29.5,22.6,20.9,0,13.9,11.1,25.5,40.7,30.8,30.6,34,73.1,37.3,49.5,46.3,66.8]},
+{name:"THIRUMULLAIVASAL",total:706.1,active_days:27,daily_avg:26.2,trend:"down",consistency:100,daily:[30.3,28.5,28.2,26.4,27,24.5,29.5,27.1,26.4,26.3,25.8,25.1,24.1,26.1,25,24.9,27.4,28.3,27.1,25.9,25.7,26.4,22.5,21.9,24.9,24,26.8]},
+{name:"MUDIKANDANALLUR",total:692.2,active_days:27,daily_avg:25.6,trend:"up",consistency:100,daily:[27,25.9,25.1,27.3,25.2,23.5,25.9,24.4,24.9,24.2,24.2,21.5,23.4,26.6,22.7,29,19,25.1,24,27.7,28.1,27.5,29.3,27.9,28.2,26.3,28.3]},
+{name:"KONARIRAJAPURAM",total:662.8,active_days:25,daily_avg:26.5,trend:"down",consistency:93,daily:[31.9,29.2,29.6,29.3,32,26,17.2,27.1,27.2,38.4,36.4,42.1,22.6,11.2,20.3,0,0,7.4,10.4,14,14.4,34,24.8,47.6,11.9,39.6,38.2]},
+{name:"MANGAIMADAM",total:599.3,active_days:27,daily_avg:22.2,trend:"up",consistency:100,daily:[10.3,4,5.7,11.6,13,15.1,12.2,13,19.5,19.6,19.2,25.5,25.8,23.2,17.3,24.5,29.7,32.3,30.5,32.6,22.7,36.8,33.9,32.5,34.3,20.8,33.7]},
+{name:"THIRUVAVADUTHURAI",total:594.5,active_days:27,daily_avg:22,trend:"up",consistency:100,daily:[10.7,23.2,21,15,25.1,19.5,18.7,14.5,16.9,15.5,20.6,27.8,29.8,26.5,24.6,18.2,22.9,26.6,24,28.8,23.4,19.5,25.7,23.2,26,24.4,22.4]},
+{name:"THIRUVALI",total:569.7,active_days:25,daily_avg:22.8,trend:"down",consistency:93,daily:[0,26.7,24,28.4,32.1,29,22.7,32.9,26,26.2,35,30.4,12.7,30.6,7.3,0,24,23.1,18.1,20,12,19.8,15.5,19.9,17.8,17.8,17.7]},
+{name:"KEELSATANATHAPURAM",total:539.2,active_days:26,daily_avg:20.7,trend:"up",consistency:96,daily:[0,19.2,15.6,15.7,19,17.8,20,12.1,22.8,24.9,18,29.6,19.8,22.2,12.7,22.2,18,27.9,25,25.8,20.8,22.1,19.6,18,26.2,26.8,17.4]},
+{name:"PANAMANGALAM",total:536.2,active_days:27,daily_avg:19.9,trend:"down",consistency:100,daily:[20,25.3,26.5,26.5,23.5,24.1,25.5,22.7,17.5,11.1,18,18,16.9,16.8,25.3,6.6,22.8,27.1,23.7,21.7,24.8,17.8,21.6,13.3,7.6,12.9,18.6]},
+{name:"KEERANKUDI",total:474.8,active_days:27,daily_avg:17.6,trend:"up",consistency:100,daily:[12,15.6,18.5,19,17.3,16.4,17.5,13.8,17,17.4,14,17.2,14.4,17.1,15.9,16.5,16.5,18.5,18.6,17.7,19.4,20.3,22,20.2,20.9,20.6,20.5]},
+{name:"THALAICHANGADU",total:463.4,active_days:27,daily_avg:17.2,trend:"up",consistency:100,daily:[9.2,21.5,11.8,10.4,10.4,11.8,23,15.9,17.3,16.5,17.5,14.8,13.6,11.2,11.5,9.6,15.2,12.6,13.3,22.5,18,21.3,26.3,6.7,36,36.3,29.2]},
+{name:"OTHAVANTHANKUDI",total:429.4,active_days:27,daily_avg:15.9,trend:"up",consistency:100,daily:[11.2,14.5,10.3,12.9,15.7,16.8,17.6,16.4,16.6,16,10.9,18.1,15.2,18,19.6,12,14.3,21.5,19.2,16.2,18.4,15.5,18.9,19.2,13.5,15.3,15.6]},
+{name:"EURUKKUR",total:423.9,active_days:27,daily_avg:15.7,trend:"down",consistency:100,daily:[17.9,16.3,24.1,21.2,25.2,24.6,24.2,14,21.4,20.4,28.8,14.7,18.6,7.9,10.7,11.4,11.6,5.2,15,15.3,15.4,10,8,10.1,14.4,10.2,7.3]},
+{name:"KEEZHAIYUR",total:392.3,active_days:14,daily_avg:28,trend:"down",consistency:52,daily:[12.2,50.5,36.1,40.8,49,19.6,44.2,50,24.3,16.3,5,19.9,0,0,0,0,0,0,0,0,0,0,7.9,16.5,0,0,0]},
+{name:"ARASUR",total:358.7,active_days:23,daily_avg:15.6,trend:"up",consistency:85,daily:[13.2,19,18.5,19.5,16.3,13.8,0,0,0,0,16.2,16.9,14.8,14.4,12.5,14.1,13.9,13.8,14.5,13.4,13.1,14.2,16.6,14.6,18,18.3,19.1]},
+{name:"POOTHANGUDI",total:288.1,active_days:25,daily_avg:11.5,trend:"up",consistency:93,daily:[0,12.4,9.5,0,9.8,8.5,9.6,8,8.7,10.5,8.8,10,8,7,42.4,7.1,9.4,10.2,12.1,12.3,10.7,10.6,13,12.3,13.5,13.5,10.2]},
+{name:"MUTHALAIMEDU",total:230.8,active_days:27,daily_avg:8.5,trend:"stable",consistency:100,daily:[8.7,8.5,8.1,8.5,9.2,6.8,10.3,9,7.8,9.1,9.8,8,9.1,9,8,6.5,4,6.4,8.9,8.1,9.3,8.1,8,9,11.5,11.5,9.6]},
+{name:"SATTANATHAPURAM",total:184.6,active_days:20,daily_avg:9.2,trend:"up",consistency:74,daily:[0,0,0,6,5.4,6,6,5.1,5.8,0,7.1,11.7,6,7.3,0,10.6,6.3,10.6,15.3,25.6,7.4,0,14.8,0,9.1,9.1,9.4]},
+{name:"UMAIYALPATHI",total:174.5,active_days:22,daily_avg:7.9,trend:"up",consistency:81,daily:[0,0,5.6,6.4,7,6.5,7.5,5,6,6.8,7,7.5,7.5,5.5,6.5,5.6,0,7.9,6.1,9.5,0,16.5,0,16.2,8,9.2,10.7]},
+{name:"KUCHIPALAYAM",total:148.5,active_days:18,daily_avg:8.2,trend:"up",consistency:67,daily:[0,5.3,6.4,5.3,4.4,0,0,0,0,9.9,4.3,8.7,5.5,7,6.4,0,0,13,9.1,9.1,10.6,9.8,11.2,11.3,0,0,11.2]},
+{name:"ELAYAMATHUKOODAM",total:111.3,active_days:10,daily_avg:11.1,trend:"down",consistency:37,daily:[0,11,6,6.7,2.7,17.1,8.6,18,24.6,5.2,11.4,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]},
+{name:"ARAPALLAM",total:76.5,active_days:13,daily_avg:5.9,trend:"down",consistency:48,daily:[6,6,6.4,6,0,6.2,5.6,6,5.5,5.2,5,5.8,6.6,6.2,0,0,0,0,0,0,0,0,0,0,0,0,0]},
+{name:"MADAPURAM",total:0,active_days:0,daily_avg:0,trend:"stable",consistency:0,daily:Array(27).fill(0)},
+{name:"PERUNTHOTTAM",total:0,active_days:0,daily_avg:0,trend:"stable",consistency:0,daily:Array(27).fill(0)},
+{name:"THENNAMPATTINAM",total:0,active_days:0,daily_avg:0,trend:"stable",consistency:0,daily:Array(27).fill(0)},
+{name:"RADHANALLUR",total:0,active_days:0,daily_avg:0,trend:"stable",consistency:0,daily:Array(27).fill(0)},
+{name:"THILLAIVIDANGAN",total:0,active_days:0,daily_avg:0,trend:"stable",consistency:0,daily:Array(27).fill(0)},
+{name:"MANALMEDU",total:0,active_days:0,daily_avg:0,trend:"stable",consistency:0,daily:Array(27).fill(0)},
+{name:"ALAKUDI",total:0,active_days:0,daily_avg:0,trend:"stable",consistency:0,daily:Array(27).fill(0)},
+{name:"SEEYALAM",total:0,active_days:0,daily_avg:0,trend:"stable",consistency:0,daily:Array(27).fill(0)},
+{name:"KATTUR",total:0,active_days:0,daily_avg:0,trend:"stable",consistency:0,daily:Array(27).fill(0)},
+{name:"NAGAMBADI",total:0,active_days:0,daily_avg:0,trend:"stable",consistency:0,daily:Array(27).fill(0)},
+{name:"THIRUVALANGADU",total:0,active_days:0,daily_avg:0,trend:"stable",consistency:0,daily:Array(27).fill(0)},
+{name:"KADALANGUDI",total:0,active_days:0,daily_avg:0,trend:"stable",consistency:0,daily:Array(27).fill(0)},
+{name:"SENNIYANALLUR",total:0,active_days:0,daily_avg:0,trend:"stable",consistency:0,daily:Array(27).fill(0)}
+];
+const _STATIC_AP = [
+{n:1,name:'Mar 2025',phase:'Stabilise & Diagnose',color:'#1a73e8',bg:'#e8f0fe',target:75000,prev:72238,newSoc:0,react:0,
+ focus:'Stop the bleeding on 14 declining societies; full vet audit of all 13 inactive centres.',
+ actions:['Vet visit to all 14 declining societies — identify root cause (disease / operator / price)','Issue reactivation notices to 13 inactive centres; set 30-day response deadline','Re-engage SITHAMALLI & KATHIRUPPU (combined 4,092 L/mo at risk)','Deploy field officer to Kollidam block — highest concentration of issues','GPS mapping: photograph and record co-ordinates for all 63 enrolled societies','Set individual targets in MYL Milk Intel for all active societies'],
+ kpis:['Daily procurement ≥ 2,750 L','Vet visits: 14/14 declining societies complete','13 inactive centres formally notified','SITHAMALLI decline reversed (↑ from 92 L/day)']},
+{n:2,name:'Apr 2025',phase:'Reactivation Sprint',color:'#f9ab00',bg:'#fef7e0',target:82000,prev:75000,newSoc:0,react:5,
+ focus:'Reactivate first 5 inactive centres. Target easiest cases first.',
+ actions:['Reactivate MADAPURAM & SENNIYANALLUR — newly formed / field-visit ready','Reactivate NAGAMBADI & THIRUVALANGADU — HQ proximity, straightforward logistics','Reactivate THENNAMPATTINAM — vet coordination in pipeline from Month 1','Begin farmer enrollment at Koothiyampettai (3,112 milch animals — top P1 site)','Submit new society formation application for Koothiyampettai to DCMPU','Conduct farmer awareness camp at Thandavankulam (2,620 milch, Kollidam block)'],
+ kpis:['5 inactive → active','Daily procurement ≥ 2,980 L','Koothiyampettai: ≥50 farmer members enrolled','Reactivated centres: ≥80% collection consistency']},
+{n:3,name:'May 2025',phase:'First New Societies',color:'#1e8e3e',bg:'#e6f4ea',target:92000,prev:82000,newSoc:1,react:8,
+ focus:'Register first 2 new MPCS societies. Reactivate remaining 8 inactive centres.',
+ actions:['Operationalise Koothiyampettai MPCS (3,112 milch → 1,961 L/day potential)','Reactivate ALAKUDI — critical Kollidam gap; offer 3-month procurement bonus','Reactivate MANALMEDU, RADHANALLUR, THILLAIVIDANGAN, KATTUR, SEEYALAM','Reactivate PERUNTHOTTAM & KADALANGUDI (final 2 inactive centres)','Begin farmer enrollment at Eduthukkatti (2,755 milch, Sembanarkoil block)','Route re-optimisation for Kollidam block to absorb new Koothiyampettai volumes'],
+ kpis:['1 new MPCS commissioned (Koothiyampettai)','All 13 inactive centres reactivated','Daily procurement ≥ 3,380 L','Koothiyampettai: ≥400 L/day by month end']},
+{n:4,name:'Jun 2025',phase:'Sembanarkoil Push',color:'#1e8e3e',bg:'#e6f4ea',target:105000,prev:92000,newSoc:3,react:0,
+ focus:'Commission 3 new societies in Sembanarkoil block — most under-served block (67 villages).',
+ actions:['Commission Eduthukkatti MPCS (2,755 milch → 1,736 L/day)','Commission Thirukkalacheri MPCS (1,716 milch → 1,081 L/day)','Commission Thandavankulam MPCS (2,620 milch → 1,651 L/day)','Sembanarkoil farmer felicitation event — best producer incentive ₹500/month for 3 months','NDDB fat/SNF testing equipment installed at all new societies','Member enrollment campaign: target 70+ members per new MPCS'],
+ kpis:['3 new MPCS commissioned in Sembanarkoil','Daily procurement ≥ 3,880 L','New societies: ≥80% collection days','Total active centres: 54+']},
+{n:5,name:'Jul 2025',phase:'Kollidam Saturation',color:'#129eaf',bg:'#e6f7f9',target:118000,prev:105000,newSoc:4,react:0,
+ focus:'Complete Kollidam block coverage. Commission all remaining P1 sites.',
+ actions:['Commission Alakkudy MPCS (2,387 milch → 1,504 L/day)','Commission Mudhalaimedu MPCS (2,018 milch → 1,271 L/day)','Commission Palayapalayam & Mahendrapalli MPCS (Kollidam P1 completions)','Kollidam block route re-optimised — 12+ active societies in single block','Chilling vehicle capacity review — add auxiliary if daily volumes exceed 4,500 L','Vet camp: all Kollidam societies — pregnancy diagnosis & herd health check'],
+ kpis:['4 new MPCS in Kollidam','Daily procurement ≥ 4,360 L','Kollidam block: 12 of 43 villages covered (28%)','All new societies: first full month operating']},
+{n:6,name:'Aug 2025',phase:'6-Month Review',color:'#8430ce',bg:'#f3e8fd',target:128000,prev:118000,newSoc:2,react:0,
+ focus:'Mid-year performance review. Commission 2 key Mayiladuthurai block societies.',
+ actions:['Commission Kesingan MPCS (1,440 milch → 907 L/day) — Mayiladuthurai block','Commission Thiruvalaputhur MPCS (1,196 milch → 753 L/day)','Full district NDDB benchmark audit — grade all active societies A/B/C/D','Mid-year board presentation: actual vs target procurement comparison','Begin PMKSY fodder development linkage for top 10 societies','Flag Grade D societies for intensive 90-day turnaround plan'],
+ kpis:['2 new MPCS in Mayiladuthurai','Daily procurement ≥ 4,740 L','6-month actual vs 1,18,000 L/mo target review','Grade A societies: ≥25% of active base']},
+{n:7,name:'Sep 2025',phase:'Sirkali & Quality Drive',color:'#129eaf',bg:'#e6f7f9',target:138000,prev:128000,newSoc:3,react:0,
+ focus:'Commission Melaiyur and 2 more Sirkali villages. Launch district-wide quality campaign.',
+ actions:['Commission Melaiyur MPCS (1,741 milch → 1,097 L/day) — Sirkali block anchor','Commission 2 additional Sirkali P2 villages (≥800 milch animals each)','District Quality Month: SNF/fat compliance checks at all 60+ societies','Adulteration screening drive at all chilling centres','Introduce two-axis fat+SNF payment calculator in MYL Milk Intel','Livestock insurance enrollment camp at new Sirkali societies'],
+ kpis:['3 new MPCS in Sirkali','Daily procurement ≥ 5,110 L','Quality: ≥90% societies at fat ≥3.0% & SNF ≥8.5%','Sirkali block: 5+ active societies']},
+{n:8,name:'Oct 2025',phase:'Harvest Season Buffer',color:'#f9ab00',bg:'#fef7e0',target:142000,prev:138000,newSoc:2,react:0,
+ focus:'Samba harvest season — protect existing volumes. Commission 2 P2 Kuthalam villages.',
+ actions:['Commission Thalaiyudaiyarar Koil Pathy + Manikkapangu (Kuthalam block)','Harvest incentive: ₹0.10/L bonus for societies maintaining ≥ previous month volume','Deploy mobile vet team to 14 previously-declining societies for preventive check','Kuthalam block farmer camp — price transparency & fat+SNF payment explanation','Arrange relief vehicle for Kollidam block during harvest period','Pre-position fodder advisory with agriculture dept for post-harvest livestock care'],
+ kpis:['2 new MPCS in Kuthalam','Daily procurement ≥ 5,260 L (protect from harvest dip)','Zero active societies going inactive during harvest','Kuthalam block: 4+ active societies']},
+{n:9,name:'Nov 2025',phase:'Sembanarkoil Completion',color:'#1e8e3e',bg:'#e6f4ea',target:152000,prev:142000,newSoc:3,react:0,
+ focus:'Commission remaining Sembanarkoil P2 villages to complete block saturation.',
+ actions:['Commission Kalamanallur MPCS (1,456 milch → 917 L/day)','Commission Alalasundram & one more Sembanarkoil P2 village','Sembanarkoil block 8+ active societies — introduce block-level route planning','Dairy farmer federation meeting for all Sembanarkoil societies','NDDB Anand model workshop for all society secretaries','Digital payment rollout: all societies to offer direct bank transfer to farmers'],
+ kpis:['3 new MPCS commissioned','Daily procurement ≥ 5,630 L','Sembanarkoil block: 8 active societies','Digital payments: ≥80% societies operational']},
+{n:10,name:'Dec 2025',phase:'Year-End Acceleration',color:'#1a73e8',bg:'#e8f0fe',target:162000,prev:152000,newSoc:3,react:0,
+ focus:'Commission 3 more societies. Aggressive member enrollment drives before year-end.',
+ actions:['Commission 3 new societies from remaining P2 villages across all blocks','Year-end member enrollment drive: target 50+ new members per society district-wide','DCMPU annual review meeting: present 10-month progress vs plan','Grade all 70+ active societies — A performers identified for scale-up investment','Felicitation ceremony: top 3 by volume, top 3 by consistency','Plan Year 2 strategy: remaining P2 and P3 village conversion pipeline'],
+ kpis:['3 new MPCS commissioned','Daily procurement ≥ 6,000 L','70+ active societies in district','Member enrollment: +500 new farmers district-wide']},
+{n:11,name:'Jan 2026',phase:'Kuthalam Completion',color:'#129eaf',bg:'#e6f7f9',target:172000,prev:162000,newSoc:3,react:0,
+ focus:'Complete Kuthalam block. Begin P3 village conversions. Push toward 1,75,000 L/mo.',
+ actions:['Commission 3 Kuthalam block P3 villages (500–799 milch animals)','P3 incentive model: DCMPU provides shared vet services for small societies','All 5 blocks now have ≥5 active societies — convene block-level federation meetings','Annual physical audit of all society infrastructure: weighing machines, chilling units','Train next cohort of society secretaries (succession planning)','Route rationalisation: consolidate micro-routes in blocks with 8+ societies'],
+ kpis:['3 new MPCS commissioned','Daily procurement ≥ 6,370 L','Kuthalam block: 7+ active societies','All 5 blocks: block federation meeting held']},
+{n:12,name:'Feb 2026',phase:'1,80,000 L Target',color:'#1e8e3e',bg:'#e6f4ea',target:180000,prev:172000,newSoc:2,react:0,
+ focus:'Cross 1,80,000 L/month. Finalise Year 2 plan. Validate all data in MYL Milk Intel.',
+ actions:['Commission final 2 societies to cross 80 active centres milestone','Cross 1,80,000 L/month — 2.49× growth from Feb 2025 baseline','Full data validation in MYL Milk Intel: all 80+ societies with updated co-ordinates','Submit annual report to DCMPU Thanjavur: volume, coverage, NDDB benchmarks','Set Year 2 targets: 2,50,000 L/month by Feb 2027','District Dairy Farmers Day: mass felicitation, media coverage, best society awards'],
+ kpis:['2 new MPCS commissioned','≥ 1,80,000 L/month achieved','80+ active societies in district','NDDB Grade A societies: ≥30% of active base']}
+];
+
+async function fbSeedStaticIfEmpty() {
+  if (!_fbReady) return;
+  try {
+    // Check if already seeded
+    const doc = await _fbGet('appState/societies');
+    const d = _docToObj(doc.fields || {});
+    if (d.list && d.list.length > 0) {
+      console.log('[fbSeedStatic] Already seeded —', d.list.length, 'societies in Firestore');
+      return; // already done
+    }
+  } catch(e) { /* not found = needs seeding */ }
+
+  console.log('[fbSeedStatic] First run — uploading static data to Firestore…');
+  fbBanner('syn', '⏳ First run: uploading reference data to Firestore…');
+  try {
+    // Upload SEED as societies
+    const list = _STATIC_SEED.map(s => ({
+      name: s.name, total: s.total||0, active_days: s.active_days||0,
+      daily_avg: s.daily_avg||0, trend: s.trend||'stable',
+      consistency: s.consistency||0, daily: s.daily||[]
+    }));
+    await _fbPatch('appState/societies', { fields: _objToFields({ list, updatedAt: new Date().toISOString() }) });
+
+    // Upload META
+    await _fbPatch('appState/meta', { fields: _objToFields({
+      myl: _STATIC_META.myl, tvr: _STATIC_META.tvr,
+      tnj: _STATIC_META.tnj, nag: _STATIC_META.nag,
+      morPct: _STATIC_META.morPct, updatedAt: new Date().toISOString()
+    })});
+
+    // Upload UNSERVED
+    await _fbPatch('appState/unserved', { fields: _objToFields({ list: _STATIC_UNSERVED }) });
+
+    // Upload INACT_ACT (plain object)
+    await _fbPatch('appState/inactAct', { fields: _objToFields(_STATIC_INACT) });
+
+    // Upload AP_MONTHS
+    await _fbPatch('appState/apMonths', { fields: _objToFields({ list: _STATIC_AP }) });
+
+    fbBanner('ok', '✓ Reference data uploaded to Firestore (one-time seed complete)');
+    console.log('[fbSeedStatic] Seed complete');
+  } catch(e) {
+    fbBanner('err', '✗ Seed upload failed: ' + e.message);
+    console.error('[fbSeedStatic]', e);
+  }
+}
+
+async function fbLoadAppState() {
+  try {
+    // Societies (SEED equivalent)
+    try {
+      const doc = await _fbGet('appState/societies');
+      const d = _docToObj(doc.fields || {});
+      if (d.list && d.list.length) {
+        _ALL = d.list.map(s => ({
+          name: s.name, total: s.total||0, active_days: s.active_days||0,
+          daily_avg: s.daily_avg||0, trend: s.trend||'stable',
+          consistency: s.consistency||0, daily: s.daily||[]
+        }));
+      }
+    } catch(e) {}
+
+    // META
+    try {
+      const doc = await _fbGet('appState/meta');
+      const d = _docToObj(doc.fields || {});
+      if (d.myl && d.myl.length) META.myl = d.myl;
+      if (d.tvr && d.tvr.length) META.tvr = d.tvr;
+      if (d.tnj && d.tnj.length) META.tnj = d.tnj;
+      if (d.nag && d.nag.length) META.nag = d.nag;
+      if (d.morPct) META.morPct = d.morPct;
+    } catch(e) {}
+
+    // UNSERVED
+    try {
+      const doc = await _fbGet('appState/unserved');
+      const d = _docToObj(doc.fields || {});
+      if (d.list && d.list.length) { UNSERVED.length=0; d.list.forEach(v=>UNSERVED.push(v)); }
+    } catch(e) {}
+
+    // INACT_ACT
+    try {
+      const doc = await _fbGet('appState/inactAct');
+      const d = _docToObj(doc.fields || {});
+      Object.assign(INACT_ACT, d);
+    } catch(e) {}
+
+    // AP_MONTHS
+    try {
+      const doc = await _fbGet('appState/apMonths');
+      const d = _docToObj(doc.fields || {});
+      if (d.list && d.list.length) { AP_MONTHS.length=0; d.list.forEach(m=>AP_MONTHS.push(m)); }
+    } catch(e) {}
+
+    // Rebuild stats from cached daily data, then re-render
+    rebuildAllFromDmData();
+    _bootRender();
+    sv('chip-act','✓ '+_ALL.filter(s=>s.total>0).length+' Active');
+    sv('chip-inact','✗ '+_ALL.filter(s=>!s.total).length+' Inactive');
+    dmUpdateBadge();
+    console.log('[fbLoadAppState] loaded', _ALL.length, 'societies');
+  } catch(e) { console.warn('[fbLoadAppState]', e); }
+}
+
+// Save rebuilt _ALL + META back to Firestore after every GS sync
+async function fbSaveAppState() {
+  if (!_fbReady || !_ALL.length) return;
+  try {
+    const list = _ALL.map(s => ({
+      name: s.name, total: s.total||0, active_days: s.active_days||0,
+      daily_avg: s.daily_avg||0, trend: s.trend||'stable',
+      consistency: s.consistency||0, daily: (s.daily||[]).slice(-27)
+    }));
+    await _fbPatch('appState/societies', { fields: _objToFields({ list, updatedAt: new Date().toISOString() }) });
+    await _fbPatch('appState/meta', { fields: _objToFields({
+      myl: META.myl.slice(-27), tvr: META.tvr.slice(-27),
+      tnj: META.tnj.slice(-27), nag: META.nag.slice(-27),
+      morPct: META.morPct, updatedAt: new Date().toISOString()
+    })});
+  } catch(e) { console.warn('[fbSaveAppState]', e); }
+}
+
+// One-time upload of static reference data — run from browser console:
+// fbUploadStaticData(UNSERVED_DATA, INACT_DATA, AP_DATA)
+async function fbUploadStaticData(unservedArr, inactObj, apArr) {
+  if (!_fbReady) { alert('Firebase not ready'); return; }
+  fbBanner('syn', '⏳ Uploading static data…');
+  try {
+    if (unservedArr?.length) {
+      await _fbPatch('appState/unserved', { fields: _objToFields({ list: unservedArr }) });
+      console.log('✓ unserved uploaded:', unservedArr.length, 'villages');
+    }
+    if (inactObj && Object.keys(inactObj).length) {
+      await _fbPatch('appState/inactAct', { fields: _objToFields(inactObj) });
+      console.log('✓ inactAct uploaded');
+    }
+    if (apArr?.length) {
+      await _fbPatch('appState/apMonths', { fields: _objToFields({ list: apArr }) });
+      console.log('✓ apMonths uploaded:', apArr.length, 'months');
+    }
+    fbBanner('ok', '✓ Static data uploaded to Firestore');
+  } catch(e) {
+    fbBanner('err', '✗ Upload failed: ' + e.message);
+    console.error(e);
+  }
+}
+
 // ── Init ───────────────────────────────────────────────
 
 async function fbInit() {
@@ -4106,7 +4394,12 @@ async function fbInit() {
     fbStatusTxt('Firebase: live ✓');
     fbBanner('ok', '✓ Firebase connected via REST');
 
-    // Initial fetch then start polling
+    // Seed Firestore on first run (no-op if already seeded)
+    await fbSeedStaticIfEmpty();
+    // Load app state (societies, meta, reference data) from Firestore
+    await fbLoadAppState();
+
+    // Initial daily-data fetch then start polling
     await fbPollAll();
     _fbPollTimer = setInterval(fbPollAll, 15000); // poll every 15s
 
