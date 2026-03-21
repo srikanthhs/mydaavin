@@ -1608,6 +1608,30 @@ function goTab(id,el){
 function rebuildAllFromDmData() {
   if (!_dmData || !Object.keys(_dmData).length) return;
 
+  // Sanitize _dmData in-place: remove dates older than 90 days
+  const _cutoff = new Date();
+  _cutoff.setDate(_cutoff.getDate() - 90);
+  const _cutoffStr = _cutoff.getFullYear() + '-' +
+    String(_cutoff.getMonth()+1).padStart(2,'0') + '-' +
+    String(_cutoff.getDate()).padStart(2,'0');
+  Object.keys(_dmData).forEach(dk => {
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(dk) || dk < _cutoffStr) delete _dmData[dk];
+  });
+
+  // If _ALL is empty (Firestore hasn't loaded yet), build society list from _dmData
+  if (_ALL.length === 0) {
+    const nameSet = new Set();
+    Object.values(_dmData).forEach(dayData => Object.keys(dayData).forEach(n => nameSet.add(n)));
+    if (nameSet.size > 0) {
+      nameSet.forEach(name => _ALL.push({
+        name, total: 0, active_days: 0, daily_avg: 0,
+        trend: 'stable', consistency: 0, daily: []
+      }));
+    } else {
+      return; // truly no data yet
+    }
+  }
+
   // All valid date keys, sorted
   const allDates = Object.keys(_dmData)
     .filter(k => /^\d{4}-\d{2}-\d{2}$/.test(k))
@@ -1739,11 +1763,11 @@ function renderOV(S,AL,ZL){
   const h2=MYL.slice(Math.floor(MYL.length/2)).reduce((a,b)=>a+b,0)/Math.max(MYL.length-Math.floor(MYL.length/2),1);
   const gPct=h1>0?((h2-h1)/h1*100).toFixed(1):'0.0';
   const pk=Math.max(...MYL)||0, pkD=DAYS[MYL.indexOf(pk)]||'';
-  const eff=Math.round(AL.length/S.length*100);
+  const eff=Math.round(AL.length/(S.length||1)*100);
   sv('kv-total',totL.toLocaleString('en-IN'));sv('kv-active',AL.length);sv('kv-inactive',ZL.length);
   sv('kv-partial',S.filter(s=>s.consistency>0&&s.consistency<80).length);
   sv('kv-growing',AL.filter(s=>s.trend==='up').length);
-  sv('kv-avg',Math.round(totL/AL.length).toLocaleString());
+  sv('kv-avg', AL.length ? Math.round(totL/(AL.length||1)).toLocaleString() : '—');
   sv('kv-eff',eff+'%');document.getElementById('peff').style.width=eff+'%';
   sv('kv-ratio',META.morPct+':'+(100-META.morPct));
   sv('kv-peak',pk.toLocaleString()+' L');sv('kv-peaksub','on '+pkD);
@@ -1753,9 +1777,11 @@ function renderOV(S,AL,ZL){
   const bk=[S.filter(s=>s.consistency>=90&&s.active_days>0).length,S.filter(s=>s.consistency>=70&&s.consistency<90).length,S.filter(s=>s.consistency>0&&s.consistency<70).length,ZL.length];
   mc('conChart',{type:'doughnut',data:{labels:['≥90% A','70-89% B','<70% C/D','0% Inactive'],datasets:[{data:bk,backgroundColor:['#1e8e3e','#1a73e8','#f9ab00','#d93025'],borderWidth:0,borderRadius:3}]},options:{responsive:true,maintainAspectRatio:false,cutout:'62%',plugins:{legend:{display:true,position:'bottom',labels:{font:{size:11},color:'#5f6368',boxWidth:7,padding:5}}}}});
   mc('statChart',{type:'pie',data:{labels:['Active Full','Partial','Inactive'],datasets:[{data:[AL.filter(s=>s.consistency>=80).length,S.filter(s=>s.consistency>0&&s.consistency<80).length,ZL.length],backgroundColor:['#1e8e3e','#f9ab00','#d93025'],borderWidth:0}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:true,position:'bottom',labels:{font:{size:11},color:'#5f6368',boxWidth:7,padding:5}}}}});
-  const top=S.filter(s=>s.total>0).sort((a,b)=>b.total-a.total).slice(0,10),mx=top[0].total;
+  const top=S.filter(s=>s.total>0).sort((a,b)=>b.total-a.total).slice(0,10);
+  const mx=top.length?top[0].total:1;
+  sv('kv-avg', AL.length ? Math.round(totL/(AL.length||1)).toLocaleString() : '—');
   const cols=['#1a73e8','#1e8e3e','#d93025','#f9ab00','#8430ce','#129eaf','#e8710a','#1a73e8','#1e8e3e','#d93025'];
-  sh('top10bars',top.map((s,i)=>`<div style="display:flex;align-items:center;gap:6px;margin-bottom:6px;"><div style="font-size:11px;color:var(--txt2);width:16px;text-align:right;">${i+1}</div><div style="font-size:11px;color:var(--txt);width:115px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${s.name}</div><div style="flex:1;background:var(--bg);border-radius:100px;height:6px;overflow:hidden;"><div style="width:${Math.round(s.total/mx*100)}%;height:100%;background:${cols[i]};border-radius:100px;"></div></div><div style="font-size:12px;color:var(--txt2);font-family:var(--mono);width:52px;text-align:right;">${s.total.toLocaleString()}</div></div>`).join(''));
+    sh('top10bars', top.length ? top.map((s,i)=>`<div style="display:flex;align-items:center;gap:6px;margin-bottom:6px;"><div style="font-size:11px;color:var(--txt2);width:16px;text-align:right;">${i+1}</div><div style="font-size:11px;color:var(--txt);width:115px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${s.name}</div><div style="flex:1;background:var(--bg);border-radius:100px;height:6px;overflow:hidden;"><div style="width:${Math.round(s.total/mx*100)}%;height:100%;background:${cols[i]};border-radius:100px;"></div></div><div style="font-size:12px;color:var(--txt2);font-family:var(--mono);width:52px;text-align:right;">${s.total.toLocaleString()}</div></div>`).join('') : '<div style="padding:16px;color:var(--txt3);font-size:12px;text-align:center;">No data — sync Google Sheet first</div>');
 }
 
 // ── NDDB ──
@@ -1767,14 +1793,14 @@ function renderNDDB(S,AL,ZL,totL){
   sv('ne-eff',eff+'%');document.getElementById('ne-eff-bar').style.width=eff+'%';
   sh('ne-effs',eff>=85?'<span style="color:var(--green)">✓ Met</span>':'<span style="color:var(--red)">✗ Gap</span>');
   sv('ne-risk',S.filter(s=>s.total>0&&s.trend==='down').length+' soc');
-  sv('ne-rec',Math.round(ZL.length*totL/AL.length*0.7).toLocaleString()+' L');
+  sv('ne-rec',Math.round(ZL.length*totL/(AL.length||1)*0.7).toLocaleString()+' L');
   sv('ne-stab',cv+'% CV');
   const morL=Math.round(totL*META.morPct/100);
   sh('meinfo',`Morning ${META.morPct}% | Evening ${100-META.morPct}% | NDDB 55:45 | <b style="color:${Math.abs(META.morPct-55)<=5?'var(--green)':'var(--amber)'}">${Math.abs(META.morPct-55)<=5?'✓ Near':'Monitor'}</b>`);
   const gc={A:0,B:0,C:0,D:0};S.forEach(s=>gc[grd(s)]++);
   mc('gradeChart',{type:'bar',data:{labels:['A','B','C','D'],datasets:[{data:[gc.A,gc.B,gc.C,gc.D],backgroundColor:['#1e8e3e','#1a73e8','#f9ab00','#d93025'],borderRadius:4,borderWidth:0}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{grid:{display:false}},y:{ticks:{stepSize:1,font:{size:11}},grid:{color:'rgba(0,0,0,0.06)'}}}}});
   mc('meChart',{type:'doughnut',data:{labels:[`Morning (${META.morPct}%)`,`Evening (${100-META.morPct}%)`],datasets:[{data:[morL,totL-morL],backgroundColor:['#1a73e8','#f9ab00'],borderWidth:0,borderRadius:3}]},options:{responsive:true,maintainAspectRatio:false,cutout:'60%',plugins:{legend:{display:true,position:'bottom',labels:{font:{size:11},color:'#5f6368',boxWidth:9,padding:7}}}}});
-  const bm=[{m:'Collection Efficiency',v:eff+'%',t:'≥85%',ok:eff>=85},{m:'Avg Consistency (Active)',v:Math.round(AL.reduce((a,s)=>a+s.consistency,0)/AL.length)+'%',t:'≥80%',ok:AL.reduce((a,s)=>a+s.consistency,0)/AL.length>=80},{m:'Procurement Stability CV',v:cv+'%',t:'<15%',ok:cv<15},{m:'Morning:Evening',v:META.morPct+':'+(100-META.morPct),t:'55:45',ok:Math.abs(META.morPct-55)<=5},{m:'Grade A Societies',v:gc.A+'/'+S.length,t:'≥25',ok:gc.A>=25},{m:'Grade D/Inactive',v:(gc.D+ZL.length)+'/'+S.length,t:'<10',ok:gc.D+ZL.length<10},{m:'Declining Societies',v:S.filter(s=>s.trend==='down'&&s.total>0).length,t:'<8',ok:S.filter(s=>s.trend==='down'&&s.total>0).length<8}];
+  const bm=[{m:'Collection Efficiency',v:eff+'%',t:'≥85%',ok:eff>=85},{m:'Avg Consistency (Active)',v:Math.round(AL.reduce((a,s)=>a+s.consistency,0)/(AL.length||1))+'%',t:'≥80%',ok:AL.reduce((a,s)=>a+s.consistency,0)/(AL.length||1)>=80},{m:'Procurement Stability CV',v:cv+'%',t:'<15%',ok:cv<15},{m:'Morning:Evening',v:META.morPct+':'+(100-META.morPct),t:'55:45',ok:Math.abs(META.morPct-55)<=5},{m:'Grade A Societies',v:gc.A+'/'+S.length,t:'≥25',ok:gc.A>=25},{m:'Grade D/Inactive',v:(gc.D+ZL.length)+'/'+S.length,t:'<10',ok:gc.D+ZL.length<10},{m:'Declining Societies',v:S.filter(s=>s.trend==='down'&&s.total>0).length,t:'<8',ok:S.filter(s=>s.trend==='down'&&s.total>0).length<8}];
   sh('nddb-benchmarks','<div class="tw"><table class="tbl"><thead><tr><th>Metric</th><th>MYL Value</th><th>NDDB Target</th><th>Status</th></tr></thead><tbody>'+bm.map(b=>`<tr><td>${b.m}</td><td style="font-family:var(--mono);font-weight:500;">${b.v}</td><td style="color:var(--txt2);">${b.t}</td><td>${b.ok?'<span style="color:var(--green)">✓ Met</span>':'<span style="color:var(--red)">✗ Gap</span>'}</td></tr>`).join('')+'</tbody></table></div>');
   const am={A:'Maintain + scale up enrollment',B:'Increase sessions; target Grade A',C:'Urgent: vet visit + farmer incentive',D:'Immediate intervention or merger'};
   sh('gradeBody',S.map(s=>{const g=grd(s),r=rsk(s);return`<tr><td style="font-weight:500;">${s.name}</td><td style="font-family:var(--mono);">${s.total.toLocaleString()}</td><td>${s.consistency}%</td><td>${s.trend==='up'?'<span style="color:var(--green)">↑</span>':s.trend==='down'?'<span style="color:var(--red)">↓</span>':'<span style="color:var(--amber)">→</span>'}</td><td><span class="nddb-${g}">${g}</span></td><td style="color:${rkv(r)>=3?'var(--red)':rkv(r)===2?'var(--amber)':'var(--green)'};">${r}</td><td style="font-size:12px;color:var(--txt2);">${am[g]}</td></tr>`;}).join(''));
@@ -1783,6 +1809,7 @@ function renderNDDB(S,AL,ZL,totL){
 // ── SOCIETY TABLE ──
 function renderTbl(){
   if(!_ALL.length){sh('socBody','<tr><td colspan="10" style="text-align:center;padding:24px;color:var(--txt3);">Loading society data…</td></tr>');return;}
+  const q=(document.getElementById('soc-search')?.value||'').toLowerCase();
   const col=document.getElementById('soc-sort')?.value||'total';
   const dir=document.getElementById('soc-dir')?.value||'desc';
   const flt=document.getElementById('soc-filt')?.value||'all';
@@ -1989,10 +2016,10 @@ function renderInsights(S,AL,ZL,totL,gPct){
   const top3=S.filter(s=>s.total>0).sort((a,b)=>b.total-a.total).slice(0,3);
   const hid=S.filter(s=>s.total>0&&s.daily_avg<20&&s.consistency>=90);
   const its=[
-    {t:'blue',i:'📊',h:'Overall Performance — ' + (DAYS.length ? DAYS[0]+' to '+DAYS[DAYS.length-1] : 'Current Period'),d:`Total: <b style="color:var(--green)">${totL.toLocaleString()} L</b> across ${AL.length} active societies. Avg ${(totL/AL.length/Math.max(DAYS.length,1)).toFixed(1)} L/soc/day. Intra-month: <b style="color:${parseFloat(gPct)>0?'var(--green)':'var(--red)'}">${parseFloat(gPct)>0?'+':''}${gPct}%</b>.`},
+    {t:'blue',i:'📊',h:'Overall Performance — ' + (DAYS.length ? DAYS[0]+' to '+DAYS[DAYS.length-1] : 'Current Period'),d:`Total: <b style="color:var(--green)">${totL.toLocaleString()} L</b> across ${AL.length} active societies. Avg ${(totL/(AL.length||1)/Math.max(DAYS.length,1)).toFixed(1)} L/soc/day. Intra-month: <b style="color:${parseFloat(gPct)>0?'var(--green)':'var(--red)'}">${parseFloat(gPct)>0?'+':''}${gPct}%</b>.`},
     {t:'red',i:'📉',h:`${dec.length} Societies on Downward Trend`,d:`${dec.map(s=>s.name).join(', ')}. KATHIRUPPU & SITHAMALLI need immediate field visits.`},
     {t:'green',i:'🏆',h:'Star Performers',d:`Top 3: ${top3.map((s,i)=>`${i+1}. <b>${s.name}</b> (${s.total.toLocaleString()} L, ${s.trend==='up'?'↑':'→'}, ${s.consistency}% cons.)`).join('; ')}.`},
-    {t:'amber',i:'⚠️',h:`${ZL.length} Inactive Societies`,d:`${ZL.map(s=>s.name).join(', ')} — 0 L Feb. Full reactivation: ~<b style="color:var(--green)">${Math.round(ZL.length*totL/AL.length*0.7).toLocaleString()} L/month</b> potential.`},
+    {t:'amber',i:'⚠️',h:`${ZL.length} Inactive Societies`,d:`${ZL.map(s=>s.name).join(', ')} — 0 L Feb. Full reactivation: ~<b style="color:var(--green)">${Math.round(ZL.length*totL/(AL.length||1)*0.7).toLocaleString()} L/month</b> potential.`},
     {t:'teal',i:'💎',h:'Under-Enrolled High-Consistency Societies',d:`${hid.length} societies: ≥90% consistency but &lt;20 L/day — ${hid.map(s=>s.name).join(', ')}. Member drives could double output in 3 months.`},
     {t:'purple',i:'🗺️',h:'Expansion: 238 Unserved Villages',d:`1.20 lakh milch animals in unserved areas. Kollidam has 33,849 animals at 19% coverage. 10 new societies in top villages = est. 3–4 lakh L/month extra.`}
   ];
@@ -2161,7 +2188,7 @@ function addAction(){const soc=prompt('Society/Village:');if(!soc)return;const a
 function addToCol(col){const soc=prompt('Society:');if(!soc)return;const act=prompt('Action:');if(!act)return;_kb[col].push({id:'cc_'+Date.now(),soc,act,pri:'medium',stg:col});lsSave();renderKB();}
 
 // ── SCORECARD ──
-function renderSC(S,AL,totL){if(!S.length)return;const eff=Math.round(AL.length/Math.max(S.length,1)*100),gA=S.filter(s=>grd(s)==='A').length,cons=AL.length?Math.round(AL.reduce((a,s)=>a+s.consistency,0)/AL.length):0;const rows=[{k:'Monthly Collection',v:nf(totL)+' L',t:'1,00,000 L',ok:totL>=100000},{k:'Active Society Rate',v:eff+'%',t:'≥85%',ok:eff>=85},{k:'Grade A Societies',v:gA+'',t:'≥30',ok:gA>=30},{k:'New Societies Formed',v:'0',t:'5/quarter',ok:false},{k:'Inactive Reactivations',v:'0',t:'All 13 in 60d',ok:false},{k:'Avg Consistency',v:cons+'%',t:'≥85%',ok:cons>=85},{k:'Member Enrollment Growth',v:'Existing',t:'20% by Q2',ok:false}];sh('kpiSC',rows.map(r=>`<tr><td style="font-weight:500;">${r.k}</td><td style="font-family:var(--mono);font-weight:500;">${r.v}</td><td style="color:var(--txt2);">${r.t}</td><td style="color:var(--txt2);">Monthly</td><td style="color:var(--txt2);">Block Officers</td><td>${r.ok?'<span style="color:var(--green)">✓ On Track</span>':'<span style="color:var(--red)">✗ Action Needed</span>'}</td></tr>`).join(''));}
+function renderSC(S,AL,totL){if(!S.length)return;const eff=Math.round(AL.length/Math.max(S.length,1)*100),gA=S.filter(s=>grd(s)==='A').length,cons=AL.length?Math.round(AL.reduce((a,s)=>a+s.consistency,0)/(AL.length||1)):0;const rows=[{k:'Monthly Collection',v:nf(totL)+' L',t:'1,00,000 L',ok:totL>=100000},{k:'Active Society Rate',v:eff+'%',t:'≥85%',ok:eff>=85},{k:'Grade A Societies',v:gA+'',t:'≥30',ok:gA>=30},{k:'New Societies Formed',v:'0',t:'5/quarter',ok:false},{k:'Inactive Reactivations',v:'0',t:'All 13 in 60d',ok:false},{k:'Avg Consistency',v:cons+'%',t:'≥85%',ok:cons>=85},{k:'Member Enrollment Growth',v:'Existing',t:'20% by Q2',ok:false}];sh('kpiSC',rows.map(r=>`<tr><td style="font-weight:500;">${r.k}</td><td style="font-family:var(--mono);font-weight:500;">${r.v}</td><td style="color:var(--txt2);">${r.t}</td><td style="color:var(--txt2);">Monthly</td><td style="color:var(--txt2);">Block Officers</td><td>${r.ok?'<span style="color:var(--green)">✓ On Track</span>':'<span style="color:var(--red)">✗ Action Needed</span>'}</td></tr>`).join(''));}
 
 // ── EXPORT/IMPORT ──
 function exportCSV(){const h=['#','Society','Monthly L','Daily Avg','Active Days','Consistency','Trend','Grade','Risk','Target L'];const rows=_ALL.map((s,i)=>[i+1,'"'+s.name+'"',s.total||0,s.daily_avg||0,s.active_days||0,s.consistency||0,s.trend,grd(s),rsk(s),_tgts[s.name]||0].join(','));const b=new Blob([[h.join(','),...rows].join('\n')],{type:'text/csv'});const a=document.createElement('a');a.href=URL.createObjectURL(b);a.download='MYL_'+new Date().toISOString().slice(0,7)+'.csv';a.click();toast('Exported '+_ALL.length+' societies!');}
@@ -2191,32 +2218,54 @@ function boot(){
 
 function _bootRender() {
   if (!_ALL.length) {
-    // Nothing loaded yet — show a waiting message on overview
     const el = document.getElementById('top10bars');
-    if (el) el.innerHTML = '<div style="padding:32px;text-align:center;color:var(--txt3);font-size:13px;">⏳ Loading society data from Firestore…</div>';
+    if (el) el.innerHTML = '<div style="padding:32px;text-align:center;color:var(--txt3);font-size:13px;">⏳ Loading society data…</div>';
     return;
   }
-  const AL=_ALL.filter(s=>s.total>0&&s.active_days>0);
-  const ZL=_ALL.filter(s=>!s.total||!s.active_days);
-  const totL=_ALL.reduce((a,s)=>a+(s.total||0),0);
-  const MYL=META.myl;
-  const gPct = MYL.length >= 14
-    ? (((MYL.slice(13).reduce((a,b)=>a+b,0)/Math.max(MYL.slice(13).length,1))
-       -(MYL.slice(0,13).reduce((a,b)=>a+b,0)/13))
-      /(MYL.slice(0,13).reduce((a,b)=>a+b,0)/13)*100).toFixed(1)
-    : '0.0';
-  renderOV(_ALL,AL,ZL);
-  renderNDDB(_ALL,AL,ZL,totL);
-  renderTbl();
-  renderComp(totL,AL.length);
-  renderInact(ZL,totL/(AL.length||1));
-  renderInsights(_ALL,AL,ZL,totL,parseFloat(gPct));
-  renderExp();filtUV();renderNS();renderBlk();
-  initTgts(_ALL);renderTgts('all');
-  initKB(_ALL);
-  renderSC(_ALL,AL,totL);
+  // Only render what's actually visible — the active tab.
+  // Calling hidden-tab functions crashes because their DOM elements don't exist yet.
+  const AL   = _ALL.filter(s=>s.total>0&&s.active_days>0);
+  const ZL   = _ALL.filter(s=>!s.total||!s.active_days);
+  const totL = _ALL.reduce((a,s)=>a+(s.total||0),0);
+
+  sv('chip-act',   '✓ '+AL.length+' Active');
+  sv('chip-inact', '✗ '+ZL.length+' Inactive');
+  dmUpdateBadge();
+
+  const activeTab = document.querySelector('.tab-panel.act');
+  const tid = activeTab?.id?.replace('tab-','') || 'overview';
+
+  switch(tid) {
+    case 'overview':   renderOV(_ALL,AL,ZL); break;
+    case 'nddb':       renderNDDB(_ALL,AL,ZL,totL); break;
+    case 'societies':  renderTbl(); break;
+    case 'comparison': renderComp(); break;
+    case 'inactive':   renderInact(ZL,totL/(AL.length||1)); break;
+    case 'insights':   renderInsights(_ALL,AL,ZL,totL,0); break;
+    case 'targets':    initTgts(_ALL);renderTgts('all'); break;
+    case 'actions':    renderKB(); break;
+    case 'mgmt':       renderSC(_ALL,AL,totL); break;
+    case 'daily':      dmSetDate();renderDE();renderDMDashboard();renderAlerts(); break;
+    default:           renderOV(_ALL,AL,ZL);
+  }
 }
-window.addEventListener('DOMContentLoaded',()=>{document.getElementById('ldtxt').textContent='Computing metrics…';setTimeout(boot,300);});
+window.addEventListener('DOMContentLoaded',()=>{
+  document.getElementById('ldtxt').textContent='Computing metrics…';
+  // Warn if opened as local file — Firebase and GS sync won't work
+  if (location.protocol === 'file:') {
+    setTimeout(()=>{
+      const b = document.getElementById('fb-banner');
+      const t = document.getElementById('fb-banner-txt');
+      if (b && t) {
+        b.className = 'err';
+        t.innerHTML = '⚠ Opened as local file — Firebase &amp; Google Sheets sync are blocked by browser security. ' +
+          'Deploy to <a href="https://vercel.com" target="_blank" style="color:inherit;font-weight:700;">Vercel</a> ' +
+          'or run a local server (e.g. <code>npx serve .</code>) to enable sync.';
+      }
+    }, 1000);
+  }
+  setTimeout(boot, 300);
+});
 // ── ACTION PLAN DATA ──
 const AP_MONTHS=[];  // loaded from Firestore: appState/apMonths
 
@@ -2458,7 +2507,7 @@ async function reGeocode(){
 // ══════════════════════════════════════════════════════════
 //  DAILY MONITORING ENGINE
 // ══════════════════════════════════════════════════════════
-const DM_LSK = 'myl_dm_v4';
+const DM_LSK = 'myl_dm_v5'; // bumped: clears old stale date entries from localStorage
 let _dmData = {};       // {dateKey: {societyName: {mor:L, eve:L, note:'', saved:bool}}}
 let _dmActiveDate = ''; // 'YYYY-MM-DD'
 let _dmAlertFilt = 'all';
@@ -2502,8 +2551,21 @@ function dmUpdateBadge() {
 function dmLsLoad() {
   try {
     const d = JSON.parse(localStorage.getItem(DM_LSK)||'{}');
-    if(d.data) _dmData = d.data;
-    if(d.esc)  _escalations = d.esc;
+    if (d.data) {
+      // Sanitize: only keep dates within the last 90 days to prevent
+      // stale dates from old sessions polluting the window calculation
+      const cutoff = new Date();
+      cutoff.setDate(cutoff.getDate() - 90);
+      const cutoffStr = cutoff.getFullYear() + '-' +
+        String(cutoff.getMonth()+1).padStart(2,'0') + '-' +
+        String(cutoff.getDate()).padStart(2,'0');
+      const clean = {};
+      Object.keys(d.data).forEach(dk => {
+        if (/^\d{4}-\d{2}-\d{2}$/.test(dk) && dk >= cutoffStr) clean[dk] = d.data[dk];
+      });
+      _dmData = clean;
+    }
+    if (d.esc) _escalations = d.esc;
     // NOTE: _dmActiveDate is intentionally NOT restored from localStorage.
     // boot() always sets it to today so the dashboard never opens on a stale past date.
   } catch(e) {}
@@ -4601,28 +4663,43 @@ async function fbSeedStaticIfEmpty() {
 
 async function fbLoadAppState() {
   try {
-    // Societies (SEED equivalent)
+    fbStatusTxt('Firebase: loading app data…');
+
+    // Load society NAMES only — stats are always recomputed from _dmData (GS sync)
+    // Never load stale stats from Firestore cache
     try {
       const doc = await _fbGet('appState/societies');
       const d = _docToObj(doc.fields || {});
       if (d.list && d.list.length) {
-        _ALL = d.list.map(s => ({
-          name: s.name, total: s.total||0, active_days: s.active_days||0,
-          daily_avg: s.daily_avg||0, trend: s.trend||'stable',
-          consistency: s.consistency||0, daily: s.daily||[]
-        }));
+        if (_ALL.length === 0) {
+          _ALL = d.list.map(s => ({
+            name: s.name, total: 0, active_days: 0, daily_avg: 0,
+            trend: 'stable', consistency: 0, daily: []
+          }));
+        } else {
+          // Add any missing societies (from older seeds)
+          const existingNames = new Set(_ALL.map(s => s.name));
+          d.list.forEach(s => {
+            if (!existingNames.has(s.name))
+              _ALL.push({ name: s.name, total: 0, active_days: 0, daily_avg: 0, trend: 'stable', consistency: 0, daily: [] });
+          });
+        }
       }
     } catch(e) {}
 
-    // META
+    // META — only use Firestore cache if _dmData is empty (no GS sync yet)
+    // Otherwise rebuildAllFromDmData() will compute the correct META.myl
     try {
       const doc = await _fbGet('appState/meta');
       const d = _docToObj(doc.fields || {});
-      if (d.myl && d.myl.length) META.myl = d.myl;
-      if (d.tvr && d.tvr.length) META.tvr = d.tvr;
-      if (d.tnj && d.tnj.length) META.tnj = d.tnj;
-      if (d.nag && d.nag.length) META.nag = d.nag;
-      if (d.morPct) META.morPct = d.morPct;
+      const hasDmData = Object.keys(_dmData).length > 0;
+      if (!hasDmData && d.myl && d.myl.length) {
+        META.myl = d.myl;
+        if (d.tvr) META.tvr = d.tvr;
+        if (d.tnj) META.tnj = d.tnj;
+        if (d.nag) META.nag = d.nag;
+        if (d.morPct) META.morPct = d.morPct;
+      }
     } catch(e) {}
 
     // UNSERVED
@@ -4636,7 +4713,7 @@ async function fbLoadAppState() {
     try {
       const doc = await _fbGet('appState/inactAct');
       const d = _docToObj(doc.fields || {});
-      Object.assign(INACT_ACT, d);
+      if (Object.keys(d).length) Object.assign(INACT_ACT, d);
     } catch(e) {}
 
     // AP_MONTHS
@@ -4646,13 +4723,13 @@ async function fbLoadAppState() {
       if (d.list && d.list.length) { AP_MONTHS.length=0; d.list.forEach(m=>AP_MONTHS.push(m)); }
     } catch(e) {}
 
-    // Rebuild stats from cached daily data, then re-render
+    // Always recompute stats from actual daily data
     rebuildAllFromDmData();
     _bootRender();
     sv('chip-act','✓ '+_ALL.filter(s=>s.total>0).length+' Active');
     sv('chip-inact','✗ '+_ALL.filter(s=>!s.total).length+' Inactive');
     dmUpdateBadge();
-    console.log('[fbLoadAppState] loaded', _ALL.length, 'societies');
+    console.log('[fbLoadAppState] loaded', _ALL.length, 'societies, dmData keys:', Object.keys(_dmData).length);
   } catch(e) { console.warn('[fbLoadAppState]', e); }
 }
 
@@ -4660,16 +4737,22 @@ async function fbLoadAppState() {
 async function fbSaveAppState() {
   if (!_fbReady || !_ALL.length) return;
   try {
-    const list = _ALL.map(s => ({
-      name: s.name, total: s.total||0, active_days: s.active_days||0,
-      daily_avg: s.daily_avg||0, trend: s.trend||'stable',
-      consistency: s.consistency||0, daily: (s.daily||[]).slice(-27)
-    }));
-    await _fbPatch('appState/societies', { fields: _objToFields({ list, updatedAt: new Date().toISOString() }) });
+    // Only save society NAMES to Firestore — stats are computed from GS sync data
+    // Saving stats would cause stale data to be loaded on next boot before GS syncs
+    const list = _ALL.map(s => ({ name: s.name }));
+    await _fbPatch('appState/societies', { fields: _objToFields({
+      list, updatedAt: new Date().toISOString()
+    })});
+    // Save _dmData summary (latest date and district total) for quick status check
+    const allDates = Object.keys(_dmData).filter(k=>/^\d{4}-\d{2}-\d{2}$/.test(k)).sort();
+    const latestDk = allDates[allDates.length-1] || '';
+    const latestTotal = latestDk ? Math.round(
+      Object.values(_dmData[latestDk]||{}).reduce((s,e)=>s+(e.mor??0)+(e.eve??0),0)
+    ) : 0;
     await _fbPatch('appState/meta', { fields: _objToFields({
-      myl: META.myl.slice(-27), tvr: META.tvr.slice(-27),
-      tnj: META.tnj.slice(-27), nag: META.nag.slice(-27),
-      morPct: META.morPct, updatedAt: new Date().toISOString()
+      latestDate: latestDk, latestTotal,
+      morPct: META.morPct,
+      updatedAt: new Date().toISOString()
     })});
   } catch(e) { console.warn('[fbSaveAppState]', e); }
 }
@@ -4702,6 +4785,11 @@ async function fbUploadStaticData(unservedArr, inactObj, apArr) {
 // ── Init ───────────────────────────────────────────────
 
 async function fbInit() {
+  if (location.protocol === 'file:') {
+    fbStatusTxt('Firebase: disabled (file:// — deploy to Vercel)');
+    fbSetDot('err');
+    return;
+  }
   fbStatusTxt('Firebase: connecting…');
   fbSetDot('syncing');
 
