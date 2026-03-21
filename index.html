@@ -1723,7 +1723,7 @@ function renderNDDB(S,AL,ZL,totL){
 
 // ── SOCIETY TABLE ──
 function renderTbl(){
-  const q=(document.getElementById('soc-search')?.value||'').toLowerCase();
+  if(!_ALL.length){sh('socBody','<tr><td colspan="10" style="text-align:center;padding:24px;color:var(--txt3);">Loading society data…</td></tr>');return;}
   const col=document.getElementById('soc-sort')?.value||'total';
   const dir=document.getElementById('soc-dir')?.value||'desc';
   const flt=document.getElementById('soc-filt')?.value||'all';
@@ -1754,6 +1754,7 @@ function clrFilt(){_kFilt='none';document.querySelectorAll('.kcard').forEach(c=>
 
 // ── COMPARISON ──
 function renderComp(totL,ac){
+  if(!ac) return;
   sv('comp-myl',totL.toLocaleString('en-IN'));
   const leg={display:true,labels:{font:{size:11},color:'#5f6368',boxWidth:7,padding:7}};
   mc('allDistChart',{type:'line',data:{labels:DAYS,datasets:[CO2('MYL',META.myl,'#1a73e8'),CO2('Tiruvarur',META.tvr,'#1e8e3e'),CO2('Thanjavur',META.tnj,'#f9ab00',[4,3]),CO2('Nagapattinam',META.nag,'#d93025',[2,2])]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:leg},scales:{x:{ticks:{font:{size:11},autoSkip:true,maxRotation:0},grid:{display:false}},y:{ticks:{font:{size:11},callback:v=>(v/1000).toFixed(0)+'K'},grid:{color:'rgba(0,0,0,0.06)'}}}}});
@@ -1771,7 +1772,7 @@ function renderInact(ZL,avg){
 
 // ── INSIGHTS ──
 function renderInsights(S,AL,ZL,totL,gPct){
-  const dec=S.filter(s=>s.trend==='down'&&s.total>0);
+  if(!S.length||!AL.length) return;
   const top3=S.filter(s=>s.total>0).sort((a,b)=>b.total-a.total).slice(0,3);
   const hid=S.filter(s=>s.total>0&&s.daily_avg<20&&s.consistency>=90);
   const its=[
@@ -1947,7 +1948,7 @@ function addAction(){const soc=prompt('Society/Village:');if(!soc)return;const a
 function addToCol(col){const soc=prompt('Society:');if(!soc)return;const act=prompt('Action:');if(!act)return;_kb[col].push({id:'cc_'+Date.now(),soc,act,pri:'medium',stg:col});lsSave();renderKB();}
 
 // ── SCORECARD ──
-function renderSC(S,AL,totL){const eff=Math.round(AL.length/S.length*100),gA=S.filter(s=>grd(s)==='A').length,cons=Math.round(AL.reduce((a,s)=>a+s.consistency,0)/AL.length);const rows=[{k:'Monthly Collection',v:nf(totL)+' L',t:'1,00,000 L',ok:totL>=100000},{k:'Active Society Rate',v:eff+'%',t:'≥85%',ok:eff>=85},{k:'Grade A Societies',v:gA+'',t:'≥30',ok:gA>=30},{k:'New Societies Formed',v:'0',t:'5/quarter',ok:false},{k:'Inactive Reactivations',v:'0',t:'All 13 in 60d',ok:false},{k:'Avg Consistency',v:cons+'%',t:'≥85%',ok:cons>=85},{k:'Member Enrollment Growth',v:'Existing',t:'20% by Q2',ok:false}];sh('kpiSC',rows.map(r=>`<tr><td style="font-weight:500;">${r.k}</td><td style="font-family:var(--mono);font-weight:500;">${r.v}</td><td style="color:var(--txt2);">${r.t}</td><td style="color:var(--txt2);">Monthly</td><td style="color:var(--txt2);">Block Officers</td><td>${r.ok?'<span style="color:var(--green)">✓ On Track</span>':'<span style="color:var(--red)">✗ Action Needed</span>'}</td></tr>`).join(''));}
+function renderSC(S,AL,totL){if(!S.length)return;const eff=Math.round(AL.length/Math.max(S.length,1)*100),gA=S.filter(s=>grd(s)==='A').length,cons=AL.length?Math.round(AL.reduce((a,s)=>a+s.consistency,0)/AL.length):0;const rows=[{k:'Monthly Collection',v:nf(totL)+' L',t:'1,00,000 L',ok:totL>=100000},{k:'Active Society Rate',v:eff+'%',t:'≥85%',ok:eff>=85},{k:'Grade A Societies',v:gA+'',t:'≥30',ok:gA>=30},{k:'New Societies Formed',v:'0',t:'5/quarter',ok:false},{k:'Inactive Reactivations',v:'0',t:'All 13 in 60d',ok:false},{k:'Avg Consistency',v:cons+'%',t:'≥85%',ok:cons>=85},{k:'Member Enrollment Growth',v:'Existing',t:'20% by Q2',ok:false}];sh('kpiSC',rows.map(r=>`<tr><td style="font-weight:500;">${r.k}</td><td style="font-family:var(--mono);font-weight:500;">${r.v}</td><td style="color:var(--txt2);">${r.t}</td><td style="color:var(--txt2);">Monthly</td><td style="color:var(--txt2);">Block Officers</td><td>${r.ok?'<span style="color:var(--green)">✓ On Track</span>':'<span style="color:var(--red)">✗ Action Needed</span>'}</td></tr>`).join(''));}
 
 // ── EXPORT/IMPORT ──
 function exportCSV(){const h=['#','Society','Monthly L','Daily Avg','Active Days','Consistency','Trend','Grade','Risk','Target L'];const rows=_ALL.map((s,i)=>[i+1,'"'+s.name+'"',s.total||0,s.daily_avg||0,s.active_days||0,s.consistency||0,s.trend,grd(s),rsk(s),_tgts[s.name]||0].join(','));const b=new Blob([[h.join(','),...rows].join('\n')],{type:'text/csv'});const a=document.createElement('a');a.href=URL.createObjectURL(b);a.download='MYL_Feb2026.csv';a.click();toast('Exported '+_ALL.length+' societies!');}
@@ -1976,6 +1977,12 @@ function boot(){
 }
 
 function _bootRender() {
+  if (!_ALL.length) {
+    // Nothing loaded yet — show a waiting message on overview
+    const el = document.getElementById('top10bars');
+    if (el) el.innerHTML = '<div style="padding:32px;text-align:center;color:var(--txt3);font-size:13px;">⏳ Loading society data from Firestore…</div>';
+    return;
+  }
   const AL=_ALL.filter(s=>s.total>0&&s.active_days>0);
   const ZL=_ALL.filter(s=>!s.total||!s.active_days);
   const totL=_ALL.reduce((a,s)=>a+(s.total||0),0);
@@ -3395,7 +3402,6 @@ function gsExtractGid(url) {
 
 async function gsFetchUrl(rawUrl, opts={}) {
   if (!gsIsGoogleUrl(rawUrl)) {
-    // Non-Google URL: direct fetch
     const r = await fetch(rawUrl, opts);
     return r;
   }
@@ -3404,16 +3410,18 @@ async function gsFetchUrl(rawUrl, opts={}) {
   const gid  = gsExtractGid(rawUrl);
 
   // ── Strategy 1: Google gviz/tq CSV endpoint (native CORS, no proxy) ──────
-  // Works for published sheets. Returns CSV directly with Access-Control-Allow-Origin: *
   if (info) {
     const gvizBase = info.type === 'pub'
       ? `https://docs.google.com/spreadsheets/d/e/${info.key}/gviz/tq`
       : `https://docs.google.com/spreadsheets/d/${info.key}/gviz/tq`;
-    const gvizUrl = `${gvizBase}?tqx=out:csv&gid=${gid}`;
-    try {
-      const r = await fetch(gvizUrl, {cache:'no-store'});
-      if (r.ok) { gsLog(_gsSyncLogs,'✓ Fetched via Google gviz API','info'); return r; }
-    } catch(e) { /* try next */ }
+    // Try gid=0 first (default/first sheet), then the extracted gid
+    const gidsToTry = gid === '0' ? ['0'] : ['0', gid];
+    for (const g of gidsToTry) {
+      try {
+        const r = await fetch(`${gvizBase}?tqx=out:csv&gid=${g}`, {cache:'no-store'});
+        if (r.ok) { gsLog(_gsSyncLogs, `✓ Fetched via gviz (gid=${g})`, 'info'); return r; }
+      } catch(e) { /* try next */ }
+    }
   }
 
   // ── Strategy 2: Direct CSV fetch (sometimes works without redirect) ───────
@@ -3966,6 +3974,9 @@ function _fromFsVal(v) {
   if ('doubleValue'  in v) return Number(v.doubleValue);
   if ('stringValue'  in v) return v.stringValue;
   if ('timestampValue' in v) return v.timestampValue;
+  if ('arrayValue'   in v) {
+    return (v.arrayValue.values || []).map(_fromFsVal);
+  }
   if ('mapValue'     in v) {
     const out = {};
     const fields = v.mapValue.fields || {};
@@ -3981,6 +3992,7 @@ function _toFsVal(v) {
   if (typeof v === 'boolean')  return {booleanValue: v};
   if (typeof v === 'number')   return Number.isInteger(v) ? {integerValue: String(v)} : {doubleValue: v};
   if (typeof v === 'string')   return {stringValue: v};
+  if (Array.isArray(v))        return {arrayValue: {values: v.map(_toFsVal)}};
   if (typeof v === 'object')   {
     const fields = {};
     for (const k in v) fields[k] = _toFsVal(v[k]);
@@ -4224,13 +4236,14 @@ const _STATIC_AP = [
 
 async function fbSeedStaticIfEmpty() {
   if (!_fbReady) return;
+  const SEED_VERSION = 'v2'; // bump to force re-seed after array fix
   try {
-    // Check if already seeded
     const doc = await _fbGet('appState/societies');
     const d = _docToObj(doc.fields || {});
-    if (d.list && d.list.length > 0) {
+    // Re-seed if empty OR if version doesn't match (old bad serialization)
+    if (d.list && d.list.length > 0 && d.version === SEED_VERSION) {
       console.log('[fbSeedStatic] Already seeded —', d.list.length, 'societies in Firestore');
-      return; // already done
+      return;
     }
   } catch(e) { /* not found = needs seeding */ }
 
@@ -4243,7 +4256,7 @@ async function fbSeedStaticIfEmpty() {
       daily_avg: s.daily_avg||0, trend: s.trend||'stable',
       consistency: s.consistency||0, daily: s.daily||[]
     }));
-    await _fbPatch('appState/societies', { fields: _objToFields({ list, updatedAt: new Date().toISOString() }) });
+    await _fbPatch('appState/societies', { fields: _objToFields({ list, version: SEED_VERSION, updatedAt: new Date().toISOString() }) });
 
     // Upload META
     await _fbPatch('appState/meta', { fields: _objToFields({
