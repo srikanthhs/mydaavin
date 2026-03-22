@@ -604,6 +604,60 @@ body{background:var(--bg);color:var(--txt);font-family:var(--font);font-size:13.
 .alert-top-bar { background:linear-gradient(90deg,#fce8e6,#fff5f5);border-left:4px solid #ea4335;border-radius:0 8px 8px 0;padding:8px 14px;margin-bottom:8px;display:flex;align-items:center;gap:10px;font-size:13px; }
 .alert-top-bar.warn { background:linear-gradient(90deg,#fef7e0,#fffdf5);border-left-color:#fbbc04; }
 .alert-top-bar.ok   { background:linear-gradient(90deg,#e6f4ea,#f5fff8);border-left-color:#34a853; }
+
+/* ── UNIVERSAL SORTABLE TABLE HEADERS ── */
+.tbl th.sortable { cursor:pointer;user-select:none;position:relative;padding-right:22px;transition:color .15s,background .15s; }
+.tbl th.sortable:hover { color:var(--g-blue);background:#f0f4ff; }
+.tbl th.sortable::after { content:'⇅';position:absolute;right:6px;top:50%;transform:translateY(-50%);opacity:.35;font-size:11px;transition:opacity .15s; }
+.tbl th.sortable:hover::after { opacity:.7; }
+.tbl th.sort-asc::after  { content:'↑';opacity:.9;color:var(--g-blue); }
+.tbl th.sort-desc::after { content:'↓';opacity:.9;color:var(--g-blue); }
+.tbl th.sort-asc,.tbl th.sort-desc { color:var(--g-blue);background:#f0f4ff; }
+
+/* ── KPI CARD TOOLTIP ── */
+.kcard[data-tip] { cursor:pointer; }
+.kcard[data-tip]:hover { box-shadow:0 4px 16px rgba(60,64,67,.2);transform:translateY(-2px); }
+.kpi-tooltip { position:fixed;z-index:8000;background:#202124;color:#fff;border-radius:8px;padding:10px 14px;font-size:12px;line-height:1.7;max-width:260px;pointer-events:none;opacity:0;transition:opacity .18s;box-shadow:0 4px 20px rgba(0,0,0,.3);white-space:pre-line; }
+.kpi-tooltip.show { opacity:1; }
+
+/* ── KPI CARD SPARKLINE ── */
+.kc-sparkline { display:flex;align-items:flex-end;gap:2px;height:28px;margin-top:8px;padding:2px 0; }
+.kc-spark-bar { flex:1;border-radius:2px 2px 0 0;min-width:5px;opacity:.75;transition:opacity .15s; }
+.kc-sparkline:hover .kc-spark-bar { opacity:1; }
+
+/* ── IMPROVED KPI CARD ── */
+.kcard { transition:box-shadow .15s,transform .15s; }
+.kcard:hover { box-shadow:0 4px 16px rgba(60,64,67,.18);transform:translateY(-2px); }
+.kc-icon { font-size:22px;position:absolute;top:14px;right:16px;opacity:.18; }
+
+/* ── ALERT FILTERS ── */
+.alert-filter-bar { display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:12px; }
+.af-btn { padding:5px 14px;border-radius:100px;font-size:12.5px;font-weight:500;cursor:pointer;background:var(--surface);border:1.5px solid var(--brd);color:var(--txt2);transition:all .15s;font-family:var(--font); }
+.af-btn:hover { border-color:var(--g-blue);color:var(--g-blue);background:#f0f4ff; }
+.af-btn.active { background:var(--g-blue);color:#fff;border-color:var(--g-blue); }
+
+/* ── SUMMARY TABLE IMPROVEMENTS ── */
+.sort-indicator { display:inline-block;width:14px;text-align:center;opacity:.4;font-size:10px; }
+
+/* ── TREND BADGE ── */
+.trend-up   { display:inline-flex;align-items:center;gap:2px;padding:2px 7px;border-radius:100px;font-size:11px;font-weight:600;background:#e6f4ea;color:#137333; }
+.trend-down { display:inline-flex;align-items:center;gap:2px;padding:2px 7px;border-radius:100px;font-size:11px;font-weight:600;background:#fce8e6;color:#c5221f; }
+.trend-flat { display:inline-flex;align-items:center;gap:2px;padding:2px 7px;border-radius:100px;font-size:11px;font-weight:500;background:#f1f3f4;color:#5f6368; }
+
+/* ── PROGRESS MINI BAR INLINE ── */
+.mini-prog { display:inline-flex;align-items:center;gap:6px;min-width:80px; }
+.mini-prog-track { flex:1;height:5px;background:var(--s2);border-radius:100px;overflow:hidden;min-width:40px; }
+.mini-prog-fill { height:100%;border-radius:100px;transition:width .6s; }
+
+/* ── DAILY LOG IMPROVEMENTS ── */
+#dl-body tr:hover td { background:rgba(26,115,232,.05); }
+.dl-row-high { background:#f5fff8 !important; }
+.dl-row-miss { background:#fff5f5 !important; }
+.dl-row-low  { background:#fffdf0 !important; }
+
+/* ── QUICK STATS BADGE ROW ── */
+.quick-stat-row { display:flex;gap:10px;flex-wrap:wrap;margin-bottom:6px; }
+.qs-badge { display:inline-flex;align-items:center;gap:5px;padding:4px 10px;border-radius:100px;font-size:12px;font-weight:500;background:var(--bg);border:1px solid var(--brd);color:var(--txt2); }
 </style>
 </head>
 <body>
@@ -694,11 +748,30 @@ body{background:var(--bg);color:var(--txt);font-family:var(--font);font-size:13.
       <span id="conn-txt">Not connected</span>
     </div>
     <div class="conn" style="margin-top:2px;">
-      <div class="dot dot-g" id="fb-dot"></div>
-      <span id="fb-txt" style="font-size:10.5px;">Firebase sync active</span>
+      <div class="dot" id="fb-dot" style="background:var(--txt3);"></div>
+      <span id="fb-txt" style="font-size:10.5px;">Firebase: checking…</span>
     </div>
+    <div class="conn" style="margin-top:2px;font-size:10px;color:var(--txt3);" id="sb-rows-info"></div>
   </div>
 </div>
+
+<script>
+// Update Firebase status dot live as SDK initialises
+window.addEventListener('firebase-ready', () => {
+  const dot = document.getElementById('fb-dot');
+  const txt = document.getElementById('fb-txt');
+  if (dot) { dot.className = 'dot dot-g'; }
+  if (txt) txt.textContent = 'Firebase: ✓ connected';
+}, { once: true });
+setTimeout(() => {
+  if (!window._fbReady) {
+    const dot = document.getElementById('fb-dot');
+    const txt = document.getElementById('fb-txt');
+    if (dot) dot.style.background = '#ea4335';
+    if (txt) txt.textContent = 'Firebase: unavailable';
+  }
+}, 4500);
+</script>
 
 <!-- MAIN -->
 <div id="main">
@@ -738,6 +811,15 @@ body{background:var(--bg);color:var(--txt);font-family:var(--font);font-size:13.
     <div class="dr-count" id="dr-count">—</div>
   </div>
 
+  <!-- MOBILE / FETCH ERROR BANNER — shown when data fails to load -->
+  <div id="mobile-err-banner" style="display:none;background:linear-gradient(90deg,#fce8e6,#fff5f5);border-left:4px solid #ea4335;padding:10px 20px;font-size:13px;display:none;align-items:center;gap:12px;flex-wrap:wrap;">
+    <span style="font-size:18px;">📡</span>
+    <span id="mobile-err-txt" style="flex:1;">Data not loaded.</span>
+    <button onclick="fetchNow()" class="btn btn-p" style="font-size:12px;padding:5px 16px;">↻ Retry</button>
+    <button onclick="goTab('settings',null)" class="btn btn-o" style="font-size:12px;padding:5px 16px;">⚙️ Settings</button>
+    <button onclick="document.getElementById('mobile-err-banner').style.display='none'" style="background:none;border:none;cursor:pointer;color:var(--txt3);font-size:18px;padding:0 4px;">✕</button>
+  </div>
+
   <!-- CONTENT -->
   <div class="content">
 
@@ -757,31 +839,36 @@ body{background:var(--bg);color:var(--txt);font-family:var(--font);font-size:13.
 
       <!-- ROW 1: 5 primary KPIs — clickable -->
       <div class="g5" style="margin-bottom:10px;" id="ov-kpi-row1">
-        <div class="kcard kc-g ov-kpi-card" onclick="goTab('daily',document.querySelector('[onclick*=daily]'))" style="cursor:pointer;" title="View Daily Log">
+        <div class="kcard kc-g ov-kpi-card" onclick="goTab('daily',document.querySelector('[onclick*=daily]'))" style="cursor:pointer;"
+          onmouseenter="showTip(this,'Total milk collected in selected period.\nClick → Daily Log for full breakdown.')" onmouseleave="hideTip()">
           <div class="kc-lbl">🥛 Total Collection</div>
           <div class="kc-val kv-g" id="kpi-total">—</div>
           <div class="kc-sub" id="kpi-total-sub">tap to view daily log</div>
           <div style="margin-top:6px;height:3px;background:var(--s2);border-radius:100px;overflow:hidden;"><div id="kpi-total-bar" style="height:100%;background:#34a853;border-radius:100px;width:0%;transition:width .6s;"></div></div>
         </div>
-        <div class="kcard kc-t ov-kpi-card" onclick="goTab('tracker',document.querySelector('[onclick*=tracker]'))" style="cursor:pointer;" title="Society Tracker">
+        <div class="kcard kc-t ov-kpi-card" onclick="goTab('tracker',document.querySelector('[onclick*=tracker]'))" style="cursor:pointer;"
+          onmouseenter="showTip(this,'Average litres collected per day.\nArrow shows trend vs previous half-period.\nClick → Society Tracker for detail.')" onmouseleave="hideTip()">
           <div class="kc-lbl">📊 Daily Average</div>
           <div class="kc-val kv-t" id="kpi-avg">—</div>
           <div class="kc-sub" id="kpi-avg-sub">L / day · <span id="kpi-avg-trend"></span></div>
           <div style="margin-top:6px;font-size:10.5px;color:var(--txt3);" id="kpi-avg-detail"></div>
         </div>
-        <div class="kcard kc-b ov-kpi-card" onclick="goTab('tracker_all',document.querySelector('[onclick*=tracker_all]'))" style="cursor:pointer;" title="All Societies">
+        <div class="kcard kc-b ov-kpi-card" onclick="goTab('tracker_all',document.querySelector('[onclick*=tracker_all]'))" style="cursor:pointer;"
+          onmouseenter="showTip(this,'Societies that submitted at least one report.\nBar shows district reporting rate.\nClick → All Societies tracker.')" onmouseleave="hideTip()">
           <div class="kc-lbl">🏘 Active Societies</div>
           <div class="kc-val kv-b" id="kpi-soc">—</div>
           <div class="kc-sub" id="kpi-soc-sub">reporting · <span id="kpi-soc-rate" style="font-weight:600;"></span></div>
           <div style="margin-top:6px;height:3px;background:var(--s2);border-radius:100px;overflow:hidden;"><div id="kpi-soc-bar" style="height:100%;background:#4285f4;border-radius:100px;width:0%;transition:width .6s;"></div></div>
         </div>
-        <div class="kcard kc-r ov-kpi-card" onclick="goTab('alerts',document.querySelector('[onclick*=alerts]'))" style="cursor:pointer;" title="View Alerts">
+        <div class="kcard kc-r ov-kpi-card" onclick="goTab('alerts',document.querySelector('[onclick*=alerts]'))" style="cursor:pointer;"
+          onmouseenter="showTip(this,'Total zero-collection events across all societies.\nEach missed day = one missed event.\nClick → Alerts tab for details.')" onmouseleave="hideTip()">
           <div class="kc-lbl">🚫 Missed Events</div>
           <div class="kc-val kv-r" id="kpi-missed">—</div>
           <div class="kc-sub">zero-collection days · <span id="kpi-missed-rate" style="font-weight:600;color:var(--g-red);"></span></div>
           <div style="margin-top:6px;font-size:10.5px;color:var(--txt3);" id="kpi-missed-socs"></div>
         </div>
-        <div class="kcard kc-a ov-kpi-card" onclick="goTab('pareto',document.querySelector('[onclick*=pareto]'))" style="cursor:pointer;" title="Pareto Analysis">
+        <div class="kcard kc-a ov-kpi-card" onclick="goTab('pareto',document.querySelector('[onclick*=pareto]'))" style="cursor:pointer;"
+          onmouseenter="showTip(this,'Number of days in the selected date range.\nShows first → last date.\nClick → Pareto Analysis.')" onmouseleave="hideTip()">
           <div class="kc-lbl">📅 Days on Record</div>
           <div class="kc-val kv-a" id="kpi-days">—</div>
           <div class="kc-sub" id="kpi-days-sub">in selected range</div>
@@ -791,29 +878,34 @@ body{background:var(--bg);color:var(--txt);font-family:var(--font);font-size:13.
 
       <!-- ROW 2: 5 secondary KPIs -->
       <div class="g5" style="margin-bottom:10px;">
-        <div class="kcard kc-b ov-kpi-card" onclick="goTab('village_table',document.querySelector('[onclick*=village_table]'))" style="cursor:pointer;">
+        <div class="kcard kc-b ov-kpi-card" onclick="goTab('village_table',document.querySelector('[onclick*=village_table]'))" style="cursor:pointer;"
+          onmouseenter="showTip(this,'% of estimated cattle milk potential currently being collected.\nBased on 2.7 L/animal/day.\nClick → Village Milch Table.')" onmouseleave="hideTip()">
           <div class="kc-lbl">🏭 BMC Utilisation</div>
           <div class="kc-val kv-b" id="kpi-bmc-util">—</div>
           <div class="kc-sub" id="kpi-bmc-sub">of milk potential</div>
           <div style="margin-top:6px;height:4px;background:var(--s2);border-radius:100px;overflow:hidden;"><div id="kpi-bmc-bar" style="height:100%;border-radius:100px;background:#4285f4;transition:width .5s;width:0%;"></div></div>
         </div>
-        <div class="kcard kc-g ov-kpi-card" style="cursor:pointer;" onclick="goTab('tracker_all',document.querySelector('[onclick*=tracker_all]'))">
+        <div class="kcard kc-g ov-kpi-card" style="cursor:pointer;" onclick="goTab('tracker_all',document.querySelector('[onclick*=tracker_all]'))"
+          onmouseenter="showTip(this,'% of society-days with non-zero collection.\n≥80% = strong, 60-80% = moderate, <60% = at risk.\nClick → All Societies tracker.')" onmouseleave="hideTip()">
           <div class="kc-lbl">📈 Reporting Rate</div>
           <div class="kc-val kv-g" id="kpi-rep-rate">—</div>
           <div class="kc-sub">district-wide reporting</div>
           <div style="margin-top:6px;height:4px;background:var(--s2);border-radius:100px;overflow:hidden;"><div id="kpi-rep-bar" style="height:100%;border-radius:100px;background:#34a853;transition:width .5s;width:0%;"></div></div>
         </div>
-        <div class="kcard kc-t ov-kpi-card" style="cursor:pointer;" onclick="goTab('summary',document.querySelector('[onclick*=summary]'))">
+        <div class="kcard kc-t ov-kpi-card" style="cursor:pointer;" onclick="goTab('summary',document.querySelector('[onclick*=summary]'))"
+          onmouseenter="showTip(this,'Highest-volume society in selected period.\nShows total volume and reporting rate.\nClick → Society Summary.')" onmouseleave="hideTip()">
           <div class="kc-lbl">🏆 Top Society</div>
           <div class="kc-val kv-t" id="kpi-top-soc" style="font-size:16px;font-weight:500;">—</div>
           <div class="kc-sub" id="kpi-top-soc-val"></div>
         </div>
-        <div class="kcard kc-r ov-kpi-card" style="cursor:pointer;" onclick="goTab('alerts',document.querySelector('[onclick*=alerts]'))">
+        <div class="kcard kc-r ov-kpi-card" style="cursor:pointer;" onclick="goTab('alerts',document.querySelector('[onclick*=alerts]'))"
+          onmouseenter="showTip(this,'Societies with <40% reporting rate in this period.\nThese need urgent field intervention.\nClick → Alerts tab.')" onmouseleave="hideTip()">
           <div class="kc-lbl">⚠️ Critical Societies</div>
           <div class="kc-val kv-r" id="kpi-crit-soc">—</div>
           <div class="kc-sub" id="kpi-crit-sub">&lt;40% reporting rate</div>
         </div>
-        <div class="kcard ov-kpi-card" id="season-banner" style="background:linear-gradient(135deg,#e8f0fe,#f8f9fa);border:1px solid #c5d9f8;cursor:default;">
+        <div class="kcard ov-kpi-card" id="season-banner" style="background:linear-gradient(135deg,#e8f0fe,#f8f9fa);border:1px solid #c5d9f8;cursor:default;"
+          onmouseenter="showTip(this,'Tamil Nadu seasonal context.\nFlush (Oct-Feb): higher volumes expected.\nLean (Mar-Jul): focus on farmer retention.')" onmouseleave="hideTip()">
           <div class="kc-lbl" id="season-lbl">📅 Season</div>
           <div class="kc-val" id="season-val" style="font-size:16px;font-weight:500;">—</div>
           <div class="kc-sub" id="season-sub">—</div>
@@ -822,22 +914,26 @@ body{background:var(--bg);color:var(--txt);font-family:var(--font);font-size:13.
 
       <!-- ROW 3: Morning/Evening split KPIs + trend KPIs -->
       <div class="g4" style="margin-bottom:10px;">
-        <div class="kcard" style="border-top:3px solid #34a853;">
+        <div class="kcard" style="border-top:3px solid #34a853;"
+          onmouseenter="showTip(this,'Total morning session milk across all societies.\nIdeal M:E ratio is 55:45 to 60:40.')" onmouseleave="hideTip()">
           <div class="kc-lbl">☀️ Morning Total</div>
           <div class="kc-val" style="color:#34a853;" id="kpi-morning">—</div>
           <div class="kc-sub" id="kpi-morning-pct">% of daily</div>
         </div>
-        <div class="kcard" style="border-top:3px solid #ea4335;">
+        <div class="kcard" style="border-top:3px solid #ea4335;"
+          onmouseenter="showTip(this,'Total evening session milk.\nEvening typically lower than morning.\nA large gap may indicate transport/chilling issues.')" onmouseleave="hideTip()">
           <div class="kc-lbl">🌙 Evening Total</div>
           <div class="kc-val" style="color:#ea4335;" id="kpi-evening">—</div>
           <div class="kc-sub" id="kpi-evening-pct">% of daily</div>
         </div>
-        <div class="kcard" style="border-top:3px solid #fbbc04;">
+        <div class="kcard" style="border-top:3px solid #fbbc04;cursor:pointer;" onclick="goTab('daily',null);"
+          onmouseenter="showTip(this,'Highest single-day collection in the period.\nThis is your peak capacity benchmark.\nClick → Daily Log to find this day.')" onmouseleave="hideTip()">
           <div class="kc-lbl">📆 Best Single Day</div>
           <div class="kc-val" style="color:#ea8600;" id="kpi-best-day">—</div>
           <div class="kc-sub" id="kpi-best-day-date"></div>
         </div>
-        <div class="kcard" style="border-top:3px solid #9c27b0;">
+        <div class="kcard" style="border-top:3px solid #9c27b0;cursor:pointer;" onclick="goTab('scorecard',null);"
+          onmouseenter="showTip(this,'% change: second half vs first half of period.\n▲ Positive = procurement growing.\n▼ Negative = needs intervention.\nClick → Balanced Scorecard.')" onmouseleave="hideTip()">
           <div class="kc-lbl">📉 Period Growth</div>
           <div class="kc-val" id="kpi-growth" style="font-size:22px;">—</div>
           <div class="kc-sub" id="kpi-growth-sub">vs previous period</div>
@@ -865,13 +961,13 @@ body{background:var(--bg);color:var(--txt);font-family:var(--font);font-size:13.
             <table class="tbl" id="ov-soc-tbl">
               <thead><tr>
                 <th style="width:24px;">#</th>
-                <th onclick="ovSocSort('name')" style="cursor:pointer;" class="sort-th">Society ↕</th>
-                <th onclick="ovSocSort('morning')" style="cursor:pointer;" class="sort-th">Morning ↕</th>
-                <th onclick="ovSocSort('evening')" style="cursor:pointer;" class="sort-th">Evening ↕</th>
-                <th onclick="ovSocSort('total')" style="cursor:pointer;" class="sort-th">Total ↕</th>
-                <th onclick="ovSocSort('diff')" style="cursor:pointer;" class="sort-th">M-E Diff ↕</th>
-                <th onclick="ovSocSort('rep')" style="cursor:pointer;" class="sort-th">Rep % ↕</th>
-                <th onclick="ovSocSort('trend')" style="cursor:pointer;" class="sort-th">Trend ↕</th>
+                <th data-col="name" data-type="str" onclick="ovSocSort('name')" class="sort-th">Society</th>
+                <th data-col="morning" data-type="num" onclick="ovSocSort('morning')" class="sort-th">Morning</th>
+                <th data-col="evening" data-type="num" onclick="ovSocSort('evening')" class="sort-th">Evening</th>
+                <th data-col="total" data-type="num" onclick="ovSocSort('total')" class="sort-th">Total</th>
+                <th data-col="diff" data-type="num" onclick="ovSocSort('diff')" class="sort-th">M-E Diff</th>
+                <th data-col="rep" data-type="num" onclick="ovSocSort('rep')" class="sort-th">Rep %</th>
+                <th data-col="trend" data-type="num" onclick="ovSocSort('trend')" class="sort-th">Trend</th>
               </tr></thead>
               <tbody id="ov-soc-body"></tbody>
               <tfoot id="ov-soc-foot" style="background:var(--bg);font-weight:600;border-top:2px solid var(--brd);font-size:12px;"></tfoot>
@@ -935,11 +1031,11 @@ body{background:var(--bg);color:var(--txt);font-family:var(--font);font-size:13.
             <table class="tbl" id="ov-top10-tbl">
               <thead><tr>
                 <th style="width:28px;">#</th>
-                <th onclick="ovSortTop('name')" style="cursor:pointer;">Society</th>
-                <th onclick="ovSortTop('total')" style="cursor:pointer;">Total (L)</th>
-                <th onclick="ovSortTop('avg')" style="cursor:pointer;">Avg/Day</th>
-                <th onclick="ovSortTop('rep')" style="cursor:pointer;">Rep %</th>
-                <th onclick="ovSortTop('trend')" style="cursor:pointer;">Trend</th>
+                <th data-col="name" data-type="str" onclick="ovSortTop('name')">Society</th>
+                <th data-col="total" data-type="num" onclick="ovSortTop('total')">Total (L)</th>
+                <th data-col="avg" data-type="num" onclick="ovSortTop('avg')">Avg/Day</th>
+                <th data-col="rep" data-type="num" onclick="ovSortTop('rep')">Rep %</th>
+                <th data-col="trend" data-type="num" onclick="ovSortTop('trend')">Trend</th>
                 <th>Status</th>
               </tr></thead>
               <tbody id="ov-top10-body"></tbody>
@@ -958,10 +1054,10 @@ body{background:var(--bg);color:var(--txt);font-family:var(--font);font-size:13.
             <table class="tbl" id="ov-atrisk-tbl">
               <thead><tr>
                 <th style="width:28px;">#</th>
-                <th>Society</th>
-                <th>Missed</th>
-                <th>Rep %</th>
-                <th>Avg (L)</th>
+                <th data-col="name" data-type="str">Society</th>
+                <th data-col="missed" data-type="num">Missed</th>
+                <th data-col="rep" data-type="num">Rep %</th>
+                <th data-col="avg" data-type="num">Avg (L)</th>
                 <th>Last Day</th>
                 <th>Action</th>
               </tr></thead>
@@ -980,13 +1076,13 @@ body{background:var(--bg);color:var(--txt);font-family:var(--font);font-size:13.
         <div style="overflow-x:auto;">
           <table class="tbl" id="ov-daily7-tbl">
             <thead><tr>
-              <th>Date</th>
+              <th data-col="date" data-type="str">Date</th>
               <th>Day</th>
-              <th>Morning (L)</th>
-              <th>Evening (L)</th>
-              <th>Total (L)</th>
-              <th>Societies</th>
-              <th>Missed</th>
+              <th data-col="morning" data-type="num">Morning (L)</th>
+              <th data-col="evening" data-type="num">Evening (L)</th>
+              <th data-col="total" data-type="num">Total (L)</th>
+              <th data-col="societies" data-type="num">Societies</th>
+              <th data-col="missed" data-type="num">Missed</th>
               <th>vs Avg</th>
             </tr></thead>
             <tbody id="ov-daily7-body"></tbody>
@@ -1040,13 +1136,13 @@ body{background:var(--bg);color:var(--txt);font-family:var(--font);font-size:13.
           <table class="tbl" id="dl-table">
             <thead>
               <tr>
-                <th onclick="sortDL('date')" id="dlh-date" style="cursor:pointer;">Date ↕</th>
-                <th onclick="sortDL('society')" style="cursor:pointer;">Society ↕</th>
-                <th onclick="sortDL('morning')" style="cursor:pointer;">Morning (L) ↕</th>
-                <th onclick="sortDL('evening')" style="cursor:pointer;">Evening (L) ↕</th>
-                <th onclick="sortDL('total')" style="cursor:pointer;">Total (L) ↕</th>
-                <th onclick="sortDL('fat')" style="cursor:pointer;">Fat % ↕</th>
-                <th onclick="sortDL('snf')" style="cursor:pointer;">SNF % ↕</th>
+                <th data-col="date" data-type="str" onclick="sortDL('date')" id="dlh-date">Date</th>
+                <th data-col="society" data-type="str" onclick="sortDL('society')">Society</th>
+                <th data-col="morning" data-type="num" onclick="sortDL('morning')">Morning (L)</th>
+                <th data-col="evening" data-type="num" onclick="sortDL('evening')">Evening (L)</th>
+                <th data-col="total" data-type="num" onclick="sortDL('total')">Total (L)</th>
+                <th data-col="fat" data-type="num" onclick="sortDL('fat')">Fat %</th>
+                <th data-col="snf" data-type="num" onclick="sortDL('snf')">SNF %</th>
                 <th>vs Avg</th>
                 <th>Status</th>
                 <th>Notes</th>
@@ -1110,16 +1206,16 @@ body{background:var(--bg);color:var(--txt);font-family:var(--font);font-size:13.
             <thead>
               <tr>
                 <th style="width:28px;">#</th>
-                <th onclick="ssSort('name')" style="cursor:pointer;">Society ↕</th>
-                <th onclick="ssSort('total')" style="cursor:pointer;">Total (L) ↕</th>
-                <th onclick="ssSort('avg')" style="cursor:pointer;">Daily Avg ↕</th>
-                <th onclick="ssSort('morning')" style="cursor:pointer;">Morn Avg ↕</th>
-                <th onclick="ssSort('evening')" style="cursor:pointer;">Eve Avg ↕</th>
-                <th onclick="ssSort('activeDays')" style="cursor:pointer;">Active Days ↕</th>
-                <th onclick="ssSort('missed')" style="cursor:pointer;">Missed ↕</th>
-                <th onclick="ssSort('repPct')" style="cursor:pointer;">Rep % ↕</th>
-                <th onclick="ssSort('best')" style="cursor:pointer;">Best Day ↕</th>
-                <th onclick="ssSort('trend')" style="cursor:pointer;">Trend ↕</th>
+                <th data-col="name" data-type="str" onclick="ssSort('name')">Society</th>
+                <th data-col="total" data-type="num" onclick="ssSort('total')">Total (L)</th>
+                <th data-col="avg" data-type="num" onclick="ssSort('avg')">Daily Avg</th>
+                <th data-col="morning" data-type="num" onclick="ssSort('morning')">Morn Avg</th>
+                <th data-col="evening" data-type="num" onclick="ssSort('evening')">Eve Avg</th>
+                <th data-col="activeDays" data-type="num" onclick="ssSort('activeDays')">Active Days</th>
+                <th data-col="missed" data-type="num" onclick="ssSort('missed')">Missed</th>
+                <th data-col="repPct" data-type="num" onclick="ssSort('repPct')">Rep %</th>
+                <th data-col="best" data-type="num" onclick="ssSort('best')">Best Day</th>
+                <th data-col="trend" data-type="num" onclick="ssSort('trend')">Trend</th>
                 <th>L/Member</th>
                 <th>NDDB</th>
                 <th>Status</th>
@@ -1137,17 +1233,40 @@ body{background:var(--bg);color:var(--txt);font-family:var(--font);font-size:13.
 
     <!-- ═══════════════ ALERTS ═══════════════ -->
     <div class="tab-panel" id="tab-alerts">
-      <div class="g2" style="margin-bottom:12px;">
-        <div class="kcard kc-r">
-          <div class="kc-lbl">Missed (Zero) Days</div>
+      <div class="g4" style="margin-bottom:12px;">
+        <div class="kcard kc-r" style="cursor:pointer;" onclick="filterAlerts('missed')"
+          onmouseenter="showTip(this,'Days with zero milk collection.\nEach represents a complete loss for that society.\nClick to show only missed events.')" onmouseleave="hideTip()">
+          <div class="kc-lbl">🚫 Missed (Zero) Days</div>
           <div class="kc-val kv-r" id="al-missed">—</div>
-          <div class="kc-sub">societies × days with 0 L</div>
+          <div class="kc-sub">societies × days with 0 L · click to filter</div>
         </div>
-        <div class="kcard kc-a">
-          <div class="kc-lbl">Low Collection Days</div>
+        <div class="kcard kc-a" style="cursor:pointer;" onclick="filterAlerts('low')"
+          onmouseenter="showTip(this,'Days where collection was below 70% of the society average.\nIndicates transport, farmer, or chilling issues.\nClick to show only low events.')" onmouseleave="hideTip()">
+          <div class="kc-lbl">⚠️ Low Collection Days</div>
           <div class="kc-val kv-a" id="al-low">—</div>
-          <div class="kc-sub">below 70% of avg</div>
+          <div class="kc-sub">below 70% of avg · click to filter</div>
         </div>
+        <div class="kcard kc-b" style="cursor:pointer;" onclick="filterAlerts('festival')"
+          onmouseenter="showTip(this,'Missed days that fall on Tamil Nadu festival dates.\nThese may be expected — verify and log.\nClick to show festival-day events.')" onmouseleave="hideTip()">
+          <div class="kc-lbl">🎉 Festival-Day Misses</div>
+          <div class="kc-val kv-b" id="al-festival">—</div>
+          <div class="kc-sub">likely holiday closures</div>
+        </div>
+        <div class="kcard kc-g" style="cursor:pointer;" onclick="filterAlerts('all')"
+          onmouseenter="showTip(this,'% of society-days with zero collection.\nTarget: <5% miss rate.\nClick to show all alerts.')" onmouseleave="hideTip()">
+          <div class="kc-lbl">📊 Miss Rate</div>
+          <div class="kc-val kv-g" id="al-missrate">—</div>
+          <div class="kc-sub">of total events · click to show all</div>
+        </div>
+      </div>
+      <div class="alert-filter-bar">
+        <span style="font-size:12.5px;font-weight:500;color:var(--txt2);">Filter:</span>
+        <button class="af-btn active" id="af-all"      onclick="filterAlerts('all')">All Alerts</button>
+        <button class="af-btn"        id="af-missed"   onclick="filterAlerts('missed')">🚫 Missed Only</button>
+        <button class="af-btn"        id="af-low"      onclick="filterAlerts('low')">⚠️ Low Only</button>
+        <button class="af-btn"        id="af-festival" onclick="filterAlerts('festival')">🎉 Festival Days</button>
+        <input type="text" class="dr-inp" id="al-search" placeholder="Search society…" oninput="renderAlerts()" style="min-width:160px;margin-left:auto;">
+        <span id="al-count" style="font-size:12px;color:var(--txt3);font-family:var(--mono);white-space:nowrap;"></span>
       </div>
       <div id="alerts-list">
         <div class="empty"><div class="empty-ico">✅</div><div class="empty-t">No alerts</div></div>
@@ -1193,7 +1312,7 @@ body{background:var(--bg);color:var(--txt);font-family:var(--font);font-size:13.
         </div>
         <label class="set-label" style="margin-top:10px;">API Key</label>
         <div style="display:flex;gap:8px;margin-bottom:6px;align-items:center;">
-          <input type="password" class="ctrl" id="api-key-inp" placeholder="Paste your API key here…" style="flex:1;font-family:var(--mono);font-size:12.5px;" oninput="saveSettings()" value="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">
+          <input type="password" class="ctrl" id="api-key-inp" placeholder="Paste your API key here…" style="flex:1;font-family:var(--mono);font-size:12.5px;" oninput="saveSettings()">
           <button class="btn btn-o" onclick="toggleApiKeyVis()" style="padding:6px 12px;">👁</button>
           <button class="btn btn-p" onclick="testApiKey()">Test</button>
         </div>
@@ -1203,14 +1322,17 @@ body{background:var(--bg);color:var(--txt);font-family:var(--font);font-size:13.
       <div class="set-card">
         <div class="set-title">🔗 Google Sheets Connection</div>
         <div class="set-sub">
-          Connected to Mayiladuthurai DCMPU procurement sheet. Data syncs automatically on every page load.
+          Connected to Mayiladuthurai DCMPU procurement sheet. URL and API key are synced across devices via Firebase — open on any phone and data loads automatically.
         </div>
         <label class="set-label">Published CSV URL</label>
-        <div style="display:flex;gap:8px;margin-bottom:6px;">
-          <input type="url" class="ctrl" id="gs-url" value="https://docs.google.com/spreadsheets/d/e/2PACX-1vQoidPzsC2uuXAckFPgBBtwmz0y8Wqz4D9NaI2ay3vl28X7P28z2W4vBYj_l-W9_w/pub?output=csv" style="flex:1;color:var(--txt3);font-size:12px;">
-          <button class="btn btn-p" onclick="connectSheet()">↻ Refresh</button>
+        <div style="display:flex;gap:8px;margin-bottom:6px;flex-wrap:wrap;">
+          <input type="url" class="ctrl" id="gs-url" placeholder="https://docs.google.com/…" style="flex:1;min-width:200px;color:var(--txt3);font-size:12px;" onchange="saveSettings()">
+          <button class="btn btn-p" onclick="connectSheet()" style="white-space:nowrap;">↻ Connect &amp; Fetch</button>
         </div>
-        <div class="set-hint" style="color:var(--g-green);">✅ Sheet connected · data loads automatically on every device</div>
+        <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+          <div class="set-hint" style="color:var(--g-green);flex:1;">✅ Sheet URL hardcoded · syncs via Firebase to all devices including mobile</div>
+          <div id="gs-last-sync" style="font-size:11px;color:var(--txt3);font-family:var(--mono);white-space:nowrap;"></div>
+        </div>
       </div>
 
       <div class="set-card">
@@ -1254,6 +1376,25 @@ body{background:var(--bg);color:var(--txt);font-family:var(--font);font-size:13.
         <div id="data-health-body" style="font-size:13px;color:var(--txt3);padding:8px 0;">Load data to see health check.</div>
       </div>
 
+      <!-- MOBILE / CONNECTION DIAGNOSTICS -->
+      <div class="set-card" style="border:1px solid rgba(66,133,244,.2);background:#f0f4ff;">
+        <div class="set-title" style="color:#1a73e8;">📱 Connection Diagnostics</div>
+        <div class="set-sub">Use this panel to test all connections. Especially useful when troubleshooting on mobile devices.</div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px;">
+          <button class="btn btn-p" onclick="fetchNow()" style="flex:1;min-width:140px;">↻ Fetch Google Sheet</button>
+          <button class="btn btn-o" onclick="testFirebaseConn()" style="flex:1;min-width:140px;">🔥 Test Firebase</button>
+          <button class="btn btn-o" onclick="testApiKey()" style="flex:1;min-width:140px;">🤖 Test AI Key</button>
+        </div>
+        <div id="diag-status" style="font-size:12.5px;line-height:1.9;font-family:var(--mono);background:var(--surface);border:1px solid var(--brd);border-radius:6px;padding:10px 12px;min-height:60px;">
+          <span style="color:var(--txt3);">Run diagnostics above to see results…</span>
+        </div>
+        <div style="margin-top:10px;font-size:11.5px;color:var(--txt2);line-height:1.7;">
+          <strong>Sheet URL:</strong> <span id="diag-url" style="font-family:var(--mono);font-size:11px;color:var(--g-blue);word-break:break-all;"></span><br>
+          <strong>Provider:</strong> <span id="diag-provider" style="font-family:var(--mono);"></span> &nbsp;|&nbsp;
+          <strong>Firebase:</strong> <span id="diag-fb" style="font-family:var(--mono);"></span>
+        </div>
+      </div>
+
       <div class="set-card">
         <div class="set-title">📟 Sync Log</div>
         <div class="log-box" id="sync-log">
@@ -1263,7 +1404,7 @@ body{background:var(--bg);color:var(--txt);font-family:var(--font);font-size:13.
 
       <div class="set-card" style="border:1px solid rgba(192,57,43,.2);">
         <div class="set-title">🗑 Clear All Data</div>
-        <div class="set-sub">Remove all fetched data from this browser session.</div>
+        <div class="set-sub">Remove all fetched data from this browser session. Settings (URL, API key) are preserved.</div>
         <button class="btn" style="background:#fdecea;color:var(--red);border:1px solid rgba(192,57,43,.2);" onclick="clearData()">Clear Data</button>
       </div>
 
@@ -1279,14 +1420,22 @@ body{background:var(--bg);color:var(--txt);font-family:var(--font);font-size:13.
     <!-- ═══ MANAGEMENT HUB ═══ -->
     <div class="tab-panel" id="tab-hub">
       <div class="g4" style="margin-bottom:12px;">
-        <div class="hcard hc-g"><div class="hc-lbl">Total Collection</div><div class="hc-val kv-g" id="hub-total">—</div><div class="hc-sub" id="hub-total-sub">selected period</div></div>
-        <div class="hcard hc-b"><div class="hc-lbl">Daily Average</div><div class="hc-val kv-b" id="hub-avg">—</div><div class="hc-sub" id="hub-avg-sub">litres / day</div></div>
-        <div class="hcard hc-a"><div class="hc-lbl">Active Societies</div><div class="hc-val kv-a" id="hub-soc">—</div><div class="hc-sub" id="hub-soc-sub">reporting in period</div></div>
-        <div class="hcard hc-r"><div class="hc-lbl">Critical Alerts</div><div class="hc-val kv-r" id="hub-crit">—</div><div class="hc-sub">missed + low days</div></div>
+        <div class="hcard hc-g" style="cursor:pointer;" onclick="goTab('daily',null);"
+          onmouseenter="showTip(this,'Total milk collected in selected period.\nClick → Daily Log for full breakdown.')" onmouseleave="hideTip()">
+          <div class="hc-lbl">Total Collection</div><div class="hc-val kv-g" id="hub-total">—</div><div class="hc-sub" id="hub-total-sub">selected period</div></div>
+        <div class="hcard hc-b" style="cursor:pointer;" onclick="goTab('scorecard',null);"
+          onmouseenter="showTip(this,'Average litres per day in selected period.\nArrow shows trend vs previous half.\nClick → Balanced Scorecard.')" onmouseleave="hideTip()">
+          <div class="hc-lbl">Daily Average</div><div class="hc-val kv-b" id="hub-avg">—</div><div class="hc-sub" id="hub-avg-sub">litres / day</div></div>
+        <div class="hcard hc-a" style="cursor:pointer;" onclick="goTab('tracker_all',null);"
+          onmouseenter="showTip(this,'Number of unique societies that reported in this period.\nClick → All Societies tracker.')" onmouseleave="hideTip()">
+          <div class="hc-lbl">Active Societies</div><div class="hc-val kv-a" id="hub-soc">—</div><div class="hc-sub" id="hub-soc-sub">reporting in period</div></div>
+        <div class="hcard hc-r" style="cursor:pointer;" onclick="goTab('alerts',null);"
+          onmouseenter="showTip(this,'Total missed + low-collection events.\nMissed = zero day. Low = <70% of avg.\nClick → Alerts tab.')" onmouseleave="hideTip()">
+          <div class="hc-lbl">Critical Alerts</div><div class="hc-val kv-r" id="hub-crit">—</div><div class="hc-sub">missed + low days · click to view</div></div>
       </div>
       <div class="g2" style="margin-bottom:12px;">
-        <div class="card"><div class="card-t"><span class="ico">🏆</span> Top Performers</div><div id="hub-top"></div></div>
-        <div class="card"><div class="card-t"><span class="ico">🚨</span> Needs Attention</div><div id="hub-action"></div></div>
+        <div class="card"><div class="card-t"><span class="ico">🏆</span> Top Performers <span style="margin-left:auto;font-size:11px;color:var(--txt3);">Click a row → Society Tracker</span></div><div id="hub-top"></div></div>
+        <div class="card"><div class="card-t"><span class="ico">🚨</span> Needs Attention <span style="margin-left:auto;font-size:11px;color:var(--txt3);">Societies requiring field visits</span></div><div id="hub-action"></div></div>
       </div>
       <div class="card">
         <div class="card-t"><span class="ico">📈</span> Collection Trend — Mayiladuthurai District</div>
@@ -1880,16 +2029,16 @@ body{background:var(--bg);color:var(--txt);font-family:var(--font);font-size:13.
           <table class="tbl" id="ta-table">
             <thead><tr>
               <th style="width:28px;">#</th>
-              <th onclick="taSortBy('name')" style="cursor:pointer;">Society ↕</th>
-              <th onclick="taSortBy('target')" style="cursor:pointer;">Target (L) ↕</th>
-              <th onclick="taSortBy('total')" style="cursor:pointer;">Collected ↕</th>
-              <th onclick="taSortBy('ach')" style="cursor:pointer;">Ach % ↕</th>
-              <th onclick="taSortBy('avg')" style="cursor:pointer;">Daily Avg ↕</th>
-              <th onclick="taSortBy('morning')" style="cursor:pointer;">Morn Avg ↕</th>
-              <th onclick="taSortBy('evening')" style="cursor:pointer;">Eve Avg ↕</th>
-              <th onclick="taSortBy('missed')" style="cursor:pointer;">Missed ↕</th>
-              <th onclick="taSortBy('rep')" style="cursor:pointer;">Rep % ↕</th>
-              <th onclick="taSortBy('trend')" style="cursor:pointer;">Trend ↕</th>
+              <th data-col="name" data-type="str" onclick="taSortBy('name')">Society</th>
+              <th data-col="target" data-type="num" onclick="taSortBy('target')">Target (L)</th>
+              <th data-col="total" data-type="num" onclick="taSortBy('total')">Collected</th>
+              <th data-col="ach" data-type="num" onclick="taSortBy('ach')">Ach %</th>
+              <th data-col="avg" data-type="num" onclick="taSortBy('avg')">Daily Avg</th>
+              <th data-col="morn" data-type="num" onclick="taSortBy('morning')">Morn Avg</th>
+              <th data-col="eve" data-type="num" onclick="taSortBy('evening')">Eve Avg</th>
+              <th data-col="missed" data-type="num" onclick="taSortBy('missed')">Missed</th>
+              <th data-col="rep" data-type="num" onclick="taSortBy('rep')">Rep %</th>
+              <th data-col="trend" data-type="num" onclick="taSortBy('trend')">Trend</th>
               <th>NDDB</th>
               <th>Status</th>
             </tr></thead>
@@ -1937,13 +2086,13 @@ body{background:var(--bg);color:var(--txt);font-family:var(--font);font-size:13.
           <table class="tbl" id="vt-table">
             <thead><tr>
               <th style="width:28px;">#</th>
-              <th>Village</th>
-              <th>Block</th>
-              <th>Milch Animals</th>
-              <th>Milk Potential (L/day)</th>
-              <th>Actual Procured (L/day avg)</th>
-              <th>Utilisation %</th>
-              <th>Gap (L/day)</th>
+              <th data-col="village" data-type="str">Village</th>
+              <th data-col="block" data-type="str">Block</th>
+              <th data-col="animals" data-type="num">Milch Animals</th>
+              <th data-col="potential" data-type="num">Milk Potential (L/day)</th>
+              <th data-col="actual" data-type="num">Actual Procured (L/day avg)</th>
+              <th data-col="util" data-type="num">Utilisation %</th>
+              <th data-col="gap" data-type="num">Gap (L/day)</th>
               <th>Viability</th>
               <th>Remarks</th>
             </tr></thead>
@@ -2065,6 +2214,7 @@ body{background:var(--bg);color:var(--txt);font-family:var(--font);font-size:13.
 </div><!-- /main -->
 
 <div id="toast"></div>
+<div id="kpi-tooltip" class="kpi-tooltip"></div>
 
 <!-- Google Material FAB -->
 <button class="g-fab" onclick="fetchNow()" title="Sync data now" id="fab-sync">↻</button>
@@ -2113,7 +2263,7 @@ function splitCell(val, hasSplit, color) {
 // ══════════════════════════════════════════════════════
 //  BOOT
 // ══════════════════════════════════════════════════════
-window.addEventListener('DOMContentLoaded', () => {
+window.addEventListener('DOMContentLoaded', async () => {
   loadSettings();
   initProviderUI();
   setLd('Loading settings…');
@@ -2130,9 +2280,19 @@ window.addEventListener('DOMContentLoaded', () => {
       + '<button onclick="document.getElementById(\'file-origin-warn\').remove()" style="background:transparent;color:#fff;border:1px solid rgba(255,255,255,.4);border-radius:4px;padding:5px 10px;font-size:12px;cursor:pointer;">✕</button>'
       + '</div>';
     document.body.prepend(warn);
-    // Offset main content
     document.getElementById('main').style.marginTop = '46px';
   }
+
+  // ── Wait for Firebase ready (max 3 s) then fetch ──
+  await new Promise(resolve => {
+    if (window._fbReady) { resolve(); return; }
+    const t = setTimeout(resolve, 3000); // don't block forever
+    window.addEventListener('firebase-ready', () => { clearTimeout(t); resolve(); }, { once: true });
+  });
+
+  // ── Pull settings from Firebase (fills apiKey, url, groqModel cross-device) ──
+  await fbLoadSettings();
+
   setTimeout(() => {
     setLd('Ready');
     document.getElementById('loader').classList.add('hide');
@@ -2147,9 +2307,9 @@ window.addEventListener('DOMContentLoaded', () => {
     // Always hide setup banner — sheet URL is hardcoded
     document.getElementById('setup-banner')?.classList.add('hide');
 
-    // Always auto-fetch
+    // Always auto-fetch with the now-fully-loaded settings
     fetchNow();
-  }, 700);
+  }, 200);
 });
 
 function setLd(msg) {
@@ -2187,7 +2347,7 @@ function renderActiveTab() {
   if (_activeTab === 'cattle')      renderCattle();
   if (_activeTab === 'actionplan')  renderBestWorst();
   if (_activeTab === 'daily_mgmt')  { renderDailyMgmt(); renderChecklist(); }
-  if (_activeTab === 'settings') { renderMemberEditor(); renderDataHealth(); }
+  if (_activeTab === 'settings') { renderMemberEditor(); renderDataHealth(); renderDiagnostics(); }
   if (_activeTab === 'pareto')      renderPareto();
   if (_activeTab === 'scorecard')   renderScorecard();
   if (_activeTab === 'daily')       renderDailyLog();
@@ -2282,7 +2442,7 @@ function renderAll() {
   else if (active === 'cattle')     renderCattle();
   else if (active === 'actionplan') { renderBestWorst(); }
   else if (active === 'daily_mgmt') { renderDailyMgmt(); renderChecklist(); }
-  else if (active === 'settings') { renderMemberEditor(); renderDataHealth(); }
+  else if (active === 'settings') { renderMemberEditor(); renderDataHealth(); renderDiagnostics(); }
   else if (active === 'pareto')     renderPareto();
   else if (active === 'scorecard')  renderScorecard();
   else if (active === 'daily')      renderDailyLog();
@@ -2370,12 +2530,20 @@ function isFileOrigin() {
   return window.location.protocol === 'file:';
 }
 
-async function tryFetch(url) {
-  const r = await fetch(url, {cache:'no-store', mode:'cors'});
-  if (!r.ok) throw new Error('HTTP '+r.status);
-  const text = await r.text();
-  if (!text || text.trim().length < 10) throw new Error('Empty response');
-  return text;
+async function tryFetch(url, timeoutMs=12000) {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), timeoutMs);
+  try {
+    const r = await fetch(url, {cache:'no-store', mode:'cors', signal: controller.signal});
+    clearTimeout(timer);
+    if (!r.ok) throw new Error('HTTP '+r.status);
+    const text = await r.text();
+    if (!text || text.trim().length < 10) throw new Error('Empty response');
+    return text;
+  } catch(e) {
+    clearTimeout(timer);
+    throw e;
+  }
 }
 
 async function gsFetch(rawUrl) {
@@ -2402,37 +2570,39 @@ async function gsFetch(rawUrl) {
         : 'https://docs.google.com/spreadsheets/d/'+info.key+'/gviz/tq?tqx=out:csv&gid='+gid)
     : null;
 
-  // CORS proxies — tried in order
+  // CORS proxies ordered by reliability on mobile browsers
+  // allorigins and corsproxy.io work best on iOS/Android
   const proxies = [
     'https://api.allorigins.win/raw?url=',
     'https://corsproxy.io/?',
     'https://api.codetabs.com/v1/proxy?quest=',
     'https://thingproxy.freeboard.io/fetch/',
     'https://yacdn.org/proxy/',
+    'https://cors-anywhere.herokuapp.com/',
   ];
 
   const strategies = [];
 
-  // If NOT file origin, try direct first
+  // If NOT file origin, try direct first (works on most hosted deployments)
   if (!isFile) {
-    if (gvizUrl) strategies.push({label:'gviz direct', fn: ()=>tryFetch(gvizUrl)});
-    strategies.push({label:'csv direct', fn: ()=>tryFetch(csvUrl)});
+    if (gvizUrl) strategies.push({label:'gviz direct', fn: ()=>tryFetch(gvizUrl, 10000)});
+    strategies.push({label:'csv direct', fn: ()=>tryFetch(csvUrl, 10000)});
   }
 
-  // Always try proxies (required for file:// origins)
+  // Proxy strategies (essential for mobile, file://, and restricted networks)
   const targetUrl = gvizUrl || csvUrl;
   for (const proxy of proxies) {
     strategies.push({
-      label: 'proxy: '+proxy.split('/')[2],
-      fn: ()=>tryFetch(proxy + encodeURIComponent(targetUrl))
+      label: 'proxy:'+proxy.split('/')[2],
+      fn: ()=>tryFetch(proxy + encodeURIComponent(targetUrl), 15000)
     });
   }
-  // Also try proxying the plain CSV url
+  // Fallback: proxy plain CSV url too
   if (gvizUrl) {
-    for (const proxy of proxies.slice(0,2)) {
+    for (const proxy of proxies.slice(0,3)) {
       strategies.push({
-        label: 'proxy csv: '+proxy.split('/')[2],
-        fn: ()=>tryFetch(proxy + encodeURIComponent(csvUrl))
+        label: 'proxy-csv:'+proxy.split('/')[2],
+        fn: ()=>tryFetch(proxy + encodeURIComponent(csvUrl), 15000)
       });
     }
   }
@@ -2443,22 +2613,16 @@ async function gsFetch(rawUrl) {
       addLog('Trying: '+strategy.label+'…','info');
       const text = await strategy.fn();
       addLog('✓ Fetched via '+strategy.label,'ok');
-      // Return a fake Response-like object with the text
-      return {
-        ok: true,
-        text: ()=>Promise.resolve(text),
-        status: 200
-      };
+      return { ok: true, text: ()=>Promise.resolve(text), status: 200 };
     } catch(e) {
       lastErr = e.message || String(e);
       addLog('✗ '+strategy.label+': '+lastErr,'err');
     }
   }
 
-  // Final error with helpful message
   const hint = isFile
-    ? 'You are opening this file directly (file://). Browsers block Google Sheets access from local files. Solutions: (1) Run a local server: python -m http.server 8080 then open http://localhost:8080/index.html, (2) Deploy to GitHub Pages or Netlify, (3) Use VS Code Live Server extension.'
-    : 'All fetch strategies failed. Ensure your Google Sheet is published: File → Share → Publish to web → CSV.';
+    ? 'Opening as local file (file://) — browsers block Google Sheets access. Solutions: (1) python3 -m http.server 8080, then open http://localhost:8080, (2) Deploy to GitHub Pages or Netlify, (3) VS Code Live Server.'
+    : 'All fetch strategies failed. On mobile, ensure you have internet access. Also confirm your Google Sheet is published: File → Share → Publish to web → CSV. Last error: '+lastErr;
   throw new Error(hint);
 }
 
@@ -2577,9 +2741,18 @@ function csvParse(text) {
 }
 
 async function fetchNow() {
-  const url = document.getElementById('gs-url')?.value?.trim() || _cfg.url;
-  if (!url) { toast('No URL configured. Go to Settings.', true); return; }
+  // Priority: (1) input field value, (2) _cfg.url, (3) hardcoded constant
+  const url = (document.getElementById('gs-url')?.value?.trim()) || _cfg.url || HARDCODED_URL;
+  if (!url) { toast('No URL configured. Go to ⚙️ Settings.', true); return; }
   _cfg.url = url;
+  // Populate the input if it was empty (e.g. first load on mobile)
+  const urlEl = document.getElementById('gs-url');
+  if (urlEl && !urlEl.value.trim()) urlEl.value = url;
+
+  // Hide any previous error banner while retrying
+  const errBanner = document.getElementById('mobile-err-banner');
+  if (errBanner) errBanner.style.display = 'none';
+
   setStatus('syncing', 'Fetching…');
   addLog('Fetching data…','info');
   try {
@@ -2587,46 +2760,44 @@ async function fetchNow() {
     if (!resp.ok) throw new Error('HTTP ' + resp.status);
     const text = await resp.text();
     _rows = csvParse(text);
-    if (!_rows.length) throw new Error('No valid rows parsed. Check column names.');
+    if (!_rows.length) throw new Error('No valid rows parsed. Check column names in your sheet.');
     applyDateRange();
     populateSocFilter();
     setStatus('connected', `${_rows.length} rows`);
-    addLog(`✓ Loaded ${_rows.length} rows from ${new Set(_rows.map(r=>r.date)).size} dates`,'ok');
+    addLog(`✓ Loaded ${_rows.length} rows · ${new Set(_rows.map(r=>r.date)).size} dates · ${new Set(_rows.map(r=>r.society)).size} societies`,'ok');
 
-    // ── Morning/Evening Diagnostic ──
     const hasMorn = _rows.filter(r=>r.morning > 0).length;
     const hasEve  = _rows.filter(r=>r.evening > 0).length;
-    const pctMorn = Math.round(hasMorn/_rows.length*100);
-    const pctEve  = Math.round(hasEve/_rows.length*100);
     if (hasMorn === 0 && hasEve === 0) {
-      addLog('⚠️ No morning/evening split data found — only Total column detected. M-E diff will show 0.','info');
+      addLog('⚠️ No M/E split data found — only Total detected.','info');
     } else {
-      addLog(`☀️ Morning data: ${hasMorn} rows (${pctMorn}%)  🌙 Evening data: ${hasEve} rows (${pctEve}%)`,'ok');
-      const sampleMorn = _rows.find(r=>r.morning>0);
-      if (sampleMorn) addLog(`   Sample: ${sampleMorn.society} ${sampleMorn.date} → Mor:${sampleMorn.morning} Eve:${sampleMorn.evening} Tot:${sampleMorn.total}`,'info');
+      addLog(`☀️ Morning: ${hasMorn} rows  🌙 Evening: ${hasEve} rows`,'ok');
     }
 
-    // ── Data Health Summary ──
-    const socs      = [...new Set(_rows.map(r=>r.society))];
-    const dates     = [...new Set(_rows.map(r=>r.date))];
-    const missed    = _rows.filter(r=>r.total===0).length;
-    const hasFat    = _rows.filter(r=>r.fat!=null).length;
-    const hasSNF    = _rows.filter(r=>r.snf!=null).length;
-    addLog(`📊 ${socs.length} societies · ${dates.length} dates · ${missed} zero-collection rows`,'info');
-    if (hasFat>0) addLog(`🧪 Fat%: ${hasFat} rows  SNF%: ${hasSNF} rows`,'info');
+    const socs  = [...new Set(_rows.map(r=>r.society))];
+    const dates = [...new Set(_rows.map(r=>r.date))];
+    const missed= _rows.filter(r=>r.total===0).length;
+    const hasFat= _rows.filter(r=>r.fat!=null).length;
+    addLog(`📊 ${socs.length} societies · ${dates.length} dates · ${missed} zero rows${hasFat?` · ${hasFat} fat rows`:''}`,'info');
 
-    // Update data health panel if visible
     renderDataHealth();
-
     document.getElementById('setup-banner')?.classList.add('hide');
     document.getElementById('sync-btn').style.display='flex';
+    const syncEl = document.getElementById('gs-last-sync');
+    if (syncEl) syncEl.textContent = 'Last sync: ' + new Date().toLocaleTimeString();
     saveSettings();
     renderAll();
     toast(`✓ ${_rows.length} rows loaded`);
   } catch(err) {
     setStatus('error', 'Fetch failed');
     addLog('✗ '+err.message,'err');
-    toast(err.message, true);
+    toast('Fetch failed: ' + err.message.slice(0, 100), true);
+    // Show persistent error banner with Retry button — critical for mobile
+    if (errBanner) {
+      const errTxt = document.getElementById('mobile-err-txt');
+      if (errTxt) errTxt.textContent = `Data not loaded — ${err.message.slice(0, 80)}. Tap Retry or check Settings.`;
+      errBanner.style.display = 'flex';
+    }
   }
 }
 
@@ -2923,6 +3094,7 @@ function renderOverview() {
       d7foot.innerHTML = `<tr><td colspan="2" style="font-weight:700;">7-Day Total</td><td style="font-family:var(--mono);color:#34a853;">${fmt(m7)}</td><td style="font-family:var(--mono);color:#ea4335;">${fmt(e7)}</td><td style="font-family:var(--mono);color:var(--g-blue);font-weight:700;">${fmt(t7)}</td><td></td><td style="font-family:var(--mono);color:${miss7>0?'#ea4335':'var(--txt3)'};">${miss7>0?'⚠️ '+miss7:miss7}</td><td></td></tr>`;
     }
   }
+  setTimeout(attachAllSortables, 80);
 }
 
 function renderTrend(dailyTotals) {
@@ -3339,6 +3511,7 @@ function renderDailyLog() {
       options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>`${fmt(c.raw)} L`}}},scales:{x:{grid:{display:false},ticks:{maxTicksLimit:10,font:{size:9}}},y:{ticks:{callback:v=>fmt(v)+'L',font:{size:10}},grid:{color:'rgba(0,0,0,.05)'}}}}
     });
   }
+  setTimeout(attachAllSortables, 80);
 }
 
 function dlExportCSV() {
@@ -3487,6 +3660,7 @@ function renderSummary() {
     `<td style="font-family:var(--mono);">${grep}%</td>`+
     `<td style="font-family:var(--mono);">${fmt(gbest)} L</td>`+
     `<td colspan="4"></td></tr>`;
+  setTimeout(attachAllSortables, 80);
 }
 
 function ssExportExcel() {
@@ -3517,7 +3691,6 @@ function ssExportExcel() {
 // ══════════════════════════════════════════════════════
 //  RENDER: ALERTS
 // ══════════════════════════════════════════════════════
-// Tamil Nadu festival calendar (MM-DD format, recurring annually)
 const TN_FESTIVALS = {
   '01-14':'Pongal','01-15':'Mattu Pongal','01-16':'Kanum Pongal',
   '01-26':'Republic Day','04-14':'Tamil New Year / Vishu',
@@ -3527,64 +3700,105 @@ const TN_FESTIVALS = {
 };
 function isFestivalDay(dateStr) {
   if (!dateStr) return null;
-  const mmdd = dateStr.slice(5); // "MM-DD"
-  return TN_FESTIVALS[mmdd] || null;
+  return TN_FESTIVALS[dateStr.slice(5)] || null;
+}
+
+let _alertFilter = 'all';
+function filterAlerts(type) {
+  _alertFilter = type;
+  ['all','missed','low','festival'].forEach(t => {
+    const btn = document.getElementById('af-' + t);
+    if (btn) btn.classList.toggle('active', t === type);
+  });
+  renderAlerts();
 }
 
 function renderAlerts() {
-  const tod = today();
-  const data = _filtered.filter(r => r.date <= tod);   // belt-and-suspenders: no future dates
+  const tod  = today();
+  const data = _filtered.filter(r => r.date <= tod);
+  const searchQ = (document.getElementById('al-search')?.value || '').toLowerCase();
+
   if (!data.length) {
     document.getElementById('alerts-list').innerHTML = emptyHtml('No data loaded', 'Connect your Google Sheet in Settings to view alerts.');
-    sv('al-missed','—'); sv('al-low','—'); return;
+    ['al-missed','al-low','al-festival','al-missrate'].forEach(id => sv(id, '—'));
+    return;
   }
 
-  // Compute averages
   const socRows = {};
-  data.forEach(r=>{ if(!socRows[r.society]) socRows[r.society]=[]; socRows[r.society].push(r); });
-  const socAvg = {};
-  Object.keys(socRows).forEach(k=>{ const vals=socRows[k].filter(r=>r.total>0); socAvg[k]=vals.length?vals.reduce((a,r)=>a+r.total,0)/vals.length:0; });
+  data.forEach(r => { if (!socRows[r.society]) socRows[r.society]=[]; socRows[r.society].push(r); });
+  const socAvg  = {};
+  Object.keys(socRows).forEach(k => {
+    const vals = socRows[k].filter(r => r.total > 0);
+    socAvg[k]  = vals.length ? vals.reduce((a,r) => a+r.total, 0) / vals.length : 0;
+  });
 
-  const missed = data.filter(r=>r.total===0);
-  const low    = data.filter(r=>r.total>0 && socAvg[r.society]>0 && r.total/socAvg[r.society]<0.7);
+  const allMissed   = data.filter(r => r.total === 0);
+  const allLow      = data.filter(r => r.total > 0 && socAvg[r.society] > 0 && r.total / socAvg[r.society] < 0.7);
+  const allFestival = allMissed.filter(r => isFestivalDay(r.date));
+  const totalEvents = data.length;
+  const missRate    = totalEvents > 0 ? (allMissed.length / totalEvents * 100).toFixed(1) : '0';
 
-  sv('al-missed', missed.length);
-  sv('al-low',    low.length);
+  sv('al-missed',   allMissed.length);
+  sv('al-low',      allLow.length);
+  sv('al-festival', allFestival.length);
+  sv('al-missrate', missRate + '%');
 
-  const cards = [
-    ...missed.map(r=>{
-      const fest = isFestivalDay(r.date);
-      const festTag = fest ? `<span style="display:inline-block;padding:1px 8px;background:#fef7e0;color:#ea8600;border-radius:100px;font-size:10.5px;margin-left:6px;">🎉 ${fest}</span>` : '';
-      return `
-      <div class="alert-card ${fest?'ac-a':'ac-r'}">
-        <div class="ac-ico">${fest?'🎉':'🚫'}</div>
-        <div>
-          <div class="ac-t">${r.society} — Zero Collection${festTag}</div>
-          <div class="ac-d">${fmtDate(r.date)} · ${fest?'Likely festival/holiday closure — verify and log.':'Immediate field follow-up required.'}${r.notes?' Note: '+r.notes:''}</div>
-        </div>
-      </div>`;}),
-    ...low.map(r=>{
-      const pct=Math.round(r.total/socAvg[r.society]*100);
-      return `
-      <div class="alert-card ac-a">
-        <div class="ac-ico">⚠️</div>
-        <div>
-          <div class="ac-t">${r.society} — Low Collection (${pct}% of avg)</div>
-          <div class="ac-d">${fmtDate(r.date)} · Collected ${fmt(r.total)} L, average ${fmt(socAvg[r.society])} L.${r.notes?' Note: '+r.notes:''}</div>
-        </div>
-      </div>`;
-    })
+  // Build all alert objects with type
+  let allCards = [
+    ...allMissed.map(r => ({ r, type: 'missed', fest: isFestivalDay(r.date) })),
+    ...allLow.map(r    => ({ r, type: 'low',    fest: null }))
   ];
 
-  if (!cards.length) {
+  // Apply filter
+  if (_alertFilter === 'missed')   allCards = allCards.filter(c => c.type === 'missed');
+  if (_alertFilter === 'low')      allCards = allCards.filter(c => c.type === 'low');
+  if (_alertFilter === 'festival') allCards = allCards.filter(c => c.fest);
+
+  // Apply search
+  if (searchQ) allCards = allCards.filter(c => c.r.society.toLowerCase().includes(searchQ));
+
+  // Sort by date desc, then society
+  allCards.sort((a, b) => b.r.date.localeCompare(a.r.date) || a.r.society.localeCompare(b.r.society));
+
+  const countEl = document.getElementById('al-count');
+  if (countEl) countEl.textContent = `${allCards.length} alert${allCards.length !== 1 ? 's' : ''}`;
+
+  if (!allCards.length) {
     document.getElementById('alerts-list').innerHTML = `
       <div class="alert-card ac-g">
         <div class="ac-ico">✅</div>
-        <div><div class="ac-t">All clear in selected range</div><div class="ac-d">No missed or low-collection events found.</div></div>
+        <div><div class="ac-t">All clear${_alertFilter !== 'all' ? ' for this filter' : ''}</div>
+        <div class="ac-d">No ${_alertFilter === 'all' ? 'missed or low-collection' : _alertFilter} events found in the selected period.</div></div>
       </div>`;
-  } else {
-    document.getElementById('alerts-list').innerHTML = cards.join('');
+    return;
   }
+
+  document.getElementById('alerts-list').innerHTML = allCards.map(({ r, type, fest }) => {
+    if (type === 'missed') {
+      const festTag = fest ? `<span style="display:inline-block;padding:1px 8px;background:#fef7e0;color:#ea8600;border-radius:100px;font-size:10.5px;margin-left:6px;">🎉 ${fest}</span>` : '';
+      return `<div class="alert-card ${fest?'ac-a':'ac-r'}" style="cursor:pointer;"
+        onclick="goTab('tracker',null);setTimeout(()=>{const p=document.getElementById('trk-picker');if(p){p.value='${r.society}';renderTracker();}},100);">
+        <div class="ac-ico">${fest?'🎉':'🚫'}</div>
+        <div style="flex:1;">
+          <div class="ac-t">${r.society} — Zero Collection${festTag}</div>
+          <div class="ac-d">${fmtDate(r.date)} · ${fest?'Festival/holiday closure — verify and log.':'Immediate field follow-up required.'}${r.notes?' · Note: '+r.notes:''}</div>
+        </div>
+        <div style="font-size:11px;color:var(--txt3);white-space:nowrap;">Click → Tracker</div>
+      </div>`;
+    } else {
+      const pct = Math.round(r.total / socAvg[r.society] * 100);
+      const gap = Math.round(socAvg[r.society] - r.total);
+      return `<div class="alert-card ac-a" style="cursor:pointer;"
+        onclick="goTab('tracker',null);setTimeout(()=>{const p=document.getElementById('trk-picker');if(p){p.value='${r.society}';renderTracker();}},100);">
+        <div class="ac-ico">⚠️</div>
+        <div style="flex:1;">
+          <div class="ac-t">${r.society} — Low Collection <span style="font-family:var(--mono);font-size:12px;">(${pct}% of avg)</span></div>
+          <div class="ac-d">${fmtDate(r.date)} · Collected <strong>${fmt(r.total)} L</strong>, avg ${fmt(socAvg[r.society])} L · Gap: ${fmt(gap)} L.${r.notes?' · Note: '+r.notes:''}</div>
+        </div>
+        <div style="font-size:11px;color:var(--txt3);white-space:nowrap;">Click → Tracker</div>
+      </div>`;
+    }
+  }).join('');
 }
 
 function updateAlertBadge() {
@@ -3601,21 +3815,38 @@ function updateAlertBadge() {
 function loadSettings() {
   try {
     const d = JSON.parse(localStorage.getItem(LS_KEY)||'{}');
+
+    // Always prefer hardcoded values as authoritative defaults
     _cfg.url       = d.url       || HARDCODED_URL;
     _cfg.interval  = d.interval  || 0;
     _cfg.apiKey    = d.apiKey    || HARDCODED_APIKEY;
     _cfg.provider  = d.provider  || HARDCODED_PROVIDER;
     _cfg.groqModel = d.groqModel || 'llama-3.3-70b-versatile';
     _syncLogs      = d.logs      || [];
-    const urlEl = document.getElementById('gs-url');       if(urlEl) urlEl.value = _cfg.url;
-    const intEl = document.getElementById('gs-interval');  if(intEl && _cfg.interval) intEl.value = _cfg.interval;
-    const keyEl = document.getElementById('api-key-inp');  if(keyEl) keyEl.value = _cfg.apiKey;
-    const modEl = document.getElementById('groq-model-sel'); if(modEl) modEl.value = _cfg.groqModel;
+
+    // Always populate UI fields with current values
+    const urlEl = document.getElementById('gs-url');        if(urlEl) urlEl.value = _cfg.url;
+    const intEl = document.getElementById('gs-interval');   if(intEl && _cfg.interval) intEl.value = _cfg.interval;
+    const keyEl = document.getElementById('api-key-inp');   if(keyEl) keyEl.value = _cfg.apiKey;
+    const modEl = document.getElementById('groq-model-sel');if(modEl) modEl.value = _cfg.groqModel;
+
+    // Save resolved values back to localStorage (ensures mobile localStorage matches)
+    localStorage.setItem(LS_KEY, JSON.stringify({
+      url:_cfg.url, interval:_cfg.interval, apiKey:_cfg.apiKey,
+      provider:_cfg.provider, groqModel:_cfg.groqModel, logs:_syncLogs.slice(-30)
+    }));
+
     renderSyncLog();
     if (_cfg.url && _cfg.interval>0) startTimer();
-  } catch(e){}
-  // Also try to pull from Firebase (cross-device sync)
-  fbLoadSettings();
+
+    // Push defaults to Firebase immediately so mobile devices pick them up
+    // (non-blocking — runs in background)
+    fbSaveSettings({
+      url: _cfg.url, interval: _cfg.interval, apiKey: _cfg.apiKey,
+      provider: _cfg.provider, groqModel: _cfg.groqModel, logs: _syncLogs.slice(-30)
+    });
+  } catch(e){ console.warn('loadSettings error:', e); }
+  // NOTE: fbLoadSettings() is now called from boot sequence AFTER Firebase is ready
 }
 
 async function fbLoadSettings() {
@@ -3624,14 +3855,20 @@ async function fbLoadSettings() {
     const snap = await window._fbGetDoc(window._fbDoc(window._fbDb, 'config', 'app'));
     if (!snap.exists()) return;
     const d = snap.data();
-    // Only overwrite non-hardcoded fields (interval, groqModel, logs)
-    if (d.interval !== undefined) _cfg.interval = d.interval;
-    if (d.groqModel)              _cfg.groqModel = d.groqModel;
-    if (d.logs)                   _syncLogs = d.logs;
-    const intEl = document.getElementById('gs-interval'); if(intEl && _cfg.interval) intEl.value = _cfg.interval;
-    const modEl = document.getElementById('groq-model-sel'); if(modEl) modEl.value = _cfg.groqModel;
+
+    // Sync ALL fields from Firebase so mobile gets the same config as desktop
+    if (d.url)      { _cfg.url      = d.url;      const el=document.getElementById('gs-url');        if(el) el.value=d.url; }
+    if (d.apiKey)   { _cfg.apiKey   = d.apiKey;   const el=document.getElementById('api-key-inp');   if(el) el.value=d.apiKey; }
+    if (d.provider) { _cfg.provider = d.provider; setProvider(d.provider); }
+    if (d.groqModel){ _cfg.groqModel= d.groqModel; const el=document.getElementById('groq-model-sel'); if(el) el.value=d.groqModel; }
+    if (d.interval !== undefined) { _cfg.interval = d.interval; const el=document.getElementById('gs-interval'); if(el && d.interval) el.value=d.interval; }
+    if (d.logs)     { _syncLogs = d.logs; }
+
     renderSyncLog();
-  } catch(e) {}
+    addLog('✓ Settings synced from Firebase','ok');
+  } catch(e) {
+    addLog('Firebase settings load: '+e.message,'err');
+  }
 }
 
 function saveSettings() {
@@ -3641,18 +3878,31 @@ function saveSettings() {
     const apiKey    = document.getElementById('api-key-inp')?.value?.trim()   || HARDCODED_APIKEY;
     const groqModel = document.getElementById('groq-model-sel')?.value        || _cfg.groqModel || 'llama-3.3-70b-versatile';
     _cfg.url=url; _cfg.interval=interval; _cfg.apiKey=apiKey; _cfg.groqModel=groqModel;
-    localStorage.setItem(LS_KEY, JSON.stringify({url,interval,apiKey,provider:_cfg.provider,groqModel,logs:_syncLogs.slice(-30)}));
+
+    const payload = {url, interval, apiKey, provider:_cfg.provider||HARDCODED_PROVIDER, groqModel, logs:_syncLogs.slice(-30)};
+    localStorage.setItem(LS_KEY, JSON.stringify(payload));
     if (interval>0) startTimer(); else if(_timer) { clearInterval(_timer); _timer=null; }
-    // Sync to Firebase (non-blocking)
-    fbSaveSettings({url, interval, apiKey, provider: _cfg.provider, groqModel, logs: _syncLogs.slice(-30)});
+
+    // Sync everything to Firebase so all devices (including mobile) stay in sync
+    fbSaveSettings(payload);
   } catch(e){}
 }
 
 async function fbSaveSettings(data) {
   try {
-    if (!window._fbReady) return;
+    // If Firebase not ready yet, wait up to 5s
+    if (!window._fbReady) {
+      await new Promise(resolve => {
+        const t = setTimeout(resolve, 5000);
+        window.addEventListener('firebase-ready', () => { clearTimeout(t); resolve(); }, { once: true });
+      });
+    }
+    if (!window._fbReady) return; // still not ready, skip
     await window._fbSetDoc(window._fbDoc(window._fbDb, 'config', 'app'), data, {merge: true});
-  } catch(e) {}
+    addLog('✓ Settings synced to Firebase','ok');
+  } catch(e) {
+    addLog('Firebase save error: '+e.message,'err');
+  }
 }
 
 function startTimer() {
@@ -3661,15 +3911,18 @@ function startTimer() {
 }
 
 function clearData() {
-  if (!confirm('Clear all loaded data?')) return;
+  if (!confirm('Clear all loaded data? Settings (URL, API key) will be preserved.')) return;
   _rows=[]; _filtered=[];
-  localStorage.removeItem(LS_KEY);
-  _cfg={url:'',interval:0};
-  document.getElementById('gs-url').value='';
+  // Restore to hardcoded defaults — don't blank out config
+  _cfg = {url: HARDCODED_URL, interval:0, apiKey: HARDCODED_APIKEY, provider: HARDCODED_PROVIDER, groqModel:'llama-3.3-70b-versatile'};
+  // Re-seed localStorage and UI
+  const urlEl = document.getElementById('gs-url'); if(urlEl) urlEl.value = HARDCODED_URL;
+  const keyEl = document.getElementById('api-key-inp'); if(keyEl) keyEl.value = HARDCODED_APIKEY;
+  localStorage.setItem(LS_KEY, JSON.stringify({url:HARDCODED_URL, interval:0, apiKey:HARDCODED_APIKEY, provider:HARDCODED_PROVIDER, groqModel:'llama-3.3-70b-versatile', logs:[]}));
   setStatus('disconnected','No data');
   document.getElementById('setup-banner')?.classList.remove('hide');
   renderAll();
-  toast('Data cleared');
+  toast('Data cleared — settings preserved');
 }
 
 // ══════════════════════════════════════════════════════
@@ -3803,6 +4056,36 @@ function renderDataHealth() {
   el.innerHTML = html;
 }
 
+// ── Connection diagnostics (Settings panel) ──
+function renderDiagnostics() {
+  const urlEl = document.getElementById('diag-url');
+  const prvEl = document.getElementById('diag-provider');
+  const fbEl  = document.getElementById('diag-fb');
+  if (urlEl) urlEl.textContent = _cfg.url || HARDCODED_URL;
+  if (prvEl) prvEl.textContent = (_cfg.provider || HARDCODED_PROVIDER) + ' · key: ' + ((_cfg.apiKey||HARDCODED_APIKEY).slice(0,12)+'…');
+  if (fbEl)  fbEl.textContent  = window._fbReady ? '✅ Connected' : '⏳ Not ready';
+}
+
+async function testFirebaseConn() {
+  const el = document.getElementById('diag-status');
+  if (el) el.innerHTML = '⏳ Testing Firebase connection…';
+  try {
+    if (!window._fbReady) throw new Error('Firebase SDK not initialised yet');
+    // Write a test value then read it back
+    const testDoc = window._fbDoc(window._fbDb, 'config', 'ping');
+    await window._fbSetDoc(testDoc, { ping: Date.now(), device: navigator.userAgent.slice(0,80) }, { merge: true });
+    const snap = await window._fbGetDoc(testDoc);
+    if (!snap.exists()) throw new Error('Document write succeeded but read failed');
+    const ts = snap.data().ping;
+    if (el) el.innerHTML = `✅ Firebase OK — ping round-trip at ${new Date(ts).toLocaleTimeString()}<br>📱 Device saved: ${navigator.userAgent.slice(0,60)}…`;
+    toast('Firebase connection OK');
+  } catch(e) {
+    if (el) el.innerHTML = `❌ Firebase error: ${e.message}`;
+    toast('Firebase: ' + e.message, true);
+  }
+}
+
+
 // ══════════════════════════════════════════════════════
 //  STATUS
 // ══════════════════════════════════════════════════════
@@ -3820,7 +4103,36 @@ function setStatus(state, msg) {
   const connTxt=document.getElementById('conn-txt');
   if(connDot) connDot.className='dot '+(state==='connected'?'dot-g':state==='syncing'?'dot-a':'dot-r');
   if(connTxt) connTxt.textContent=msg||state;
+
+  // Update sidebar rows info
+  if (state==='connected' && _rows.length) {
+    const ri = document.getElementById('sb-rows-info');
+    const socs = new Set(_rows.map(r=>r.society)).size;
+    const dates = new Set(_rows.map(r=>r.date)).size;
+    if (ri) ri.textContent = `${_rows.length} rows · ${socs} socs · ${dates} days`;
+  }
+
+  // Update Firebase status dot
+  const fbDot = document.getElementById('fb-dot');
+  const fbTxt = document.getElementById('fb-txt');
+  if (fbDot && fbTxt) {
+    if (window._fbReady) {
+      fbDot.className = 'dot dot-g';
+      fbTxt.textContent = 'Firebase: synced';
+    } else {
+      fbDot.className = 'dot dot-a';
+      fbTxt.textContent = 'Firebase: connecting…';
+    }
+  }
 }
+
+// Update Firebase status dot when Firebase becomes ready
+window.addEventListener('firebase-ready', () => {
+  const fbDot = document.getElementById('fb-dot');
+  const fbTxt = document.getElementById('fb-txt');
+  if (fbDot) { fbDot.className = 'dot dot-g'; }
+  if (fbTxt) { fbTxt.textContent = 'Firebase: connected'; }
+});
 
 // ══════════════════════════════════════════════════════
 //  EXPORT
@@ -3948,22 +4260,53 @@ function toggleApiKeyVis() {
 }
 
 async function testApiKey() {
-  const statusEl = document.getElementById('api-key-status');
-  const key = document.getElementById('api-key-inp')?.value?.trim();
-  if (!key) { if(statusEl){statusEl.textContent='⚠️ Enter a key first';statusEl.style.color='#ea8600';} return; }
-  if (statusEl){statusEl.textContent='⏳ Testing…';statusEl.style.color='var(--txt3)';}
+  const statusEl  = document.getElementById('api-key-status');
+  const diagEl    = document.getElementById('diag-status');
+  const key = (document.getElementById('api-key-inp')?.value?.trim()) || _cfg.apiKey || HARDCODED_APIKEY;
+  if (!key) {
+    const msg = '⚠️ No API key found. Enter your key in Settings.';
+    if (statusEl) { statusEl.textContent = msg; statusEl.style.color = '#ea8600'; }
+    if (diagEl)   diagEl.innerHTML = msg;
+    return;
+  }
+  const loadMsg = '⏳ Testing AI connection…';
+  if (statusEl) { statusEl.textContent = loadMsg; statusEl.style.color = 'var(--txt3)'; }
+  if (diagEl)   diagEl.innerHTML = loadMsg;
   try {
     await callAI('Reply with only: ok', 10);
-    const model = _cfg.provider==='groq' ? (document.getElementById('groq-model-sel')?.value||_cfg.groqModel)
-                : _cfg.provider==='gemini' ? 'gemini-2.0-flash' : 'claude-sonnet-4-6';
-    if(statusEl){statusEl.textContent='✅ Key valid — AI ready · '+(_cfg.provider)+' · '+model;statusEl.style.color='#137333';}
-    _cfg.apiKey=key; saveSettings();
+    const model = _cfg.provider === 'groq'
+      ? (document.getElementById('groq-model-sel')?.value || _cfg.groqModel)
+      : _cfg.provider === 'gemini' ? 'gemini-2.0-flash' : 'claude-sonnet-4-6';
+    const okMsg = `✅ AI key valid — ${_cfg.provider} · ${model}`;
+    if (statusEl) { statusEl.textContent = okMsg; statusEl.style.color = '#137333'; }
+    if (diagEl)   diagEl.innerHTML = okMsg;
+    _cfg.apiKey = key;
+    saveSettings();
   } catch(e) {
-    if(statusEl){statusEl.textContent='❌ '+e.message;statusEl.style.color='#c5221f';}
+    const errMsg = `❌ AI error: ${e.message}`;
+    if (statusEl) { statusEl.textContent = errMsg; statusEl.style.color = '#c5221f'; }
+    if (diagEl)   diagEl.innerHTML = errMsg;
   }
 }
 
+function showHostingGuide() {
+  const msg = `HOW TO FIX: Opening from local file (file://) blocks Google Sheets.
 
+OPTIONS:
+1. Python server (easiest):
+   Open terminal → cd to folder → python3 -m http.server 8080
+   Then open: http://localhost:8080/index.html
+
+2. VS Code: Install "Live Server" extension → right-click index.html → Open with Live Server
+
+3. Deploy free: Upload to GitHub Pages, Netlify, or Firebase Hosting
+
+4. Mobile: Host anywhere and open the URL in your phone browser`;
+  alert(msg);
+}
+
+// ══════════════════════════════════════════════════════
+//  RENDER: MANAGEMENT HUB
 // ══════════════════════════════════════════════════════
 function renderHub() {
   const data = _filtered;
@@ -3990,12 +4333,12 @@ function renderHub() {
   // Top performers
   const socTot = socs.map(s=>({name:s,total:data.filter(r=>r.society===s).reduce((a,r)=>a+r.total,0)})).sort((a,b)=>b.total-a.total);
   const maxT = socTot[0]?.total||1;
-  document.getElementById('hub-top').innerHTML = socTot.map((s,i)=>`<div class="mini-bar-row"><div class="mini-bar-lbl">${i+1}. ${s.name}</div><div class="mini-bar-track"><div class="mini-bar-fill" style="width:${Math.round(s.total/maxT*100)}%"></div></div><div class="mini-bar-val">${fmt(s.total)} L</div></div>`).join('');
+  document.getElementById('hub-top').innerHTML = socTot.map((s,i)=>`<div class="mini-bar-row" style="cursor:pointer;" onclick="goTab('tracker',null);setTimeout(()=>{const p=document.getElementById('trk-picker');if(p){p.value='${s.name}';renderTracker();}},100);"><div class="mini-bar-lbl">${i+1}. ${s.name}</div><div class="mini-bar-track"><div class="mini-bar-fill" style="width:${Math.round(s.total/maxT*100)}%"></div></div><div class="mini-bar-val">${fmt(s.total)} L</div></div>`).join('');
   // Action items
   const missedSocs = [...new Set(missed.map(r=>r.society))];
   const lowSocs    = [...new Set(low.map(r=>r.society))].filter(s=>!missedSocs.includes(s)).slice(0,3);
-  let html = missedSocs.slice(0,3).map(s=>`<div class="action-row crit"><div><div class="ar-lbl">🚫 ${s}</div><div class="ar-sub">${missed.filter(r=>r.society===s).length} zero-collection day(s) — immediate visit needed.</div></div></div>`).join('');
-  html += lowSocs.map(s=>`<div class="action-row warn"><div><div class="ar-lbl">⚠️ ${s}</div><div class="ar-sub">${low.filter(r=>r.society===s).length} low-collection day(s) — below 70% of average.</div></div></div>`).join('');
+  let html = missedSocs.slice(0,3).map(s=>`<div class="action-row crit" style="cursor:pointer;" onclick="goTab('tracker',null);setTimeout(()=>{const p=document.getElementById('trk-picker');if(p){p.value='${s.name}';renderTracker();}},100);"><div><div class="ar-lbl">🚫 ${s}</div><div class="ar-sub">${missed.filter(r=>r.society===s).length} zero-collection day(s) — immediate visit needed.</div></div></div>`).join('');
+  html += lowSocs.map(s=>`<div class="action-row warn" style="cursor:pointer;" onclick="goTab('tracker',null);setTimeout(()=>{const p=document.getElementById('trk-picker');if(p){p.value='${s.name}';renderTracker();}},100);"><div><div class="ar-lbl">⚠️ ${s}</div><div class="ar-sub">${low.filter(r=>r.society===s).length} low-collection day(s) — below 70% of average.</div></div></div>`).join('');
   if (!html) html = `<div class="action-row ok"><div><div class="ar-lbl">✅ All societies on track</div><div class="ar-sub">No critical alerts in the selected period.</div></div></div>`;
   document.getElementById('hub-action').innerHTML = html;
   // Trend chart
@@ -4639,6 +4982,104 @@ function renderBestPractices() {
 }
 
 // ══════════════════════════════════════════════════════
+//  UNIVERSAL SORTABLE TABLE ENGINE
+// ══════════════════════════════════════════════════════
+const _sortState = {};
+
+function makeSortable(tableId, renderFn) {
+  const tbl = document.getElementById(tableId);
+  if (!tbl) return;
+  tbl.querySelectorAll('th[data-col]').forEach(th => {
+    th.classList.add('sortable');
+    th.style.cursor = 'pointer';
+    th.addEventListener('click', () => {
+      const col = th.dataset.col;
+      const type = th.dataset.type || 'num';
+      if (!_sortState[tableId]) _sortState[tableId] = { col: '', dir: 'desc' };
+      const st = _sortState[tableId];
+      if (st.col === col) st.dir = st.dir === 'asc' ? 'desc' : 'asc';
+      else { st.col = col; st.dir = 'desc'; }
+      tbl.querySelectorAll('th[data-col]').forEach(h => { h.classList.remove('sort-asc','sort-desc'); });
+      th.classList.add(st.dir === 'asc' ? 'sort-asc' : 'sort-desc');
+      if (renderFn) renderFn(tableId, col, st.dir, type);
+    });
+  });
+}
+
+function sortTableRows(tableId, col, dir, type) {
+  const tbody = document.querySelector(`#${tableId} tbody`);
+  if (!tbody) return;
+  const rows = [...tbody.querySelectorAll('tr')];
+  rows.sort((a, b) => {
+    const ai = a.querySelector(`[data-sort-${col}]`);
+    const bi = b.querySelector(`[data-sort-${col}]`);
+    if (!ai || !bi) return 0;
+    let av = ai.dataset[`sort${col.charAt(0).toUpperCase()+col.slice(1)}`] || ai.dataset[`sort${col}`] || '';
+    let bv = bi.dataset[`sort${col.charAt(0).toUpperCase()+col.slice(1)}`] || bi.dataset[`sort${col}`] || '';
+    if (type === 'num') { av = parseFloat(av) || 0; bv = parseFloat(bv) || 0; return dir === 'asc' ? av - bv : bv - av; }
+    return dir === 'asc' ? av.localeCompare(bv) : bv.localeCompare(av);
+  });
+  rows.forEach(r => tbody.appendChild(r));
+}
+
+// Attach sortable to all static tables after render
+function attachAllSortables() {
+  document.querySelectorAll('.tbl').forEach(tbl => {
+    if (tbl.dataset.sortAttached) return;
+    tbl.dataset.sortAttached = '1';
+    tbl.querySelectorAll('th[data-col]').forEach(th => {
+      th.classList.add('sortable');
+      th.addEventListener('click', () => {
+        const col = th.dataset.col;
+        const type = th.dataset.type || 'num';
+        const id = tbl.id || ('tbl_' + Math.random());
+        if (!_sortState[id]) _sortState[id] = { col: '', dir: 'desc' };
+        const st = _sortState[id];
+        if (st.col === col) st.dir = st.dir === 'asc' ? 'desc' : 'asc';
+        else { st.col = col; st.dir = 'desc'; }
+        tbl.querySelectorAll('th[data-col]').forEach(h => h.classList.remove('sort-asc','sort-desc'));
+        th.classList.add(st.dir === 'asc' ? 'sort-asc' : 'sort-desc');
+        sortTableRows(id, col, st.dir, type);
+      });
+    });
+  });
+}
+
+// ── KPI Tooltip System ──
+const _tooltipEl = document.getElementById('kpi-tooltip');
+function showTip(el, text) {
+  if (!_tooltipEl) return;
+  _tooltipEl.textContent = text;
+  _tooltipEl.classList.add('show');
+  moveTip(el);
+}
+function moveTip(el) {
+  if (!_tooltipEl || !el) return;
+  const r = el.getBoundingClientRect();
+  let left = r.left + r.width/2 - _tooltipEl.offsetWidth/2;
+  let top  = r.bottom + 8;
+  if (left < 8) left = 8;
+  if (left + 270 > window.innerWidth) left = window.innerWidth - 278;
+  if (top + 120 > window.innerHeight) top = r.top - 120;
+  _tooltipEl.style.left = left + 'px';
+  _tooltipEl.style.top  = top + 'px';
+}
+function hideTip() { if (_tooltipEl) _tooltipEl.classList.remove('show'); }
+document.addEventListener('scroll', hideTip, true);
+
+// ── Trend badge helper ──
+function trendBadge(pct) {
+  if (pct > 5)  return `<span class="trend-up">▲ ${pct}%</span>`;
+  if (pct < -5) return `<span class="trend-down">▼ ${Math.abs(pct)}%</span>`;
+  return `<span class="trend-flat">→ ${pct >= 0 ? '+' : ''}${pct}%</span>`;
+}
+
+// ── Mini progress bar helper ──
+function miniProg(val, color) {
+  return `<div class="mini-prog-track"><div class="mini-prog-fill" style="width:${Math.min(val,100)}%;background:${color};"></div></div>`;
+}
+
+// ══════════════════════════════════════════════════════
 //  RENDER: ALL SOCIETIES TRACKER
 // ══════════════════════════════════════════════════════
 function renderTrackerAll() {
@@ -4675,10 +5116,9 @@ function renderTrackerAll() {
     return { name: s, total, morning, evening, active, missed, rep, avg, mornAvg, eveAvg, target, ach, trend };
   });
 
-  // Sort
   const sortVal = document.getElementById('ta-sort')?.value || 'total_desc';
   const [sKey, sDir] = sortVal.split('_');
-  const keyMap = { total: 'total', achievement: 'ach', trend: 'trend', missed: 'missed', rep: 'rep', avg: 'avg', name: 'name' };
+  const keyMap = { total:'total', achievement:'ach', trend:'trend', missed:'missed', rep:'rep', avg:'avg', name:'name' };
   const col = keyMap[sKey] || 'total';
   socStats.sort((a, b) => {
     const av = a[col], bv = b[col];
@@ -4686,7 +5126,6 @@ function renderTrackerAll() {
     return sDir === 'asc' ? av - bv : bv - av;
   });
 
-  // Filter
   const filterVal = document.getElementById('ta-filter')?.value || '';
   const search = (document.getElementById('ta-search')?.value || '').toLowerCase();
   let filtered = socStats.filter(s => {
@@ -4698,49 +5137,75 @@ function renderTrackerAll() {
     return true;
   });
 
-  // KPI Summary
   const totalL = socStats.reduce((a, s) => a + s.total, 0);
   const avgRep = Math.round(socStats.reduce((a, s) => a + s.rep, 0) / Math.max(socStats.length, 1));
   const toppers = socStats.filter(s => s.ach >= 100).length;
   const laggards = socStats.filter(s => s.rep < 60).length;
-  const avgTrend = Math.round(socStats.reduce((a, s) => a + s.trend, 0) / Math.max(socStats.length, 1));
+  const grandAvg = totalL / Math.max(totalDays, 1);
   if (kpiEl) kpiEl.innerHTML = `
-    <div class="kcard kc-g"><div class="kc-lbl">Total Societies</div><div class="kc-val kv-g">${socStats.length}</div><div class="kc-sub">active in period</div></div>
-    <div class="kcard kc-b"><div class="kc-lbl">District Total</div><div class="kc-val kv-b">${fmt(totalL)} L</div><div class="kc-sub">selected period</div></div>
-    <div class="kcard kc-a"><div class="kc-lbl">Avg Reporting Rate</div><div class="kc-val kv-a">${avgRep}%</div><div class="kc-sub">district-wide</div></div>
-    <div class="kcard kc-g"><div class="kc-lbl">On/Above Target</div><div class="kc-val kv-g">${toppers}</div><div class="kc-sub">≥100% achievement</div></div>
-    <div class="kcard kc-r"><div class="kc-lbl">Laggards</div><div class="kc-val kv-r">${laggards}</div><div class="kc-sub">&lt;60% reporting rate</div></div>`;
+    <div class="kcard kc-b" style="cursor:pointer;" onclick="document.getElementById('ta-filter').value='';renderTrackerAll();"
+      onmouseenter="showTip(this,'${socStats.length} societies active in selected period\\nDistrict total: ${fmt(totalL)} L\\nDaily avg: ${fmt(grandAvg)} L/day')" onmouseleave="hideTip()">
+      <div class="kc-lbl">Total Societies</div><div class="kc-val kv-b">${socStats.length}</div><div class="kc-sub">active in period</div></div>
+    <div class="kcard kc-g" style="cursor:pointer;"
+      onmouseenter="showTip(this,'District total in period\\nAvg per society: ${fmt(totalL/Math.max(socStats.length,1))} L\\nBest society: ${socStats.sort((a,b)=>b.total-a.total)[0]?.name||\"—\"}')" onmouseleave="hideTip()">
+      <div class="kc-lbl">District Total</div><div class="kc-val kv-g">${fmt(totalL)} L</div><div class="kc-sub">selected period · ${fmt(grandAvg)} L/day</div></div>
+    <div class="kcard kc-a" style="cursor:pointer;"
+      onmouseenter="showTip(this,'${avgRep}% avg reporting rate\\n${socStats.filter(s=>s.rep>=80).length} societies ≥80% (strong)\\n${socStats.filter(s=>s.rep>=60&&s.rep<80).length} societies 60–80% (moderate)\\n${socStats.filter(s=>s.rep<60).length} societies <60% (weak)')" onmouseleave="hideTip()">
+      <div class="kc-lbl">Avg Reporting Rate</div><div class="kc-val kv-a">${avgRep}%</div>
+      <div style="height:4px;background:var(--s2);border-radius:100px;overflow:hidden;margin-top:6px;"><div style="height:100%;background:${avgRep>=80?'#34a853':avgRep>=60?'#fbbc04':'#ea4335'};width:${avgRep}%;border-radius:100px;"></div></div></div>
+    <div class="kcard kc-g" style="cursor:pointer;" onclick="document.getElementById('ta-filter').value='topper';renderTrackerAll();"
+      onmouseenter="showTip(this,'${toppers} societies achieved ≥100% of target\\nClick to filter view')" onmouseleave="hideTip()">
+      <div class="kc-lbl">On/Above Target</div><div class="kc-val kv-g">${toppers}</div><div class="kc-sub">≥100% achievement · click to filter</div></div>
+    <div class="kcard kc-r" style="cursor:pointer;" onclick="document.getElementById('ta-filter').value='laggard';renderTrackerAll();"
+      onmouseenter="showTip(this,'${laggards} societies with <60% reporting rate\\nThese need immediate field intervention\\nClick to filter view')" onmouseleave="hideTip()">
+      <div class="kc-lbl">Laggards</div><div class="kc-val kv-r">${laggards}</div><div class="kc-sub">&lt;60% reporting · click to filter</div></div>`;
 
-  // Top 5 / Bottom 5
   const byTotal = [...socStats].sort((a, b) => b.total - a.total);
   const byMissed = [...socStats].sort((a, b) => b.missed - a.missed);
-  const trendArrow = t => t > 5 ? '<span style="color:#34a853;">↑</span>' : t < -5 ? '<span style="color:#ea4335;">↓</span>' : '<span style="color:#fbbc04;">→</span>';
   document.getElementById('ta-toppers').innerHTML = byTotal.slice(0, 5).map((s, i) =>
-    `<tr><td style="color:var(--txt3);">${i+1}</td><td style="font-weight:500;">${s.name}</td><td style="font-family:var(--mono);">${fmt(s.total)}</td><td style="font-family:var(--mono);">${fmt(s.avg)}</td><td>${s.rep}%</td><td>${trendArrow(s.trend)} ${s.trend>0?'+':''}${s.trend}%</td><td><span class="bdg ${s.ach>=100?'b-g':s.ach>=80?'b-b':'b-a'}">${s.ach}%</span></td></tr>`
+    `<tr style="cursor:pointer;" onclick="goTab('tracker',null);setTimeout(()=>{const p=document.getElementById('trk-picker');if(p){p.value='${s.name}';renderTracker();}},100);">
+      <td style="color:var(--txt3);">${['🥇','🥈','🥉','4','5'][i]}</td>
+      <td style="font-weight:500;">${s.name}</td>
+      <td style="font-family:var(--mono);font-weight:600;color:#34a853;">${fmt(s.total)}</td>
+      <td style="font-family:var(--mono);">${fmt(s.avg)}</td>
+      <td>${s.rep}%</td><td>${trendBadge(s.trend)}</td>
+      <td><span class="bdg ${s.ach>=100?'b-g':s.ach>=80?'b-b':'b-a'}">${s.ach}%</span></td></tr>`
   ).join('');
   document.getElementById('ta-laggards').innerHTML = byMissed.slice(0, 5).map((s, i) =>
-    `<tr><td style="color:var(--txt3);">${i+1}</td><td style="font-weight:500;">${s.name}</td><td style="font-family:var(--mono);">${fmt(s.total)}</td><td style="color:#ea4335;">${s.missed}</td><td>${s.rep}%</td><td>${trendArrow(s.trend)}</td><td><button class="btn btn-o" style="font-size:11px;padding:3px 8px;" onclick="goTab('tracker',document.querySelector('[onclick*=tracker]'));setTimeout(()=>{document.getElementById('trk-picker').value='${s.name}';renderTracker();},100)">View →</button></td></tr>`
+    `<tr style="cursor:pointer;" onclick="goTab('tracker',null);setTimeout(()=>{const p=document.getElementById('trk-picker');if(p){p.value='${s.name}';renderTracker();}},100);">
+      <td style="color:var(--txt3);">${i+1}</td>
+      <td style="font-weight:500;">${s.name}</td>
+      <td style="font-family:var(--mono);">${fmt(s.total)}</td>
+      <td style="font-family:var(--mono);color:#ea4335;font-weight:600;">${s.missed}</td>
+      <td><span class="bdg ${s.rep<40?'b-r':s.rep<60?'b-a':'b-b'}">${s.rep}%</span></td>
+      <td>${trendBadge(s.trend)}</td>
+      <td><button class="btn btn-o" style="font-size:11px;padding:3px 8px;">View →</button></td></tr>`
   ).join('');
 
-  // Full table
   const countEl = document.getElementById('ta-count');
   if (countEl) countEl.textContent = `${filtered.length} of ${socStats.length} societies`;
+  const maxTotal = Math.max(...filtered.map(s => s.total), 1);
   document.getElementById('ta-body').innerHTML = filtered.map((s, i) => {
     const achCls = s.ach >= 100 ? 'b-g' : s.ach >= 80 ? 'b-b' : s.ach >= 60 ? 'b-a' : 'b-r';
     const stCls = s.rep >= 80 ? 'b-g' : s.rep >= 60 ? 'b-b' : s.rep >= 40 ? 'b-a' : 'b-r';
     const stLbl = s.rep >= 80 ? 'Strong' : s.rep >= 60 ? 'Moderate' : s.rep >= 40 ? 'Weak' : 'Critical';
-    return `<tr>
+    const barW = Math.round(s.total / maxTotal * 100);
+    return `<tr style="cursor:pointer;" onclick="goTab('tracker',null);setTimeout(()=>{const p=document.getElementById('trk-picker');if(p){p.value='${s.name}';renderTracker();}},100);"
+      data-sort-name="${s.name}" data-sort-total="${s.total}" data-sort-ach="${s.ach}" data-sort-avg="${s.avg}" data-sort-missed="${s.missed}" data-sort-rep="${s.rep}" data-sort-trend="${s.trend}">
       <td style="color:var(--txt3);">${i+1}</td>
-      <td style="font-weight:500;">${s.name}</td>
-      <td style="font-family:var(--mono);">${fmt(s.target)}</td>
-      <td style="font-family:var(--mono);font-weight:600;">${fmt(s.total)}</td>
-      <td><span class="bdg ${achCls}">${s.ach}%</span></td>
-      <td style="font-family:var(--mono);">${fmt(s.avg)}</td>
-      <td style="font-family:var(--mono);color:#34a853;">${hasSplit ? fmt(s.mornAvg) : '—'}</td>
-      <td style="font-family:var(--mono);color:#ea4335;">${hasSplit ? fmt(s.eveAvg) : '—'}</td>
-      <td style="color:${s.missed>5?'#ea4335':'var(--txt)'};">${s.missed}</td>
-      <td>${s.rep}%</td>
-      <td>${trendArrow(s.trend)} ${s.trend>0?'+':''}${s.trend}%</td>
+      <td style="font-weight:500;" data-sort-name="${s.name}"><span data-sort-name="${s.name}">${s.name}</span></td>
+      <td style="font-family:var(--mono);" data-sort-target="${s.target}">${fmt(s.target)}</td>
+      <td data-sort-total="${s.total}">
+        <div style="font-family:var(--mono);font-weight:600;color:var(--g-blue);">${fmt(s.total)}</div>
+        <div style="height:3px;background:var(--s2);border-radius:100px;margin-top:2px;overflow:hidden;width:70px;"><div style="height:100%;width:${barW}%;background:var(--g-blue);border-radius:100px;"></div></div>
+      </td>
+      <td data-sort-ach="${s.ach}"><span class="bdg ${achCls}">${s.ach}%</span></td>
+      <td style="font-family:var(--mono);" data-sort-avg="${s.avg}">${fmt(s.avg)}</td>
+      <td style="font-family:var(--mono);color:#34a853;" data-sort-morn="${s.mornAvg}">${hasSplit ? fmt(s.mornAvg) : '—'}</td>
+      <td style="font-family:var(--mono);color:#ea4335;" data-sort-eve="${s.eveAvg}">${hasSplit ? fmt(s.eveAvg) : '—'}</td>
+      <td style="color:${s.missed>5?'#ea4335':'var(--txt)'};" data-sort-missed="${s.missed}">${s.missed}</td>
+      <td data-sort-rep="${s.rep}">${s.rep}%</td>
+      <td data-sort-trend="${s.trend}">${trendBadge(s.trend)}</td>
       <td><span style="font-size:11px;color:var(--txt3);">—</span></td>
       <td><span class="bdg ${stCls}">${stLbl}</span></td>
     </tr>`;
@@ -4749,12 +5214,19 @@ function renderTrackerAll() {
   const foot = document.getElementById('ta-foot');
   if (foot) {
     const totTotal = filtered.reduce((a, s) => a + s.total, 0);
-    const totMorn = filtered.reduce((a, s) => a + s.morning, 0);
-    const totEve = filtered.reduce((a, s) => a + s.evening, 0);
+    const totMorn  = filtered.reduce((a, s) => a + s.morning, 0);
+    const totEve   = filtered.reduce((a, s) => a + s.evening, 0);
     const totMissed = filtered.reduce((a, s) => a + s.missed, 0);
-    const avgRepF = Math.round(filtered.reduce((a, s) => a + s.rep, 0) / Math.max(filtered.length, 1));
-    foot.innerHTML = `<tr style="font-size:12px;"><td colspan="3">Totals / Averages (${filtered.length} societies)</td><td style="font-family:var(--mono);">${fmt(totTotal)}</td><td>—</td><td>—</td><td style="font-family:var(--mono);color:#34a853;">${hasSplit ? fmt(totMorn) : '—'}</td><td style="font-family:var(--mono);color:#ea4335;">${hasSplit ? fmt(totEve) : '—'}</td><td>${totMissed}</td><td>${avgRepF}%</td><td colspan="3"></td></tr>`;
+    const avgRepF  = Math.round(filtered.reduce((a, s) => a + s.rep, 0) / Math.max(filtered.length, 1));
+    foot.innerHTML = `<tr style="font-size:12px;"><td colspan="3">Totals / Averages (${filtered.length} societies)</td>
+      <td style="font-family:var(--mono);font-weight:700;color:var(--g-blue);">${fmt(totTotal)}</td>
+      <td>—</td><td>—</td>
+      <td style="font-family:var(--mono);color:#34a853;">${hasSplit ? fmt(totMorn) : '—'}</td>
+      <td style="font-family:var(--mono);color:#ea4335;">${hasSplit ? fmt(totEve) : '—'}</td>
+      <td style="font-family:var(--mono);">${totMissed}</td>
+      <td>${avgRepF}%</td><td colspan="3"></td></tr>`;
   }
+  setTimeout(attachAllSortables, 50);
 }
 
 let _taSortCol = 'total', _taSortDir = 'desc';
@@ -4767,7 +5239,7 @@ function taSortBy(col) {
 }
 function taExportExcel() {
   if (!_filtered.length) { toast('No data to export', true); return; }
-  toast('Export ready — use CSV Export button for data.');
+  toast('Use CSV Export from the top bar for data export.');
 }
 
 // ══════════════════════════════════════════════════════
@@ -4778,20 +5250,18 @@ function renderVillageTable() {
   const sortV  = document.getElementById('vt-sort')?.value || 'util_desc';
   const search = (document.getElementById('vt-search')?.value || '').toLowerCase();
 
-  // Build society-level actual avg from filtered data
   const socAvg = {};
   _filtered.forEach(r => {
     if (!socAvg[r.society]) socAvg[r.society] = { total: 0, days: 0 };
     socAvg[r.society].total += r.total;
     socAvg[r.society].days  += 1;
   });
-  Object.keys(socAvg).forEach(k => {
-    socAvg[k].avg = socAvg[k].days > 0 ? socAvg[k].total / socAvg[k].days : 0;
-  });
+  Object.keys(socAvg).forEach(k => { socAvg[k].avg = socAvg[k].days > 0 ? socAvg[k].total / socAvg[k].days : 0; });
 
   let rows = CATTLE_DATA.map(v => {
-    // match society name to village name (fuzzy)
-    const matchKey = Object.keys(socAvg).find(k => k.toLowerCase().includes(v.village.toLowerCase().slice(0,6)) || v.village.toLowerCase().includes(k.toLowerCase().slice(0,6)));
+    const matchKey = Object.keys(socAvg).find(k =>
+      k.toLowerCase().includes(v.village.toLowerCase().slice(0,6)) ||
+      v.village.toLowerCase().includes(k.toLowerCase().slice(0,6)));
     const actual = matchKey ? socAvg[matchKey].avg : 0;
     const util   = v.milk_potential > 0 ? Math.round(actual / v.milk_potential * 100) : 0;
     const gap    = Math.max(v.milk_potential - actual, 0);
@@ -4801,9 +5271,8 @@ function renderVillageTable() {
   if (block) rows = rows.filter(r => r.block === block);
   if (search) rows = rows.filter(r => r.village.toLowerCase().includes(search) || r.block.toLowerCase().includes(search));
 
-  // Sort
   const [sKey, sDir] = sortV.split('_');
-  const sortMap = { util: 'util', potential: 'milk_potential', animals: 'milk_animals', village: 'village' };
+  const sortMap = { util:'util', potential:'milk_potential', animals:'milk_animals', village:'village' };
   const col = sortMap[sKey] || 'util';
   rows.sort((a, b) => {
     const av = a[col], bv = b[col];
@@ -4811,17 +5280,24 @@ function renderVillageTable() {
     return sDir === 'asc' ? av - bv : bv - av;
   });
 
-  // KPIs
   const totalAnimals = rows.reduce((a, r) => a + r.milk_animals, 0);
   const totalPotential = rows.reduce((a, r) => a + r.milk_potential, 0);
   const totalActual = rows.reduce((a, r) => a + r.actual, 0);
   const overallUtil = totalPotential > 0 ? Math.round(totalActual / totalPotential * 100) : 0;
   const highUtil = rows.filter(r => r.util >= 50).length;
+  const gap = totalPotential - totalActual;
   document.getElementById('vt-kpis').innerHTML = `
-    <div class="kcard kc-b"><div class="kc-lbl">Villages</div><div class="kc-val kv-b">${rows.length}</div><div class="kc-sub">in selection</div></div>
-    <div class="kcard kc-g"><div class="kc-lbl">Total Milch Animals</div><div class="kc-val kv-g">${fmt(totalAnimals)}</div><div class="kc-sub">in selected villages</div></div>
-    <div class="kcard kc-a"><div class="kc-lbl">Total Milk Potential</div><div class="kc-val kv-a">${fmt(totalPotential)} L/day</div><div class="kc-sub">estimated</div></div>
-    <div class="kcard ${overallUtil >= 50 ? 'kc-g' : overallUtil >= 25 ? 'kc-a' : 'kc-r'}"><div class="kc-lbl">Overall Utilisation</div><div class="kc-val ${overallUtil >= 50 ? 'kv-g' : overallUtil >= 25 ? 'kv-a' : 'kv-r'}">${overallUtil}%</div><div class="kc-sub">of milk potential tapped</div></div>`;
+    <div class="kcard kc-b" onmouseenter="showTip(this,'${rows.length} villages in current filter\\nClick to reset filter')" onmouseleave="hideTip()" style="cursor:pointer;">
+      <div class="kc-lbl">Villages</div><div class="kc-val kv-b">${rows.length}</div><div class="kc-sub">in selection</div></div>
+    <div class="kcard kc-g" onmouseenter="showTip(this,'Total milch animals in selected villages\\nEstimated at 2.7 L/animal/day')" onmouseleave="hideTip()">
+      <div class="kc-lbl">Total Milch Animals</div><div class="kc-val kv-g">${fmt(totalAnimals)}</div><div class="kc-sub">in selected villages</div></div>
+    <div class="kcard kc-a" onmouseenter="showTip(this,'Estimated daily milk potential\\nBased on 2.7 L/animal/day\\nGap remaining: ${fmt(gap)} L/day')" onmouseleave="hideTip()">
+      <div class="kc-lbl">Milk Potential</div><div class="kc-val kv-a">${fmt(totalPotential)} L/day</div>
+      <div class="kc-sub">Gap: ${fmt(gap)} L/day untapped</div></div>
+    <div class="kcard ${overallUtil >= 50 ? 'kc-g' : overallUtil >= 25 ? 'kc-a' : 'kc-r'}" onmouseenter="showTip(this,'${overallUtil}% of milk potential currently being collected\\n${highUtil} villages with ≥50% utilisation\\nOpportunity: ${fmt(gap)} L/day to unlock')" onmouseleave="hideTip()">
+      <div class="kc-lbl">Overall Utilisation</div>
+      <div class="kc-val ${overallUtil >= 50 ? 'kv-g' : overallUtil >= 25 ? 'kv-a' : 'kv-r'}">${overallUtil}%</div>
+      <div style="height:4px;background:var(--s2);border-radius:100px;overflow:hidden;margin-top:6px;"><div style="height:100%;background:${overallUtil>=50?'#34a853':overallUtil>=25?'#fbbc04':'#ea4335'};width:${Math.min(overallUtil,100)}%;border-radius:100px;"></div></div></div>`;
 
   const countEl = document.getElementById('vt-count');
   if (countEl) countEl.textContent = `${rows.length} villages`;
@@ -4829,22 +5305,27 @@ function renderVillageTable() {
   document.getElementById('vt-body').innerHTML = rows.map((r, i) => {
     const utilCls = r.util >= 70 ? 'ach-great' : r.util >= 40 ? 'ach-good' : r.util > 0 ? 'ach-poor' : '';
     const viabCls = r.viability === 'High' ? 'b-g' : r.viability === 'Medium' ? 'b-b' : r.viability === 'Low' ? 'b-a' : 'b-n';
-    const remark  = r.util === 0 ? 'No society yet' : r.util < 20 ? 'Very low — field visit needed' : r.util < 50 ? 'Growth potential' : r.util < 80 ? 'Good performance' : 'Excellent utilisation';
-    return `<tr>
+    const remark  = r.util === 0 ? 'No society yet — high priority' : r.util < 20 ? 'Very low — field visit needed' : r.util < 50 ? 'Growth potential' : r.util < 80 ? 'Good performance' : 'Excellent utilisation';
+    const remarkCls = r.util === 0 ? 'color:#ea4335;' : r.util < 30 ? 'color:#ea8600;' : 'color:var(--txt2);';
+    return `<tr style="cursor:pointer;" onclick="showVillageModal('${r.village}')"
+      data-sort-village="${r.village}" data-sort-animals="${r.milk_animals}" data-sort-potential="${r.milk_potential}" data-sort-actual="${r.actual}" data-sort-util="${r.util}" data-sort-gap="${r.gap}">
       <td style="color:var(--txt3);">${i+1}</td>
-      <td style="font-weight:500;">${r.village}</td>
-      <td><span class="g-chip g-chip-grey">${r.block}</span></td>
-      <td style="font-family:var(--mono);">${fmt(r.milk_animals)}</td>
-      <td style="font-family:var(--mono);">${fmt(r.milk_potential)}</td>
-      <td style="font-family:var(--mono);color:#4285f4;">${r.actual > 0 ? fmt(r.actual) : '<span style="color:var(--txt3);">—</span>'}</td>
-      <td><span class="${utilCls}" style="font-family:var(--mono);">${r.util}%</span>
-        <div style="height:4px;background:var(--s2);border-radius:2px;margin-top:3px;width:80px;overflow:hidden;"><div style="height:100%;background:${r.util>=50?'#34a853':r.util>=25?'#fbbc04':'#ea4335'};width:${Math.min(r.util,100)}%;border-radius:2px;"></div></div>
+      <td style="font-weight:500;"><span data-sort-village="${r.village}">${r.village}</span></td>
+      <td><span class="g-chip g-chip-grey" data-sort-block="${r.block}">${r.block}</span></td>
+      <td style="font-family:var(--mono);" data-sort-animals="${r.milk_animals}">${fmt(r.milk_animals)}</td>
+      <td style="font-family:var(--mono);" data-sort-potential="${r.milk_potential}">${fmt(r.milk_potential)}</td>
+      <td style="font-family:var(--mono);color:#4285f4;" data-sort-actual="${r.actual}">${r.actual > 0 ? fmt(r.actual) : '<span style="color:var(--txt3);">No society</span>'}</td>
+      <td data-sort-util="${r.util}">
+        <span class="${utilCls}" style="font-family:var(--mono);font-weight:600;">${r.util}%</span>
+        <div style="height:4px;background:var(--s2);border-radius:2px;margin-top:3px;width:80px;overflow:hidden;">
+          <div style="height:100%;background:${r.util>=50?'#34a853':r.util>=25?'#fbbc04':'#ea4335'};width:${Math.min(r.util,100)}%;border-radius:2px;"></div></div>
       </td>
-      <td style="font-family:var(--mono);color:${r.gap>100?'#ea4335':'var(--txt3)'};">${fmt(r.gap)}</td>
+      <td style="font-family:var(--mono);color:${r.gap>200?'#ea4335':r.gap>50?'#ea8600':'var(--txt3)'};" data-sort-gap="${r.gap}">${fmt(r.gap)}</td>
       <td><span class="bdg ${viabCls}">${r.viability}</span></td>
-      <td style="font-size:12px;color:var(--txt2);">${remark}</td>
+      <td style="font-size:12px;${remarkCls}">${remark}</td>
     </tr>`;
   }).join('') || '<tr><td colspan="10" class="empty">No villages match filter</td></tr>';
+  setTimeout(attachAllSortables, 50);
 }
 
 // ══════════════════════════════════════════════════════
@@ -4855,10 +5336,9 @@ function renderPareto() {
   const insightEl = document.getElementById('pareto-insight');
   if (!data.length) {
     if (insightEl) insightEl.textContent = 'Connect your sheet to see Pareto analysis.';
-    document.getElementById('pareto-table').innerHTML = '';
-    document.getElementById('pareto-top20').innerHTML = '';
-    document.getElementById('pareto-bottom50').innerHTML = '';
-    document.getElementById('pareto-recovery').innerHTML = '';
+    ['pareto-table','pareto-top20','pareto-bottom50','pareto-recovery'].forEach(id => {
+      const el = document.getElementById(id); if (el) el.innerHTML = '';
+    });
     return;
   }
 
@@ -4867,7 +5347,7 @@ function renderPareto() {
     const rows = data.filter(r => r.society === s);
     const total = rows.reduce((a, r) => a + r.total, 0);
     const active = rows.filter(r => r.total > 0);
-    const avg = active.length > 0 ? total / active.length : 0;
+    const avg  = active.length > 0 ? total / active.length : 0;
     const best = active.length > 0 ? Math.max(...active.map(r => r.total)) : 0;
     const missed = rows.filter(r => r.total === 0).length;
     return { name: s, total, avg, best, missed, count: rows.length };
@@ -4880,84 +5360,116 @@ function renderPareto() {
     return { ...s, pct: s.total / Math.max(grandTotal, 1) * 100, cumPct };
   });
 
-  // Find 80% threshold
-  const vital80 = withCum.filter(s => s.cumPct <= 80.01);
+  const vital80   = withCum.filter(s => s.cumPct <= 80.01);
   const trivial80 = withCum.filter(s => s.cumPct > 80.01);
-  const top20Count = Math.ceil(socs.length * 0.2);
+  const top20Count    = Math.ceil(socs.length * 0.2);
   const bottom50Count = Math.floor(socs.length * 0.5);
 
   if (insightEl) insightEl.innerHTML = `
-    <strong>Pareto Finding:</strong> Top <strong>${vital80.length}</strong> societies (${Math.round(vital80.length/socs.length*100)}% of total)
-    contribute <strong>80%</strong> of district milk procurement.
-    The bottom <strong>${trivial80.length}</strong> societies contribute only 20%.
-    Focus field visits and interventions on the bottom-performing group for maximum uplift potential.`;
+    <strong>📊 Pareto Finding:</strong> Top <strong>${vital80.length}</strong> societies (${Math.round(vital80.length/socs.length*100)}% of total)
+    contribute <strong>80%</strong> of district milk procurement (${fmt(vital80.reduce((a,s)=>a+s.total,0))} L).
+    The remaining <strong>${trivial80.length}</strong> societies contribute only 20% (${fmt(trivial80.reduce((a,s)=>a+s.total,0))} L).
+    <br><strong>Action:</strong> Focus field visits on bottom ${bottom50Count} societies for maximum uplift. Protect the top ${vital80.length}.`;
 
-  // Chart
   const existingChart = Chart.getChart('pareto-chart');
   if (existingChart) existingChart.destroy();
   const ctx = document.getElementById('pareto-chart')?.getContext('2d');
   if (ctx) {
     new Chart(ctx, {
       data: {
-        labels: withCum.map(s => s.name.length > 12 ? s.name.slice(0,12)+'…' : s.name),
+        labels: withCum.map(s => s.name.length > 14 ? s.name.slice(0,14)+'…' : s.name),
         datasets: [
-          { type: 'bar', label: 'Volume (L)', data: withCum.map(s => s.total), backgroundColor: withCum.map(s => s.cumPct <= 80 ? '#4285f4aa' : '#ea4335aa'), borderRadius: 3, yAxisID: 'y' },
-          { type: 'line', label: 'Cumulative %', data: withCum.map(s => Math.round(s.cumPct)), borderColor: '#fbbc04', backgroundColor: 'transparent', borderWidth: 2, pointRadius: 0, yAxisID: 'y2' }
+          { type:'bar', label:'Volume (L)', data:withCum.map(s=>s.total),
+            backgroundColor:withCum.map(s=>s.cumPct<=80?'#4285f4cc':'#ea4335aa'), borderRadius:3, yAxisID:'y' },
+          { type:'line', label:'Cumulative %', data:withCum.map(s=>Math.round(s.cumPct)),
+            borderColor:'#fbbc04', backgroundColor:'transparent', borderWidth:2.5, pointRadius:0, yAxisID:'y2',
+            tension:.3 }
         ]
       },
-      options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: true, position: 'top' } }, scales: { x: { ticks: { font: { size: 9 }, maxRotation: 45 } }, y: { ticks: { callback: v => fmt(v) }, grid: { color: 'rgba(0,0,0,.06)' } }, y2: { position: 'right', min: 0, max: 100, ticks: { callback: v => v + '%' }, grid: { display: false } } } }
+      options:{ responsive:true, maintainAspectRatio:false,
+        plugins:{ legend:{ display:true, position:'top', labels:{font:{size:11},boxWidth:12} },
+          tooltip:{ callbacks:{ label:c=>`${c.dataset.label}: ${c.dataset.type==='line'?c.raw+'%':fmt(c.raw)+' L'}` } } },
+        scales:{
+          x:{ ticks:{font:{size:9},maxRotation:50}, grid:{display:false} },
+          y:{ ticks:{callback:v=>fmt(v)}, grid:{color:'rgba(0,0,0,.06)'} },
+          y2:{ position:'right', min:0, max:100, ticks:{callback:v=>v+'%'}, grid:{display:false} }
+        }
+      }
     });
   }
 
-  // Table
   document.getElementById('pareto-table').innerHTML = `
-    <table class="tbl" style="font-size:12px;">
-      <thead><tr><th>#</th><th>Society</th><th>Volume (L)</th><th>%</th><th>Cum %</th><th>Zone</th></tr></thead>
-      <tbody>
-        ${withCum.map((s, i) => `<tr>
-          <td style="color:var(--txt3);">${i+1}</td>
-          <td>${s.name}</td>
-          <td style="font-family:var(--mono);">${fmt(s.total)}</td>
-          <td style="font-family:var(--mono);">${s.pct.toFixed(1)}%</td>
-          <td style="font-family:var(--mono);">${s.cumPct.toFixed(1)}%</td>
-          <td><span class="bdg ${s.cumPct <= 80 ? 'b-b' : 'b-r'}">${s.cumPct <= 80 ? 'Vital' : 'Trivial'}</span></td>
-        </tr>`).join('')}
-      </tbody>
+    <table class="tbl" id="pareto-detail-tbl" style="font-size:12px;">
+      <thead><tr>
+        <th data-col="rank" data-type="num">#</th>
+        <th data-col="name" data-type="str">Society</th>
+        <th data-col="total" data-type="num">Volume (L)</th>
+        <th data-col="pct" data-type="num">Share %</th>
+        <th data-col="cum" data-type="num">Cum %</th>
+        <th data-col="missed" data-type="num">Missed</th>
+        <th>Zone</th>
+      </tr></thead>
+      <tbody>${withCum.map((s, i) => `<tr
+        data-sort-rank="${i+1}" data-sort-name="${s.name}" data-sort-total="${s.total}"
+        data-sort-pct="${s.pct.toFixed(2)}" data-sort-cum="${s.cumPct.toFixed(2)}" data-sort-missed="${s.missed}">
+        <td style="color:var(--txt3);">${i+1}</td>
+        <td style="font-weight:${s.cumPct<=80?'500':'400'};">${s.name}</td>
+        <td style="font-family:var(--mono);font-weight:${s.cumPct<=80?'600':'400'};color:${s.cumPct<=80?'var(--g-blue)':'var(--txt2)'};">${fmt(s.total)}</td>
+        <td style="font-family:var(--mono);">${s.pct.toFixed(1)}%</td>
+        <td style="font-family:var(--mono);">${s.cumPct.toFixed(1)}%</td>
+        <td style="color:${s.missed>5?'#ea4335':'var(--txt3)'};">${s.missed}</td>
+        <td><span class="bdg ${s.cumPct<=80?'b-b':'b-r'}">${s.cumPct<=80?'Vital':'Trivial'}</span></td>
+      </tr>`).join('')}</tbody>
     </table>`;
 
-  // Focus zone — top 20%
   const top20 = withCum.slice(0, top20Count);
   const top20Vol = top20.reduce((a, s) => a + s.total, 0);
   document.getElementById('pareto-top20').innerHTML = `
-    <div style="margin-bottom:8px;font-size:12px;color:var(--txt3);">Top ${top20Count} societies → ${Math.round(top20Vol/grandTotal*100)}% of total volume. <strong style="color:#4285f4;">Protect and grow these.</strong></div>
-    ${top20.map((s, i) => `<div class="mini-bar-row"><div class="mini-bar-lbl">${i+1}. ${s.name}</div><div class="mini-bar-track"><div class="mini-bar-fill" style="width:${Math.round(s.total/withCum[0].total*100)}%;background:#4285f4;"></div></div><div class="mini-bar-val">${fmt(s.total)} L</div></div>`).join('')}`;
+    <div class="quick-stat-row"><span class="qs-badge">🏆 ${top20Count} societies</span><span class="qs-badge">📦 ${Math.round(top20Vol/grandTotal*100)}% of volume</span><span class="qs-badge" style="color:#34a853;">→ Protect &amp; Grow</span></div>
+    ${top20.map((s, i) => `<div class="mini-bar-row">
+      <div class="mini-bar-lbl" title="${s.name}">${i+1}. ${s.name.length>18?s.name.slice(0,18)+'…':s.name}</div>
+      <div class="mini-bar-track"><div class="mini-bar-fill" style="width:${Math.round(s.total/withCum[0].total*100)}%;background:#4285f4;"></div></div>
+      <div class="mini-bar-val">${fmt(s.total)} L</div>
+    </div>`).join('')}`;
 
-  // Leverage zone — bottom 50%
   const bot50 = withCum.slice(-bottom50Count);
   const bot50Vol = bot50.reduce((a, s) => a + s.total, 0);
   document.getElementById('pareto-bottom50').innerHTML = `
-    <div style="margin-bottom:8px;font-size:12px;color:var(--txt3);">Bottom ${bottom50Count} societies → only ${Math.round(bot50Vol/grandTotal*100)}% of volume. <strong style="color:#ea4335;">High uplift opportunity.</strong></div>
-    ${bot50.map((s, i) => `<div class="mini-bar-row"><div class="mini-bar-lbl">${i+1}. ${s.name}</div><div class="mini-bar-track"><div class="mini-bar-fill" style="width:${Math.round(s.total/withCum[0].total*100)}%;background:#ea4335;"></div></div><div class="mini-bar-val">${fmt(s.total)} L</div></div>`).join('')}`;
+    <div class="quick-stat-row"><span class="qs-badge">⚠️ ${bottom50Count} societies</span><span class="qs-badge">📦 ${Math.round(bot50Vol/grandTotal*100)}% of volume</span><span class="qs-badge" style="color:#ea4335;">→ Urgent Attention</span></div>
+    ${bot50.map((s, i) => `<div class="mini-bar-row">
+      <div class="mini-bar-lbl" title="${s.name}">${i+1}. ${s.name.length>18?s.name.slice(0,18)+'…':s.name}</div>
+      <div class="mini-bar-track"><div class="mini-bar-fill" style="width:${Math.max(Math.round(s.total/withCum[0].total*100),1)}%;background:#ea4335;"></div></div>
+      <div class="mini-bar-val">${fmt(s.total)} L</div>
+    </div>`).join('')}`;
 
-  // Recovery ranking — biggest gap between best day and avg
-  const recovery = [...socTot].filter(s => s.best > 0).sort((a, b) => (b.best - b.avg) - (a.best - a.avg)).slice(0, 10);
+  const recovery = [...socTot].filter(s => s.best > 0)
+    .sort((a, b) => (b.best - b.avg) - (a.best - a.avg)).slice(0, 10);
   document.getElementById('pareto-recovery').innerHTML = `
-    <table class="tbl" style="font-size:12.5px;">
-      <thead><tr><th>#</th><th>Society</th><th>Daily Avg (L)</th><th>Best Day (L)</th><th>Gap (L)</th><th>Recovery %</th><th>Missed Days</th></tr></thead>
+    <table class="tbl" id="pareto-recovery-tbl" style="font-size:12.5px;">
+      <thead><tr>
+        <th data-col="rank" data-type="num">#</th>
+        <th data-col="name" data-type="str">Society</th>
+        <th data-col="avg" data-type="num">Daily Avg (L)</th>
+        <th data-col="best" data-type="num">Best Day (L)</th>
+        <th data-col="gap" data-type="num">Uplift Gap (L)</th>
+        <th data-col="pct" data-type="num">Recovery %</th>
+        <th data-col="missed" data-type="num">Missed Days</th>
+      </tr></thead>
       <tbody>${recovery.map((s, i) => {
         const gap = s.best - s.avg;
         const recovPct = s.avg > 0 ? Math.round(gap / s.avg * 100) : 0;
-        return `<tr>
+        return `<tr data-sort-rank="${i+1}" data-sort-name="${s.name}" data-sort-avg="${s.avg}" data-sort-best="${s.best}" data-sort-gap="${gap}" data-sort-pct="${recovPct}" data-sort-missed="${s.missed}" style="cursor:pointer;" onclick="goTab('tracker',null);setTimeout(()=>{const p=document.getElementById('trk-picker');if(p){p.value='${s.name}';renderTracker();}},100);">
           <td style="color:var(--txt3);">${i+1}</td>
           <td style="font-weight:500;">${s.name}</td>
           <td style="font-family:var(--mono);">${fmt(s.avg)}</td>
-          <td style="font-family:var(--mono);color:#34a853;">${fmt(s.best)}</td>
-          <td style="font-family:var(--mono);color:#4285f4;">${fmt(gap)}</td>
-          <td><span class="bdg ${recovPct>100?'b-g':recovPct>50?'b-b':'b-a'}">+${recovPct}%</span></td>
+          <td style="font-family:var(--mono);color:#34a853;font-weight:600;">${fmt(s.best)}</td>
+          <td style="font-family:var(--mono);color:#4285f4;font-weight:600;">${fmt(gap)}</td>
+          <td>${trendBadge(recovPct)}</td>
           <td style="color:${s.missed>5?'#ea4335':'var(--txt)'};">${s.missed}</td>
         </tr>`;
       }).join('')}</tbody>
     </table>`;
+  setTimeout(attachAllSortables, 50);
 }
 
 // ══════════════════════════════════════════════════════
@@ -4973,15 +5485,14 @@ function renderDailyMgmt() {
     return;
   }
 
-  // Use most recent date in filtered data
   const dates = [...new Set(data.map(r => r.date))].sort();
-  const today = dates[dates.length - 1] || '';
-  const todayRows = data.filter(r => r.date === today);
+  const latestDate = dates[dates.length - 1] || '';
+  const todayRows = data.filter(r => r.date === latestDate);
   const socs = [...new Set(data.map(r => r.society))];
   const districtTotal = data.reduce((a, r) => a + r.total, 0);
   const totalDays = dates.length;
 
-  // Society-level stats for today's board
+  // Build per-society avg target
   const targets = {};
   socs.forEach(s => {
     const rows = data.filter(r => r.society === s && r.total > 0);
@@ -4993,7 +5504,7 @@ function renderDailyMgmt() {
     const val = todayRow ? todayRow.total : 0;
     const tgt = targets[s] || 100;
     const pct = tgt > 0 ? Math.round(val / tgt * 100) : 0;
-    const status = val === 0 ? 'todo' : pct < 80 ? 'warn' : pct <= 110 ? 'ok' : 'star';
+    const status = val === 0 ? 'todo' : pct < 80 ? 'warn' : pct <= 115 ? 'ok' : 'star';
     return { name: s, val, tgt, pct, status };
   });
 
@@ -5002,60 +5513,87 @@ function renderDailyMgmt() {
   const ok    = boardItems.filter(b => b.status === 'ok');
   const star  = boardItems.filter(b => b.status === 'star');
 
-  // Update counts
   ['todo','warn','ok','star'].forEach(st => {
     const el = document.getElementById(`dm-${st}-count`);
     if (el) el.textContent = {todo,warn,ok,star}[st].length;
   });
 
-  const mkCard = b => `<div style="padding:8px 12px;border-bottom:1px solid var(--brd);display:flex;justify-content:space-between;align-items:center;font-size:12.5px;">
-    <div style="font-weight:500;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${b.name}</div>
-    <div style="font-family:var(--mono);font-size:11.5px;color:var(--txt2);margin-left:8px;">${b.val > 0 ? fmt(b.val)+' L' : '—'} <span style="color:var(--txt3);">(${b.pct}%)</span></div>
+  const mkCard = b => `<div style="padding:8px 12px;border-bottom:1px solid var(--brd);display:flex;justify-content:space-between;align-items:center;font-size:12.5px;cursor:pointer;"
+    onclick="goTab('tracker',null);setTimeout(()=>{const p=document.getElementById('trk-picker');if(p){p.value='${b.name}';renderTracker();}},100);">
+    <div style="font-weight:500;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${b.name}">${b.name}</div>
+    <div style="font-family:var(--mono);font-size:11.5px;margin-left:8px;text-align:right;">
+      ${b.val > 0 ? `<span style="color:${b.pct>=100?'#34a853':b.pct>=80?'#ea8600':'#ea4335'};font-weight:600;">${fmt(b.val)}</span> L` : '<span style="color:#ea4335;">—</span>'}
+      <br><span style="color:var(--txt3);font-size:10.5px;">${b.pct}% of avg</span>
+    </div>
   </div>`;
 
-  document.getElementById('dm-todo').innerHTML  = todo.map(mkCard).join('') || '<div style="padding:12px;text-align:center;font-size:12px;color:var(--txt3);">None</div>';
-  document.getElementById('dm-warn').innerHTML  = warn.map(mkCard).join('') || '<div style="padding:12px;text-align:center;font-size:12px;color:var(--txt3);">None</div>';
-  document.getElementById('dm-ok').innerHTML    = ok.map(mkCard).join('')   || '<div style="padding:12px;text-align:center;font-size:12px;color:var(--txt3);">None</div>';
-  document.getElementById('dm-star').innerHTML  = star.map(mkCard).join('') || '<div style="padding:12px;text-align:center;font-size:12px;color:var(--txt3);">None</div>';
+  document.getElementById('dm-todo').innerHTML  = todo.map(mkCard).join('') || '<div style="padding:14px;text-align:center;font-size:12px;color:var(--txt3);">✅ None</div>';
+  document.getElementById('dm-warn').innerHTML  = warn.map(mkCard).join('') || '<div style="padding:14px;text-align:center;font-size:12px;color:var(--txt3);">✅ None</div>';
+  document.getElementById('dm-ok').innerHTML    = ok.map(mkCard).join('')   || '<div style="padding:14px;text-align:center;font-size:12px;color:var(--txt3);">—</div>';
+  document.getElementById('dm-star').innerHTML  = star.map(mkCard).join('') || '<div style="padding:14px;text-align:center;font-size:12px;color:var(--txt3);">—</div>';
 
-  // Summary KPIs
   const todayTotal = todayRows.reduce((a, r) => a + r.total, 0);
   const overallAvg = districtTotal / Math.max(totalDays, 1);
   const vsAvg = overallAvg > 0 ? Math.round((todayTotal - overallAvg) / overallAvg * 100) : 0;
-  if (dmSummary) dmSummary.innerHTML = `
-    <div class="kcard kc-b"><div class="kc-lbl">📅 Latest Date</div><div class="kc-val kv-b" style="font-size:16px;">${fmtDate(today)}</div><div class="kc-sub">${todayRows.length} societies reported</div></div>
-    <div class="kcard kc-g"><div class="kc-lbl">Today's Total</div><div class="kc-val kv-g">${fmt(todayTotal)} L</div><div class="kc-sub">${vsAvg >= 0 ? '+' : ''}${vsAvg}% vs period avg</div></div>
-    <div class="kcard kc-a"><div class="kc-lbl">🚫 Zero / No Data</div><div class="kc-val kv-a">${todo.length}</div><div class="kc-sub">need immediate attention</div></div>
-    <div class="kcard kc-r"><div class="kc-lbl">⚠️ Below Target</div><div class="kc-val kv-r">${warn.length}</div><div class="kc-sub">&lt;80% of daily target</div></div>`;
+  const prevDate = dates.length > 1 ? dates[dates.length - 2] : '';
+  const prevTotal = prevDate ? data.filter(r => r.date === prevDate).reduce((a,r)=>a+r.total,0) : 0;
+  const vsPrev = prevTotal > 0 ? Math.round((todayTotal - prevTotal) / prevTotal * 100) : 0;
 
-  // PDCA
+  if (dmSummary) dmSummary.innerHTML = `
+    <div class="kcard kc-b" onmouseenter="showTip(this,'Showing data for: ${fmtDate(latestDate)}\\n${todayRows.length} of ${socs.length} societies reported\\nPrevious day: ${fmtDate(prevDate)}')" onmouseleave="hideTip()">
+      <div class="kc-lbl">📅 Latest Date</div>
+      <div class="kc-val kv-b" style="font-size:16px;font-weight:500;">${fmtDate(latestDate)}</div>
+      <div class="kc-sub">${todayRows.length} / ${socs.length} societies reported</div></div>
+    <div class="kcard kc-g" onmouseenter="showTip(this,'Today total: ${fmt(todayTotal)} L\\nvs period avg: ${vsAvg>=0?\"▲\":\"▼\"}${Math.abs(vsAvg)}%\\nvs previous day: ${vsPrev>=0?\"▲\":\"▼\"}${Math.abs(vsPrev)}%')" onmouseleave="hideTip()">
+      <div class="kc-lbl">Today's Total</div>
+      <div class="kc-val kv-g">${fmt(todayTotal)} L</div>
+      <div class="kc-sub">${vsAvg>=0?'▲':'▼'}${Math.abs(vsAvg)}% vs avg · ${vsPrev>=0?'▲':'▼'}${Math.abs(vsPrev)}% vs yesterday</div></div>
+    <div class="kcard kc-a" onclick="goTab('alerts',null);" style="cursor:pointer;"
+      onmouseenter="showTip(this,'${todo.length} societies with zero/no data\\nNeed immediate field calls\\nClick to view Alerts tab')" onmouseleave="hideTip()">
+      <div class="kc-lbl">🚫 Zero / No Data</div>
+      <div class="kc-val kv-a">${todo.length}</div>
+      <div class="kc-sub">immediate attention needed</div></div>
+    <div class="kcard kc-r" onmouseenter="showTip(this,'${warn.length} societies below 80% of their daily avg\\n${ok.length} societies on target\\n${star.length} societies exceeding target')" onmouseleave="hideTip()">
+      <div class="kc-lbl">⚠️ Below Target</div>
+      <div class="kc-val kv-r">${warn.length}</div>
+      <div class="kc-sub">${ok.length} on target · ${star.length} exceeding</div></div>`;
+
   const pdcaEl = document.getElementById('dm-pdca');
   if (pdcaEl) {
-    const issues = todo.slice(0, 3).map(b => b.name).join(', ') || 'None';
-    const topWinners = star.slice(0, 2).map(b => b.name).join(', ') || 'None';
+    const issues = todo.slice(0,4).map(b=>b.name).join(', ') || 'None';
+    const warnSocs = warn.slice(0,3).map(b=>b.name).join(', ') || 'None';
+    const topWinners = star.slice(0,2).map(b=>b.name).join(', ') || 'None';
     pdcaEl.innerHTML = `
-      <div class="alert-card ac-r" style="margin-bottom:6px;"><div class="ac-ico">🔴</div><div><div class="ac-t">Plan — Zero collection societies: ${todo.length}</div><div class="ac-d">Immediate field calls to: ${issues}</div></div></div>
-      <div class="alert-card ac-a" style="margin-bottom:6px;"><div class="ac-ico">🟡</div><div><div class="ac-t">Do — Below-target societies: ${warn.length}</div><div class="ac-d">Check route, vehicle, chilling plant for: ${warn.slice(0,3).map(b=>b.name).join(', ') || 'None'}</div></div></div>
-      <div class="alert-card ac-g" style="margin-bottom:6px;"><div class="ac-ico">🟢</div><div><div class="ac-t">Check — Exceeding societies: ${star.length}</div><div class="ac-d">Document best practices from: ${topWinners}</div></div></div>
-      <div class="alert-card" style="border-left-color:var(--g-blue);margin-bottom:6px;"><div class="ac-ico">🔵</div><div><div class="ac-t">Act — Update tomorrow's targets</div><div class="ac-d">Adjust routes for ${todo.length + warn.length} underperforming societies. Share today's leaderboard.</div></div></div>`;
+      <div class="alert-card ac-r" style="margin-bottom:6px;cursor:pointer;" onclick="goTab('alerts',null);">
+        <div class="ac-ico">🔴</div><div><div class="ac-t">Plan — Zero collection: ${todo.length} societies</div>
+        <div class="ac-d">Immediate field calls to: <strong>${issues}</strong></div></div></div>
+      <div class="alert-card ac-a" style="margin-bottom:6px;">
+        <div class="ac-ico">🟡</div><div><div class="ac-t">Do — Below-target: ${warn.length} societies</div>
+        <div class="ac-d">Check route/vehicle/chilling: <strong>${warnSocs}</strong></div></div></div>
+      <div class="alert-card ac-g" style="margin-bottom:6px;">
+        <div class="ac-ico">🟢</div><div><div class="ac-t">Check — Exceeding: ${star.length} societies</div>
+        <div class="ac-d">Document best practices from: <strong>${topWinners}</strong></div></div></div>
+      <div class="alert-card" style="border-left-color:var(--g-blue);">
+        <div class="ac-ico">🔵</div><div><div class="ac-t">Act — Adjust tomorrow's plan</div>
+        <div class="ac-d">Redirect resources from ${star.length} strong → ${todo.length+warn.length} underperforming societies</div></div></div>`;
   }
 
-  // Theory of Constraints — bottleneck societies
   const constrEl = document.getElementById('dm-constraints');
   if (constrEl) {
     const allSocStats = socs.map(s => {
       const rows = data.filter(r => r.society === s);
-      const total = rows.reduce((a, r) => a + r.total, 0);
-      const missed = rows.filter(r => r.total === 0).length;
-      const rep = Math.round((rows.length - missed) / Math.max(totalDays, 1) * 100);
-      return { name: s, total, missed, rep };
-    });
-    const constraints = allSocStats.sort((a, b) => (b.missed / Math.max(b.total, 1)) - (a.missed / Math.max(a.total, 1))).slice(0, 6);
-    constrEl.innerHTML = constraints.map(s => `
-      <div class="mini-bar-row">
-        <div class="mini-bar-lbl">${s.name}</div>
+      const total = rows.reduce((a,r)=>a+r.total,0);
+      const missed = rows.filter(r=>r.total===0).length;
+      const rep = Math.round((rows.length-missed)/Math.max(totalDays,1)*100);
+      const constraint = (missed/Math.max(rows.length,1))*100 + (100-rep)*0.5;
+      return { name:s, total, missed, rep, constraint };
+    }).sort((a,b)=>b.constraint-a.constraint).slice(0,8);
+
+    constrEl.innerHTML = allSocStats.map(s => `
+      <div class="mini-bar-row" style="cursor:pointer;" onclick="goTab('tracker',null);setTimeout(()=>{const p=document.getElementById('trk-picker');if(p){p.value='${s.name}';renderTracker();}},100);">
+        <div class="mini-bar-lbl" title="${s.name}">${s.name.length>16?s.name.slice(0,16)+'…':s.name}</div>
         <div style="flex:1;font-size:11.5px;color:${s.missed>5?'#ea4335':'#ea8600'};font-family:var(--mono);">${s.missed} missed · ${s.rep}% rep</div>
-        <div style="font-size:11px;"><span class="bdg ${s.rep<40?'b-r':s.rep<60?'b-a':'b-b'}">${s.rep<40?'Critical':s.rep<60?'At Risk':'Monitor'}</span></div>
+        <span class="bdg ${s.rep<40?'b-r':s.rep<60?'b-a':'b-b'}">${s.rep<40?'Critical':s.rep<60?'At Risk':'Monitor'}</span>
       </div>`).join('') || '<div style="color:var(--txt3);font-size:12px;padding:8px 0;">No data available.</div>';
   }
 }
