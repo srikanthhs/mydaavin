@@ -9,6 +9,27 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+  import { getFirestore, doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+  const firebaseConfig = {
+    apiKey: "AIzaSyB2Cbw8w-Ygfz-6Wqtx3oV_95dD1Z4bcAQ",
+    authDomain: "milkmyd-2f028.firebaseapp.com",
+    projectId: "milkmyd-2f028",
+    storageBucket: "milkmyd-2f028.firebasestorage.app",
+    messagingSenderId: "578701442998",
+    appId: "1:578701442998:web:cff332f5e025d4728acb17",
+    measurementId: "G-09LN3Z4WZ0"
+  };
+  const app = initializeApp(firebaseConfig);
+  const db  = getFirestore(app);
+  window._fbDb      = db;
+  window._fbDoc     = doc;
+  window._fbSetDoc  = setDoc;
+  window._fbGetDoc  = getDoc;
+  window._fbReady   = true;
+  window.dispatchEvent(new Event('firebase-ready'));
+</script>
 <style>
 :root {
   --bg:       #f8f9fa;
@@ -584,6 +605,10 @@ body{background:var(--bg);color:var(--txt);font-family:var(--font);font-size:13.
       <div class="dot" id="conn-dot" style="background:var(--txt3);"></div>
       <span id="conn-txt">Not connected</span>
     </div>
+    <div class="conn" style="margin-top:2px;">
+      <div class="dot dot-g" id="fb-dot"></div>
+      <span id="fb-txt" style="font-size:10.5px;">Firebase sync active</span>
+    </div>
   </div>
 </div>
 
@@ -841,28 +866,24 @@ body{background:var(--bg);color:var(--txt);font-family:var(--font);font-size:13.
         </div>
         <label class="set-label" style="margin-top:10px;">API Key</label>
         <div style="display:flex;gap:8px;margin-bottom:6px;align-items:center;">
-          <input type="password" class="ctrl" id="api-key-inp" placeholder="Paste your API key here…" style="flex:1;font-family:var(--mono);font-size:12.5px;" oninput="saveSettings()">
+          <input type="password" class="ctrl" id="api-key-inp" placeholder="Paste your API key here…" style="flex:1;font-family:var(--mono);font-size:12.5px;" oninput="saveSettings()" value="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">
           <button class="btn btn-o" onclick="toggleApiKeyVis()" style="padding:6px 12px;">👁</button>
           <button class="btn btn-p" onclick="testApiKey()">Test</button>
         </div>
-        <div id="api-key-status" style="font-size:11.5px;color:var(--txt3);margin-top:4px;"></div>
+        <div id="api-key-status" style="font-size:11.5px;color:var(--g-green);margin-top:4px;">✅ Groq API key configured</div>
       </div>
 
       <div class="set-card">
         <div class="set-title">🔗 Google Sheets Connection</div>
         <div class="set-sub">
-          Publish your sheet as a CSV (File → Share → Publish to web → CSV), then paste the URL below.
-          The dashboard reads data from columns: <b>Date, Society, Morning, Evening, Total, Notes</b> (case-insensitive, flexible naming).
+          Connected to Mayiladuthurai DCMPU procurement sheet. Data syncs automatically on every page load.
         </div>
         <label class="set-label">Published CSV URL</label>
         <div style="display:flex;gap:8px;margin-bottom:6px;">
-          <input type="url" class="ctrl" id="gs-url" placeholder="https://docs.google.com/spreadsheets/d/…/pub?output=csv" style="flex:1;">
-          <button class="btn btn-p" onclick="connectSheet()">Connect &amp; Fetch</button>
+          <input type="url" class="ctrl" id="gs-url" value="https://docs.google.com/spreadsheets/d/e/2PACX-1vQoidPzsC2uuXAckFPgBBtwmz0y8Wqz4D9NaI2ay3vl28X7P28z2W4vBYj_l-W9_w/pub?output=csv" style="flex:1;color:var(--txt3);font-size:12px;">
+          <button class="btn btn-p" onclick="connectSheet()">↻ Refresh</button>
         </div>
-        <div class="set-hint">
-          How to get the URL: Open your Google Sheet → File → Share → Publish to web → select the sheet → choose CSV → click Publish → copy the URL.<br>
-          <a href="https://support.google.com/docs/answer/183965" target="_blank">↗ Step-by-step guide</a>
-        </div>
+        <div class="set-hint" style="color:var(--g-green);">✅ Sheet connected · data loads automatically on every device</div>
       </div>
 
       <div class="set-card">
@@ -1475,9 +1496,14 @@ body{background:var(--bg);color:var(--txt);font-family:var(--font);font-size:13.
 //  STATE
 // ══════════════════════════════════════════════════════
 const LS_KEY = 'myl_v1';
+// ── HARDCODED DEFAULTS ──────────────────────────────────
+const HARDCODED_URL    = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQoidPzsC2uuXAckFPgBBtwmz0y8Wqz4D9NaI2ay3vl28X7P28z2W4vBYj_l-W9_w/pub?output=csv';
+const HARDCODED_APIKEY = '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';
+const HARDCODED_PROVIDER = 'groq';
+// ────────────────────────────────────────────────────────
 let _rows  = [];          // [{date,society,district,morning,evening,total,notes}]
 let _filtered = [];       // filtered by date range + district
-let _cfg   = {url:'', interval:0, apiKey:'', provider:'groq', groqModel:'llama-3.3-70b-versatile'};
+let _cfg   = {url: HARDCODED_URL, interval:0, apiKey: HARDCODED_APIKEY, provider: HARDCODED_PROVIDER, groqModel:'llama-3.3-70b-versatile'};
 let _timer = null;
 let _syncLogs = [];
 let _dlPage = 0;
@@ -1506,12 +1532,11 @@ window.addEventListener('DOMContentLoaded', () => {
 
     setDefaultDateRange();
 
-    if (_cfg.url) {
-      document.getElementById('setup-banner').classList.add('hide');
-      fetchNow();
-    } else {
-      renderAll();
-    }
+    // Always hide setup banner — sheet URL is hardcoded
+    document.getElementById('setup-banner')?.classList.add('hide');
+
+    // Always auto-fetch
+    fetchNow();
   }, 700);
 });
 
@@ -2361,31 +2386,58 @@ function updateAlertBadge() {
 function loadSettings() {
   try {
     const d = JSON.parse(localStorage.getItem(LS_KEY)||'{}');
-    _cfg.url       = d.url       || '';
+    _cfg.url       = d.url       || HARDCODED_URL;
     _cfg.interval  = d.interval  || 0;
-    _cfg.apiKey    = d.apiKey    || '';
-    _cfg.provider  = d.provider  || 'groq';
+    _cfg.apiKey    = d.apiKey    || HARDCODED_APIKEY;
+    _cfg.provider  = d.provider  || HARDCODED_PROVIDER;
     _cfg.groqModel = d.groqModel || 'llama-3.3-70b-versatile';
     _syncLogs      = d.logs      || [];
-    if (d.url)      { const el=document.getElementById('gs-url');       if(el) el.value=d.url; }
-    if (d.interval) { const el=document.getElementById('gs-interval');  if(el) el.value=d.interval; }
-    if (d.apiKey)   { const el=document.getElementById('api-key-inp');  if(el) el.value=d.apiKey; }
-    if (d.groqModel){ const el=document.getElementById('groq-model-sel'); if(el) el.value=d.groqModel; }
+    const urlEl = document.getElementById('gs-url');       if(urlEl) urlEl.value = _cfg.url;
+    const intEl = document.getElementById('gs-interval');  if(intEl && _cfg.interval) intEl.value = _cfg.interval;
+    const keyEl = document.getElementById('api-key-inp');  if(keyEl) keyEl.value = _cfg.apiKey;
+    const modEl = document.getElementById('groq-model-sel'); if(modEl) modEl.value = _cfg.groqModel;
     renderSyncLog();
     if (_cfg.url && _cfg.interval>0) startTimer();
   } catch(e){}
+  // Also try to pull from Firebase (cross-device sync)
+  fbLoadSettings();
+}
+
+async function fbLoadSettings() {
+  try {
+    if (!window._fbReady) return;
+    const snap = await window._fbGetDoc(window._fbDoc(window._fbDb, 'config', 'app'));
+    if (!snap.exists()) return;
+    const d = snap.data();
+    // Only overwrite non-hardcoded fields (interval, groqModel, logs)
+    if (d.interval !== undefined) _cfg.interval = d.interval;
+    if (d.groqModel)              _cfg.groqModel = d.groqModel;
+    if (d.logs)                   _syncLogs = d.logs;
+    const intEl = document.getElementById('gs-interval'); if(intEl && _cfg.interval) intEl.value = _cfg.interval;
+    const modEl = document.getElementById('groq-model-sel'); if(modEl) modEl.value = _cfg.groqModel;
+    renderSyncLog();
+  } catch(e) {}
 }
 
 function saveSettings() {
   try {
-    const url       = document.getElementById('gs-url')?.value?.trim()        || _cfg.url;
+    const url       = document.getElementById('gs-url')?.value?.trim()        || HARDCODED_URL;
     const interval  = parseInt(document.getElementById('gs-interval')?.value||'0') || 0;
-    const apiKey    = document.getElementById('api-key-inp')?.value?.trim()   || _cfg.apiKey;
+    const apiKey    = document.getElementById('api-key-inp')?.value?.trim()   || HARDCODED_APIKEY;
     const groqModel = document.getElementById('groq-model-sel')?.value        || _cfg.groqModel || 'llama-3.3-70b-versatile';
     _cfg.url=url; _cfg.interval=interval; _cfg.apiKey=apiKey; _cfg.groqModel=groqModel;
     localStorage.setItem(LS_KEY, JSON.stringify({url,interval,apiKey,provider:_cfg.provider,groqModel,logs:_syncLogs.slice(-30)}));
     if (interval>0) startTimer(); else if(_timer) { clearInterval(_timer); _timer=null; }
+    // Sync to Firebase (non-blocking)
+    fbSaveSettings({url, interval, apiKey, provider: _cfg.provider, groqModel, logs: _syncLogs.slice(-30)});
   } catch(e){}
+}
+
+async function fbSaveSettings(data) {
+  try {
+    if (!window._fbReady) return;
+    await window._fbSetDoc(window._fbDoc(window._fbDb, 'config', 'app'), data, {merge: true});
+  } catch(e) {}
 }
 
 function startTimer() {
