@@ -477,6 +477,21 @@ body{background:var(--bg);color:var(--txt);font-family:var(--font);font-size:13.
   .topbar-right .btn-o{display:none;}
 }
 @media(max-width:480px){.g2,.g3,.g4,.g5{grid-template-columns:1fr;}}
+
+/* ── MORNING CHECKLIST ── */
+.cl-item{padding:10px 12px;border:1px solid var(--brd);border-radius:8px;cursor:pointer;transition:all .15s;background:var(--surface);}
+.cl-item:hover{border-color:var(--green);box-shadow:var(--sh1);}
+.cl-ok{border-left:3px solid #34a853;background:#f0faf4;}
+.cl-warn{border-left:3px solid #fbbc04;background:#fffdf0;}
+.cl-na{border-left:3px solid #9aa0a6;background:#f8f9fa;opacity:.7;}
+.cl-pending{border-left:3px solid var(--brd);}
+.cl-status-icon{font-size:16px;flex-shrink:0;}
+
+/* ── AI PROVIDER BUTTONS ── */
+.provider-btn{padding:10px 16px;border:1.5px solid var(--brd);border-radius:8px;background:var(--surface);cursor:pointer;font-family:var(--font);font-size:13px;font-weight:500;color:var(--txt);text-align:left;transition:all .15s;min-width:150px;}
+.provider-btn:hover{border-color:var(--g-blue);background:#f0f4ff;}
+.provider-btn.active{border-color:var(--g-blue);background:#e8f0fe;color:var(--g-blue);}
+.prov-info{padding:8px 12px;background:var(--bg);border-radius:6px;border:1px solid var(--brd);margin-bottom:8px;}
 </style>
 </head>
 <body>
@@ -761,15 +776,42 @@ body{background:var(--bg);color:var(--txt);font-family:var(--font);font-size:13.
     <div class="tab-panel" id="tab-settings">
 
       <div class="set-card">
-        <div class="set-title">🔑 Anthropic API Key</div>
+        <div class="set-title">🤖 AI Provider &amp; API Key</div>
         <div class="set-sub">
-          Required for AI Insights, Action Plan, Reports, and Cattle Planning AI features. Your key is stored only in this browser (localStorage) and sent directly to Anthropic's API — never to any other server.
-          Get your key at <a href="https://console.anthropic.com/settings/keys" target="_blank">console.anthropic.com →</a>
+          Choose your AI provider. All keys are stored only in this browser and sent directly to the provider — never to any other server.
         </div>
+
+        <!-- Provider toggle -->
+        <div style="display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap;">
+          <button class="provider-btn" id="prov-anthropic" onclick="setProvider('anthropic')">
+            <span style="font-size:16px;">🟣</span> Anthropic Claude
+            <div style="font-size:10.5px;color:var(--txt3);margin-top:2px;">Paid · $5 free credit</div>
+          </button>
+          <button class="provider-btn" id="prov-gemini" onclick="setProvider('gemini')">
+            <span style="font-size:16px;">🔵</span> Google Gemini
+            <div style="font-size:10.5px;color:var(--txt3);margin-top:2px;">Free · 1500 req/day</div>
+          </button>
+          <button class="provider-btn" id="prov-groq" onclick="setProvider('groq')">
+            <span style="font-size:16px;">⚡</span> Groq (Llama 3)
+            <div style="font-size:10.5px;color:var(--txt3);margin-top:2px;">Free · Fast inference</div>
+          </button>
+        </div>
+
+        <!-- Provider-specific instructions -->
+        <div id="prov-info-anthropic" class="prov-info" style="display:none;">
+          <div class="set-hint" style="margin-bottom:8px;">Get key at <a href="https://console.anthropic.com/settings/keys" target="_blank">console.anthropic.com →</a> · Model used: <code>claude-sonnet-4-6</code></div>
+        </div>
+        <div id="prov-info-gemini" class="prov-info" style="display:none;">
+          <div class="set-hint" style="margin-bottom:8px;">Get free key at <a href="https://aistudio.google.com/app/apikey" target="_blank">aistudio.google.com →</a> · Model used: <code>gemini-1.5-flash</code> · 1500 free requests/day, no credit card needed</div>
+        </div>
+        <div id="prov-info-groq" class="prov-info" style="display:none;">
+          <div class="set-hint" style="margin-bottom:8px;">Get free key at <a href="https://console.groq.com/keys" target="_blank">console.groq.com →</a> · Model used: <code>llama3-8b-8192</code> · Free tier, very fast</div>
+        </div>
+
         <label class="set-label">API Key</label>
         <div style="display:flex;gap:8px;margin-bottom:6px;align-items:center;">
-          <input type="password" class="ctrl" id="api-key-inp" placeholder="sk-ant-api03-…" style="flex:1;font-family:var(--mono);font-size:12.5px;" oninput="saveSettings()">
-          <button class="btn btn-o" onclick="toggleApiKeyVis()" id="api-key-vis-btn" style="padding:6px 12px;">👁</button>
+          <input type="password" class="ctrl" id="api-key-inp" placeholder="Paste your API key here…" style="flex:1;font-family:var(--mono);font-size:12.5px;" oninput="saveSettings()">
+          <button class="btn btn-o" onclick="toggleApiKeyVis()" style="padding:6px 12px;">👁</button>
           <button class="btn btn-p" onclick="testApiKey()">Test</button>
         </div>
         <div id="api-key-status" style="font-size:11.5px;color:var(--txt3);margin-top:4px;"></div>
@@ -1236,7 +1278,7 @@ body{background:var(--bg);color:var(--txt);font-family:var(--font);font-size:13.
 const LS_KEY = 'myl_v1';
 let _rows  = [];          // [{date,society,district,morning,evening,total,notes}]
 let _filtered = [];       // filtered by date range + district
-let _cfg   = {url:'', interval:0, apiKey:''};
+let _cfg   = {url:'', interval:0, apiKey:'', provider:'gemini'};
 let _timer = null;
 let _syncLogs = [];
 let _dlPage = 0;
@@ -1252,6 +1294,7 @@ let _hubChart = null, _trkChart = null, _distChart = null, _expChart = null;
 // ══════════════════════════════════════════════════════
 window.addEventListener('DOMContentLoaded', () => {
   loadSettings();
+  initProviderUI();
   setLd('Loading settings…');
   setTimeout(() => {
     setLd('Ready');
@@ -2002,6 +2045,7 @@ function loadSettings() {
     _cfg.url      = d.url      || '';
     _cfg.interval = d.interval || 0;
     _cfg.apiKey   = d.apiKey   || '';
+    _cfg.provider = d.provider || 'gemini';
     _syncLogs     = d.logs     || [];
     if (d.url) {
       const el = document.getElementById('gs-url'); if(el) el.value=d.url;
@@ -2023,7 +2067,7 @@ function saveSettings() {
     const interval = parseInt(document.getElementById('gs-interval')?.value||'0')||0;
     const apiKey = document.getElementById('api-key-inp')?.value?.trim()||_cfg.apiKey;
     _cfg.url=url; _cfg.interval=interval; _cfg.apiKey=apiKey;
-    localStorage.setItem(LS_KEY, JSON.stringify({url,interval,apiKey,logs:_syncLogs.slice(-30)}));
+    localStorage.setItem(LS_KEY, JSON.stringify({url,interval,apiKey,provider:_cfg.provider,logs:_syncLogs.slice(-30)}));
     if (interval>0) startTimer(); else if(_timer) { clearInterval(_timer); _timer=null; }
   } catch(e){}
 }
@@ -2110,8 +2154,65 @@ function fmtDate(d){
 }
 function getApiKey() {
   const key = (document.getElementById('api-key-inp')?.value?.trim()) || _cfg.apiKey || '';
-  if (!key) throw new Error('No API key set. Go to Settings → Anthropic API Key and enter your key.');
+  if (!key) throw new Error('No API key set. Go to ⚙️ Settings → AI Provider and enter your key.');
   return key;
+}
+
+function setProvider(p) {
+  _cfg.provider = p;
+  saveSettings();
+  ['anthropic','gemini','groq'].forEach(id => {
+    document.getElementById('prov-'+id)?.classList.toggle('active', id===p);
+    const info = document.getElementById('prov-info-'+id);
+    if (info) info.style.display = id===p ? 'block' : 'none';
+  });
+  const placeholders = { anthropic:'sk-ant-api03-…', gemini:'AIza…', groq:'gsk_…' };
+  const inp = document.getElementById('api-key-inp');
+  if (inp) inp.placeholder = placeholders[p] || 'Paste your API key…';
+  const st = document.getElementById('api-key-status');
+  if (st) st.textContent = '';
+}
+
+function initProviderUI() { setProvider(_cfg.provider || 'gemini'); }
+
+async function callAI(prompt, maxTokens=1500) {
+  const key = getApiKey();
+  const provider = _cfg.provider || 'gemini';
+
+  if (provider === 'anthropic') {
+    const res = await fetch('https://api.anthropic.com/v1/messages', {
+      method:'POST',
+      headers:{'Content-Type':'application/json','x-api-key':key,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},
+      body:JSON.stringify({model:'claude-sonnet-4-6',max_tokens:maxTokens,messages:[{role:'user',content:prompt}]})
+    });
+    const d = await res.json();
+    if (!res.ok) throw new Error(d.error?.message || `Anthropic error ${res.status}`);
+    return d.content?.map(c=>c.text||'').join('') || '';
+  }
+
+  if (provider === 'gemini') {
+    const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${key}`, {
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({contents:[{parts:[{text:prompt}]}],generationConfig:{maxOutputTokens:maxTokens,temperature:0.4}})
+    });
+    const d = await res.json();
+    if (!res.ok) throw new Error(d.error?.message || `Gemini error ${res.status}`);
+    return d.candidates?.[0]?.content?.parts?.[0]?.text || '';
+  }
+
+  if (provider === 'groq') {
+    const res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+      method:'POST',
+      headers:{'Content-Type':'application/json','Authorization':`Bearer ${key}`},
+      body:JSON.stringify({model:'llama3-8b-8192',max_tokens:maxTokens,temperature:0.4,messages:[{role:'user',content:prompt}]})
+    });
+    const d = await res.json();
+    if (!res.ok) throw new Error(d.error?.message || `Groq error ${res.status}`);
+    return d.choices?.[0]?.message?.content || '';
+  }
+
+  throw new Error('Unknown provider: ' + provider);
 }
 
 function toggleApiKeyVis() {
@@ -2123,23 +2224,14 @@ function toggleApiKeyVis() {
 async function testApiKey() {
   const statusEl = document.getElementById('api-key-status');
   const key = document.getElementById('api-key-inp')?.value?.trim();
-  if (!key) { if (statusEl) { statusEl.textContent = '⚠️ Enter a key first'; statusEl.style.color='#ea8600'; } return; }
-  if (statusEl) { statusEl.textContent = '⏳ Testing…'; statusEl.style.color='var(--txt3)'; }
+  if (!key) { if(statusEl){statusEl.textContent='⚠️ Enter a key first';statusEl.style.color='#ea8600';} return; }
+  if (statusEl) { statusEl.textContent='⏳ Testing…'; statusEl.style.color='var(--txt3)'; }
   try {
-    const res = await fetch('https://api.anthropic.com/v1/messages', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'x-api-key': key, 'anthropic-version': '2023-06-01', 'anthropic-dangerous-direct-browser-access': 'true' },
-      body: JSON.stringify({ model: 'claude-sonnet-4-6', max_tokens: 10, messages: [{ role: 'user', content: 'Hi' }] })
-    });
-    const d = await res.json();
-    if (res.ok) {
-      if (statusEl) { statusEl.textContent = '✅ API key valid — AI features ready'; statusEl.style.color='#137333'; }
-      _cfg.apiKey = key; saveSettings();
-    } else {
-      if (statusEl) { statusEl.textContent = '❌ ' + (d.error?.message || 'Invalid key'); statusEl.style.color='#c5221f'; }
-    }
+    await callAI('Reply with only: ok', 10);
+    if (statusEl) { statusEl.textContent='✅ Key valid — AI features ready (' + (_cfg.provider||'gemini') + ')'; statusEl.style.color='#137333'; }
+    _cfg.apiKey = key; saveSettings();
   } catch(e) {
-    if (statusEl) { statusEl.textContent = '❌ ' + e.message; statusEl.style.color='#c5221f'; }
+    if (statusEl) { statusEl.textContent='❌ ' + e.message; statusEl.style.color='#c5221f'; }
   }
 }
 
@@ -2557,10 +2649,7 @@ async function generateInsights() {
     + 'TOP 8:\n'+top8+'\n\nBOTTOM 5:\n'+bot5+'\n\n'
     + 'Return EXACTLY 5 insights as a JSON array. Each: {"type":"positive"|"warning"|"critical","title":"max 8 words","body":"2-3 sentences, specific numbers, actionable advice to boost collection"}.\nReturn ONLY the JSON array, no markdown.';
   try {
-    const res  = await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json','x-api-key':getApiKey(),'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},body:JSON.stringify({model:'claude-sonnet-4-6',max_tokens:1000,messages:[{role:'user',content:prompt}]})});
-    const d    = await res.json();
-    if (!res.ok) throw new Error((d.error?.message)||`API error ${res.status}`);
-    const raw  = extractJSON(d.content?.map(c=>c.text||'').join(''));
+    const raw  = extractJSON(await callAI(prompt, 1000));
     const ins  = JSON.parse(raw);
     const tmap = {positive:'ins-card',warning:'ins-card warn',critical:'ins-card crit'};
     out.innerHTML = ins.map(i=>`<div class="${tmap[i.type]||'ins-card'}"><div class="ins-title">${i.title}</div><div class="ins-body">${i.body}</div></div>`).join('');
@@ -2802,18 +2891,7 @@ async function generateCattleInsights() {
     + '\nReturn ONLY the JSON array, no markdown.';
 
   try {
-    const res = await fetch('https://api.anthropic.com/v1/messages', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'x-api-key': getApiKey(), 'anthropic-version': '2023-06-01', 'anthropic-dangerous-direct-browser-access': 'true' },
-      body: JSON.stringify({
-        model: 'claude-sonnet-4-6',
-        max_tokens: 1500,
-        messages: [{ role: 'user', content: prompt }]
-      })
-    });
-    const d   = await res.json();
-    if (!res.ok) throw new Error((d.error?.message)||`API error ${res.status}`);
-    const raw = extractJSON(d.content?.map(c => c.text || '').join(''));
+    const raw = extractJSON(await callAI(prompt, 1500));
     const recs = JSON.parse(raw);
     const tmap = { action: 'ins-card', insight: 'ins-card', warning: 'ins-card warn' };
     const pmap = { High: '🔴 High Priority', Medium: '🟡 Medium Priority' };
@@ -2983,10 +3061,7 @@ async function generateActionPlan() {
     + 'Return ONLY the JSON array.';
 
   try {
-    const res  = await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json','x-api-key':getApiKey(),'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},body:JSON.stringify({model:'claude-sonnet-4-6',max_tokens:2000,messages:[{role:'user',content:prompt}]})});
-    const d    = await res.json();
-    if (!res.ok) throw new Error((d.error?.message)||`API error ${res.status}`);
-    const raw  = extractJSON(d.content?.map(c=>c.text||'').join(''));
+    const raw  = extractJSON(await callAI(prompt, 2000));
     const items= JSON.parse(raw);
     if (sub) sub.textContent = '— '+items.length+' items · '+new Date().toLocaleString('en-IN',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'});
     const priCls  = {High:'ap-priority-high',Medium:'ap-priority-medium',Low:'ap-priority-low'};
@@ -3195,10 +3270,7 @@ async function generateReport() {
   }
 
   try {
-    const res  = await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json','x-api-key':getApiKey(),'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},body:JSON.stringify({model:'claude-sonnet-4-6',max_tokens:2000,messages:[{role:'user',content:prompt}]})});
-    const d    = await res.json();
-    if (!res.ok) throw new Error((d.error?.message)||`API error ${res.status}`);
-    const raw  = extractJSON(d.content?.map(c=>c.text||'').join(''));
+    const raw  = extractJSON(await callAI(prompt, 2000));
     const rpt  = JSON.parse(raw);
     _reportText = formatReportText(rpt, _reportScope);
 
