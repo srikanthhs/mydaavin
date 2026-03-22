@@ -230,6 +230,83 @@ body{background:var(--bg);color:var(--txt);font-family:var(--font);font-size:13.
 .sb-hd{font-size:14px;font-weight:600;color:var(--green);margin-bottom:2px;}
 .sb-dd{font-size:12.5px;color:var(--txt2);}
 
+/* ── DISTRICT FILTER ── */
+.dist-sel{background:var(--bg);border:1.5px solid var(--s2);border-radius:var(--r);padding:5px 10px;font-family:var(--font);font-size:12.5px;color:var(--txt);outline:none;transition:all .15s;min-width:140px;}
+.dist-sel:focus{border-color:var(--green);background:var(--surface);}
+
+/* ── MINI BAR (shared) ── */
+.mini-bar-row{display:flex;align-items:center;gap:8px;padding:5px 0;border-bottom:1px solid rgba(0,60,40,.04);}
+.mini-bar-row:last-child{border-bottom:none;}
+.mini-bar-lbl{font-size:12px;color:var(--txt2);width:140px;flex-shrink:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.mini-bar-track{flex:1;background:var(--s2);border-radius:100px;height:6px;overflow:hidden;}
+.mini-bar-fill{height:100%;border-radius:100px;background:var(--green);transition:width .7s cubic-bezier(.4,0,.2,1);}
+.mini-bar-val{font-size:11.5px;color:var(--txt2);width:65px;text-align:right;font-family:var(--mono);}
+
+/* ── HUB CARDS ── */
+.hcard{background:var(--surface);border:1px solid var(--brd);border-radius:var(--r2);padding:16px 18px;box-shadow:var(--sh1);position:relative;overflow:hidden;}
+.hcard::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;border-radius:var(--r2) var(--r2) 0 0;}
+.hc-g::before{background:linear-gradient(90deg,var(--green),var(--teal));}
+.hc-r::before{background:var(--red);}
+.hc-a::before{background:var(--amber);}
+.hc-b::before{background:var(--blue);}
+.hc-lbl{font-size:10.5px;color:var(--txt3);text-transform:uppercase;letter-spacing:.07em;font-weight:500;margin-bottom:6px;}
+.hc-val{font-size:26px;font-weight:300;line-height:1;letter-spacing:-.02em;margin-bottom:4px;}
+.hc-sub{font-size:11.5px;color:var(--txt3);}
+.action-row{display:flex;gap:10px;padding:9px 12px;border-radius:var(--r);margin-bottom:6px;border-left:3px solid var(--green);background:var(--surface);border:1px solid var(--brd);border-left:3px solid var(--green);}
+.action-row.crit{border-left-color:var(--red);background:#fffafa;}
+.action-row.warn{border-left-color:var(--amber);background:#fffdf5;}
+.action-row.ok{border-left-color:var(--green);background:#f5fbf8;}
+.ar-lbl{font-size:12.5px;font-weight:500;color:var(--txt);}
+.ar-sub{font-size:11.5px;color:var(--txt2);margin-top:2px;line-height:1.5;}
+
+/* ── TRACKER ── */
+.soc-picker{background:var(--bg);border:1.5px solid var(--s2);border-radius:var(--r);padding:7px 11px;font-family:var(--font);font-size:13px;color:var(--txt);outline:none;min-width:220px;}
+.soc-picker:focus{border-color:var(--green);}
+.goal-inp{background:var(--bg);border:1.5px solid var(--s2);border-radius:var(--r);padding:6px 10px;font-family:var(--font);font-size:13px;color:var(--txt);outline:none;width:100px;}
+.goal-inp:focus{border-color:var(--green);}
+.ts{padding:12px 14px;background:var(--bg);border-radius:var(--r);border:1px solid var(--brd);text-align:center;}
+.ts-val{font-size:22px;font-weight:300;letter-spacing:-.02em;margin-bottom:2px;}
+.ts-lbl{font-size:10.5px;color:var(--txt3);text-transform:uppercase;letter-spacing:.06em;font-weight:500;}
+.ts-sub{font-size:11px;color:var(--txt3);margin-top:2px;}
+.streak{display:inline-flex;align-items:center;gap:5px;padding:4px 12px;border-radius:100px;font-size:12px;font-weight:600;}
+.streak-hot{background:#fff3dc;color:#8f5700;}
+.streak-ok{background:#d6f5e8;color:#0a6040;}
+.streak-cold{background:#fdecea;color:#b52a1c;}
+
+/* ── EXPANSION ── */
+.exp-card{background:var(--surface);border:1px solid var(--brd);border-radius:var(--r);padding:11px 14px;margin-bottom:7px;display:flex;gap:10px;align-items:flex-start;}
+.exp-card.grow{border-left:3px solid var(--green);}
+.exp-card.risk{border-left:3px solid var(--amber);}
+.exp-card.dead{border-left:3px solid var(--red);}
+.exp-title{font-size:13px;font-weight:500;color:var(--txt);margin-bottom:2px;}
+.exp-detail{font-size:12px;color:var(--txt2);line-height:1.5;}
+.exp-tag{display:inline-block;padding:1px 8px;border-radius:100px;font-size:10.5px;font-weight:600;margin-left:5px;}
+.tg-grow{background:#d6f5e8;color:#0a6040;}
+.tg-risk{background:#fff3dc;color:#8f5700;}
+.tg-dead{background:#fdecea;color:#b52a1c;}
+
+/* ── DISTRICT COMP ── */
+.dist-card{background:var(--surface);border:1px solid var(--brd);border-radius:var(--r2);padding:14px 16px;box-shadow:var(--sh1);}
+.dist-card.focus{border-color:var(--green);box-shadow:0 0 0 1.5px var(--green);}
+.dist-head{font-size:13px;font-weight:600;color:var(--green);padding-bottom:10px;border-bottom:1px solid var(--brd);margin-bottom:10px;}
+.dist-row{display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px solid rgba(0,60,40,.04);font-size:12.5px;}
+.dist-row:last-child{border-bottom:none;}
+.dist-val{font-weight:500;font-family:var(--mono);}
+
+/* ── AI INSIGHTS ── */
+.ai-btn{display:flex;align-items:center;gap:8px;padding:9px 18px;border-radius:var(--r);background:linear-gradient(135deg,var(--green),var(--teal));color:#fff;border:none;font-family:var(--font);font-size:13px;font-weight:500;cursor:pointer;transition:all .18s;box-shadow:0 2px 8px rgba(10,124,82,.25);}
+.ai-btn:hover{filter:brightness(1.08);}
+.ai-btn:disabled{opacity:.6;cursor:not-allowed;}
+.ai-thinking{display:flex;align-items:center;gap:8px;color:var(--txt3);font-size:13px;padding:14px 0;}
+.ai-dot{width:7px;height:7px;border-radius:50%;background:var(--green);animation:aip .9s ease-in-out infinite;}
+.ai-dot:nth-child(2){animation-delay:.2s;}.ai-dot:nth-child(3){animation-delay:.4s;}
+@keyframes aip{0%,100%{opacity:.2;transform:scale(.8)}50%{opacity:1;transform:scale(1)}}
+.ins-card{background:var(--surface);border:1px solid var(--brd);border-radius:var(--r);padding:12px 15px;margin-bottom:8px;border-left:3px solid var(--green);}
+.ins-card.warn{border-left-color:var(--amber);}
+.ins-card.crit{border-left-color:var(--red);}
+.ins-title{font-size:13px;font-weight:500;color:var(--txt);margin-bottom:3px;}
+.ins-body{font-size:12.5px;color:var(--txt2);line-height:1.6;}
+
 /* ── RESPONSIVE ── */
 @media(max-width:1100px){.g5{grid-template-columns:repeat(3,1fr);}.g4{grid-template-columns:repeat(2,1fr);}}
 @media(max-width:768px){
@@ -265,10 +342,27 @@ body{background:var(--bg);color:var(--txt);font-family:var(--font);font-size:13.
     <button class="sb-tog" onclick="togSB()" title="Toggle sidebar">☰</button>
   </div>
   <div class="sb-nav">
-    <div class="sb-grp">Reports</div>
+    <div class="sb-grp">Dashboard</div>
     <div class="sb-item act" onclick="goTab('overview',this)">
       <div class="sb-ico">📊</div><div class="sb-lbl">Overview</div>
     </div>
+    <div class="sb-item" onclick="goTab('hub',this)">
+      <div class="sb-ico">🏛</div><div class="sb-lbl">Management Hub</div>
+    </div>
+    <div class="sb-grp">Analysis</div>
+    <div class="sb-item" onclick="goTab('tracker',this)">
+      <div class="sb-ico">📍</div><div class="sb-lbl">Society Tracker</div>
+    </div>
+    <div class="sb-item" onclick="goTab('distcomp',this)">
+      <div class="sb-ico">🗺</div><div class="sb-lbl">District Comparison</div>
+    </div>
+    <div class="sb-item" onclick="goTab('expansion',this)">
+      <div class="sb-ico">🌱</div><div class="sb-lbl">Expansion Plan</div>
+    </div>
+    <div class="sb-item" onclick="goTab('insights',this)">
+      <div class="sb-ico">✨</div><div class="sb-lbl">AI Insights</div>
+    </div>
+    <div class="sb-grp">Records</div>
     <div class="sb-item" onclick="goTab('daily',this)">
       <div class="sb-ico">📅</div><div class="sb-lbl">Daily Log</div>
     </div>
@@ -325,6 +419,9 @@ body{background:var(--bg);color:var(--txt);font-family:var(--font);font-size:13.
       <button class="dr-pill" onclick="setRange('month')">This Month</button>
       <button class="dr-pill" onclick="setRange('all')">All</button>
     </div>
+    <select class="dist-sel" id="dist-filter" onchange="applyDateRange()">
+      <option value="">All Districts</option>
+    </select>
     <div class="dr-count" id="dr-count">—</div>
   </div>
 
@@ -553,6 +650,85 @@ body{background:var(--bg);color:var(--txt);font-family:var(--font);font-size:13.
 
     </div>
 
+    <!-- ═══ MANAGEMENT HUB ═══ -->
+    <div class="tab-panel" id="tab-hub">
+      <div class="g4" style="margin-bottom:12px;">
+        <div class="hcard hc-g"><div class="hc-lbl">Total Collection</div><div class="hc-val kv-g" id="hub-total">—</div><div class="hc-sub" id="hub-total-sub">selected period</div></div>
+        <div class="hcard hc-b"><div class="hc-lbl">Daily Average</div><div class="hc-val kv-b" id="hub-avg">—</div><div class="hc-sub" id="hub-avg-sub">litres / day</div></div>
+        <div class="hcard hc-a"><div class="hc-lbl">Active Societies</div><div class="hc-val kv-a" id="hub-soc">—</div><div class="hc-sub" id="hub-soc-sub">reporting in period</div></div>
+        <div class="hcard hc-r"><div class="hc-lbl">Critical Alerts</div><div class="hc-val kv-r" id="hub-crit">—</div><div class="hc-sub">missed + low days</div></div>
+      </div>
+      <div class="g2" style="margin-bottom:12px;">
+        <div class="card"><div class="card-t"><span class="ico">🏆</span> Top Performers</div><div id="hub-top"></div></div>
+        <div class="card"><div class="card-t"><span class="ico">🚨</span> Needs Attention</div><div id="hub-action"></div></div>
+      </div>
+      <div class="card">
+        <div class="card-t"><span class="ico">📈</span> Collection Trend — Mayiladuthurai District</div>
+        <div class="chart-wrap"><canvas id="hub-chart"></canvas></div>
+      </div>
+    </div>
+
+    <!-- ═══ SOCIETY TRACKER ═══ -->
+    <div class="tab-panel" id="tab-tracker">
+      <div class="card">
+        <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:14px;">
+          <div class="card-t" style="margin:0;"><span class="ico">📍</span> Society Tracker</div>
+          <select class="soc-picker" id="trk-picker" onchange="renderTracker()"><option value="">— Select a Society —</option></select>
+          <div style="display:flex;align-items:center;gap:6px;margin-left:auto;">
+            <span style="font-size:12px;color:var(--txt2);font-weight:500;">Daily Target (L):</span>
+            <input type="number" class="goal-inp" id="trk-goal" value="200" min="0" oninput="renderTracker()">
+          </div>
+        </div>
+        <div id="trk-empty" class="empty"><div class="empty-ico">📍</div><div class="empty-t">Select a society above</div><div class="empty-s">Set a daily target and monitor performance against it.</div></div>
+        <div id="trk-content" style="display:none;">
+          <div class="g5" style="margin-bottom:14px;" id="trk-stats"></div>
+          <div class="card" style="box-shadow:none;border:1px solid var(--brd);margin-bottom:12px;">
+            <div class="card-t"><span class="ico">📈</span> Daily Collection vs Target</div>
+            <div class="chart-wrap"><canvas id="trk-chart"></canvas></div>
+          </div>
+          <div class="g2">
+            <div class="card" style="box-shadow:none;border:1px solid var(--brd);"><div class="card-t"><span class="ico">🏆</span> Best 5 Days</div><div id="trk-best"></div></div>
+            <div class="card" style="box-shadow:none;border:1px solid var(--brd);"><div class="card-t"><span class="ico">📉</span> Lowest 5 Days</div><div id="trk-worst"></div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══ DISTRICT COMPARISON ═══ -->
+    <div class="tab-panel" id="tab-distcomp">
+      <div class="card" style="margin-bottom:12px;">
+        <div class="card-t"><span class="ico">🗺</span> District Comparison</div>
+        <div class="chart-wrap" style="height:300px;"><canvas id="dist-chart"></canvas></div>
+      </div>
+      <div id="dist-grid" class="g3"></div>
+    </div>
+
+    <!-- ═══ EXPANSION PLAN ═══ -->
+    <div class="tab-panel" id="tab-expansion">
+      <div class="g4" style="margin-bottom:12px;" id="exp-kpis"></div>
+      <div class="g2" style="margin-bottom:12px;">
+        <div class="card"><div class="card-t"><span class="ico">🚀</span> High-Growth — Scale Up</div><div id="exp-grow"></div></div>
+        <div class="card"><div class="card-t"><span class="ico">💤</span> Reactivation Needed</div><div id="exp-dead"></div></div>
+      </div>
+      <div class="g2">
+        <div class="card"><div class="card-t"><span class="ico">⚠️</span> At Risk — Intervene Now</div><div id="exp-risk"></div></div>
+        <div class="card"><div class="card-t"><span class="ico">📊</span> Volume Distribution</div><div class="chart-wrap"><canvas id="exp-chart"></canvas></div></div>
+      </div>
+    </div>
+
+    <!-- ═══ AI INSIGHTS ═══ -->
+    <div class="tab-panel" id="tab-insights">
+      <div class="card">
+        <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:6px;">
+          <div class="card-t" style="margin:0;"><span class="ico">✨</span> AI Insights</div>
+          <span style="font-size:12px;color:var(--txt3);flex:1;">Focused on improving milk collection volumes in Mayiladuthurai.</span>
+          <button class="ai-btn" id="ai-btn" onclick="generateInsights()">✨ Generate Insights</button>
+        </div>
+        <div style="font-size:11px;color:var(--txt3);margin-bottom:14px;font-family:var(--mono);" id="ai-ctx">—</div>
+        <div id="ai-out"><div class="empty"><div class="empty-ico">✨</div><div class="empty-t">No insights yet</div><div class="empty-s">Click Generate Insights above.</div></div></div>
+      </div>
+    </div>
+
   </div><!-- /content -->
 </div><!-- /main -->
 
@@ -563,8 +739,8 @@ body{background:var(--bg);color:var(--txt);font-family:var(--font);font-size:13.
 //  STATE
 // ══════════════════════════════════════════════════════
 const LS_KEY = 'myl_v1';
-let _rows  = [];          // [{date,society,morning,evening,total,notes}]
-let _filtered = [];       // filtered by date range
+let _rows  = [];          // [{date,society,district,morning,evening,total,notes}]
+let _filtered = [];       // filtered by date range + district
 let _cfg   = {url:'', interval:0};
 let _timer = null;
 let _syncLogs = [];
@@ -574,6 +750,7 @@ let _dlSort = {col:'date', dir:'desc'};
 
 // Charts
 let _trendChart = null, _socChart = null, _splitChart = null;
+let _hubChart = null, _trkChart = null, _distChart = null, _expChart = null;
 
 // ══════════════════════════════════════════════════════
 //  BOOT
@@ -617,7 +794,7 @@ function goTab(id, el) {
   document.getElementById('tab-' + id)?.classList.add('act');
   if (el) el.classList.add('act');
   _activeTab = id;
-  const titles = {overview:'Overview', daily:'Daily Log', summary:'Society Summary', alerts:'Alerts', settings:'Settings'};
+  const titles = {overview:'Overview', hub:'Management Hub', tracker:'Society Tracker', distcomp:'District Comparison', expansion:'Expansion Plan', insights:'AI Insights', daily:'Daily Log', summary:'Society Summary', alerts:'Alerts', settings:'Settings'};
   document.getElementById('pgtitle').textContent = titles[id] || id;
   renderActiveTab();
   if (window.innerWidth < 768) closeMobSB();
@@ -625,6 +802,10 @@ function goTab(id, el) {
 
 function renderActiveTab() {
   if (_activeTab === 'overview')  renderOverview();
+  if (_activeTab === 'hub')       renderHub();
+  if (_activeTab === 'tracker')   renderTracker();
+  if (_activeTab === 'distcomp')  renderDistComp();
+  if (_activeTab === 'expansion') renderExpansion();
   if (_activeTab === 'daily')     renderDailyLog();
   if (_activeTab === 'summary')   renderSummary();
   if (_activeTab === 'alerts')    renderAlerts();
@@ -672,12 +853,15 @@ function setRange(key) {
 function applyDateRange(render=true) {
   const from = document.getElementById('dr-from').value;
   const to   = document.getElementById('dr-to').value;
+  const dist = (document.getElementById('dist-filter')?.value || '').toUpperCase().trim();
+  const tod  = today();
   _filtered = _rows.filter(r => {
+    if (r.date > tod) return false;                     // never show future dates
     if (from && r.date < from) return false;
     if (to   && r.date > to)   return false;
+    if (dist && (r.district||'').toUpperCase() !== dist) return false;
     return true;
   });
-  // Count distinct dates
   const dates = new Set(_filtered.map(r => r.date));
   document.getElementById('dr-count').textContent = `${_filtered.length} records · ${dates.size} dates · ${new Set(_filtered.map(r=>r.society)).size} societies`;
   if (render) renderAll();
@@ -689,6 +873,10 @@ function renderAll() {
   renderSummary();
   renderAlerts();
   updateAlertBadge();
+  if (_activeTab === 'hub')       renderHub();
+  if (_activeTab === 'tracker')   renderTracker();
+  if (_activeTab === 'distcomp')  renderDistComp();
+  if (_activeTab === 'expansion') renderExpansion();
 }
 
 // ══════════════════════════════════════════════════════
@@ -850,24 +1038,27 @@ function csvParse(text) {
     for (let r = dataStart; r < allRows.length; r++) {
       const row = allRows[r];
       if (!row || row.length < 2) continue;
+      const district = (row[0]||'').toString().trim().toUpperCase();
       const soc = (row[socColIdx]||'').toString().trim().toUpperCase();
       if (!soc) continue;
       // Skip summary/total rows
       if (/^(total|grand total|average|avg|sum|சுருக்கம்)$/i.test(soc)) continue;
 
       for (const { col, dateStr } of dateCols) {
+        if (dateStr > today()) continue;                // skip future dates at parse time
         const mor    = parseFloat(row[col])     || 0;
         const eve    = parseFloat(row[col + 1]) || 0;
         const rawTot = parseFloat(row[col + 2]);
         const tot    = isNaN(rawTot) ? (mor + eve) : rawTot;
-        // Only include rows where at least something was recorded OR it's an explicit zero
+        if (mor === 0 && eve === 0 && isNaN(parseFloat(row[col]))) continue; // skip truly empty cells
         result.push({
-          date:    dateStr,
-          society: soc,
-          morning: mor,
-          evening: eve,
-          total:   tot,
-          notes:   ''
+          date:     dateStr,
+          society:  soc,
+          district: district,
+          morning:  mor,
+          evening:  eve,
+          total:    tot,
+          notes:    ''
         });
       }
     }
@@ -895,7 +1086,7 @@ function csvParse(text) {
     const eve = ei>=0 ? (parseFloat(cols[ei])||0) : 0;
     let tot = ti>=0 ? (parseFloat(cols[ti])||0) : (mor+eve);
     if (!tot && (mor||eve)) tot = mor+eve;
-    rows.push({date:dateStr, society:soc, morning:mor, evening:eve, total:tot, notes:ni>=0?(cols[ni]||'').trim():''});
+    rows.push({date:dateStr, society:soc, district:'', morning:mor, evening:eve, total:tot, notes:ni>=0?(cols[ni]||'').trim():''});
   }
   return rows;
 }
@@ -1072,6 +1263,23 @@ function populateSocFilter() {
   if (!sel) return;
   const socs = [...new Set(_rows.map(r=>r.society))].sort();
   sel.innerHTML = '<option value="">All Societies</option>' + socs.map(s=>`<option value="${s}">${s}</option>`).join('');
+
+  // Tracker picker
+  const tp = document.getElementById('trk-picker');
+  if (tp) tp.innerHTML = '<option value="">— Select a Society —</option>' + socs.map(s=>`<option value="${s}">${s}</option>`).join('');
+
+  // District filter
+  const df = document.getElementById('dist-filter');
+  if (df) {
+    const cur = df.value;
+    const dists = [...new Set(_rows.map(r=>(r.district||'').trim()).filter(Boolean))].sort();
+    df.innerHTML = '<option value="">All Districts</option>' + dists.map(d=>`<option value="${d}"${d===cur?'selected':''}>${d}</option>`).join('');
+    // Auto-select MYL if present and nothing was previously selected
+    if (!cur) {
+      const myl = dists.find(d => /^MYL$/i.test(d));
+      if (myl) { df.value = myl; applyDateRange(false); }
+    }
+  }
 }
 
 function sortDL(col) {
@@ -1211,7 +1419,8 @@ function renderSummary() {
 //  RENDER: ALERTS
 // ══════════════════════════════════════════════════════
 function renderAlerts() {
-  const data = _filtered;
+  const tod = today();
+  const data = _filtered.filter(r => r.date <= tod);   // belt-and-suspenders: no future dates
   if (!data.length) {
     document.getElementById('alerts-list').innerHTML = emptyHtml('No data loaded', 'Connect your Google Sheet in Settings to view alerts.');
     sv('al-missed','—'); sv('al-low','—'); return;
@@ -1387,6 +1596,220 @@ function toast(msg, err=false){
   el.style.background=err?'#8b1a13':'#162119';
   el.classList.add('show');
   setTimeout(()=>el.classList.remove('show'),3000);
+}
+// ══════════════════════════════════════════════════════
+//  RENDER: MANAGEMENT HUB
+// ══════════════════════════════════════════════════════
+function renderHub() {
+  const data = _filtered;
+  if (!data.length) return;
+  const totalL = data.reduce((a,r)=>a+r.total,0);
+  const dates  = [...new Set(data.map(r=>r.date))].sort();
+  const socs   = [...new Set(data.map(r=>r.society))];
+  const socAvg = {};
+  data.forEach(r=>{if(!socAvg[r.society])socAvg[r.society]={s:0,n:0};socAvg[r.society].s+=r.total;socAvg[r.society].n++;});
+  Object.keys(socAvg).forEach(k=>socAvg[k].avg=socAvg[k].s/socAvg[k].n);
+  const missed = data.filter(r=>r.total===0);
+  const low    = data.filter(r=>r.total>0&&socAvg[r.society]&&r.total/socAvg[r.society].avg<0.7);
+  const half   = Math.floor(dates.length/2);
+  const f1     = data.filter(r=>dates.indexOf(r.date)<half).reduce((a,r)=>a+r.total,0)/Math.max(half,1);
+  const f2     = data.filter(r=>dates.indexOf(r.date)>=half).reduce((a,r)=>a+r.total,0)/Math.max(dates.length-half,1);
+  const tPct   = f1>0?Math.round((f2-f1)/f1*100):0;
+  const tBadge = tPct>0?`<span class="kc-trend tr-up">▲ ${tPct}%</span>`:tPct<0?`<span class="kc-trend tr-dn">▼ ${Math.abs(tPct)}%</span>`:`<span class="kc-trend tr-eq">→ Stable</span>`;
+  sv('hub-total', fmt(totalL)+' L');
+  sv('hub-avg',   fmt(totalL/Math.max(dates.length,1))+' L');
+  sv('hub-soc',   socs.length);
+  sv('hub-crit',  missed.length+low.length);
+  const el=document.getElementById('hub-avg-sub'); if(el) el.innerHTML=tBadge;
+  sv('hub-total-sub', `${dates.length} days · ${socs.length} societies`);
+  // Top performers
+  const socTot = socs.map(s=>({name:s,total:data.filter(r=>r.society===s).reduce((a,r)=>a+r.total,0)})).sort((a,b)=>b.total-a.total);
+  const maxT = socTot[0]?.total||1;
+  document.getElementById('hub-top').innerHTML = socTot.slice(0,6).map((s,i)=>`<div class="mini-bar-row"><div class="mini-bar-lbl">${i+1}. ${s.name}</div><div class="mini-bar-track"><div class="mini-bar-fill" style="width:${Math.round(s.total/maxT*100)}%"></div></div><div class="mini-bar-val">${fmt(s.total)} L</div></div>`).join('');
+  // Action items
+  const missedSocs = [...new Set(missed.map(r=>r.society))];
+  const lowSocs    = [...new Set(low.map(r=>r.society))].filter(s=>!missedSocs.includes(s)).slice(0,3);
+  let html = missedSocs.slice(0,3).map(s=>`<div class="action-row crit"><div><div class="ar-lbl">🚫 ${s}</div><div class="ar-sub">${missed.filter(r=>r.society===s).length} zero-collection day(s) — immediate visit needed.</div></div></div>`).join('');
+  html += lowSocs.map(s=>`<div class="action-row warn"><div><div class="ar-lbl">⚠️ ${s}</div><div class="ar-sub">${low.filter(r=>r.society===s).length} low-collection day(s) — below 70% of average.</div></div></div>`).join('');
+  if (!html) html = `<div class="action-row ok"><div><div class="ar-lbl">✅ All societies on track</div><div class="ar-sub">No critical alerts in the selected period.</div></div></div>`;
+  document.getElementById('hub-action').innerHTML = html;
+  // Trend chart
+  if (_hubChart) { _hubChart.destroy(); _hubChart=null; }
+  const ctx = document.getElementById('hub-chart')?.getContext('2d');
+  if (ctx) {
+    const daily = dates.map(d=>({d,t:data.filter(r=>r.date===d).reduce((a,r)=>a+r.total,0)}));
+    _hubChart = new Chart(ctx,{type:'line',data:{labels:daily.map(x=>fmtDate(x.d)),datasets:[{label:'Daily Total (L)',data:daily.map(x=>x.t),borderColor:'#0a7c52',backgroundColor:'rgba(10,124,82,.08)',borderWidth:2,tension:.35,fill:true,pointRadius:daily.length>40?0:3}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>`${fmt(c.raw)} L`}}},scales:{x:{grid:{display:false},ticks:{maxTicksLimit:10,font:{family:'DM Mono',size:10}}},y:{ticks:{callback:v=>fmt(v)+'L',font:{family:'DM Mono',size:10}},grid:{color:'rgba(10,80,50,.06)'}}}}});
+  }
+}
+
+// ══════════════════════════════════════════════════════
+//  RENDER: SOCIETY TRACKER
+// ══════════════════════════════════════════════════════
+function renderTracker() {
+  const soc  = document.getElementById('trk-picker')?.value;
+  const goal = parseFloat(document.getElementById('trk-goal')?.value)||0;
+  const emp  = document.getElementById('trk-empty');
+  const cnt  = document.getElementById('trk-content');
+  if (!soc) { emp.style.display=''; cnt.style.display='none'; return; }
+  emp.style.display='none'; cnt.style.display='';
+  const data = _filtered.filter(r=>r.society===soc).sort((a,b)=>a.date.localeCompare(b.date));
+  if (!data.length) { emp.style.display=''; cnt.style.display='none'; return; }
+  const total  = data.reduce((a,r)=>a+r.total,0);
+  const avg    = total/Math.max(data.length,1);
+  const best   = Math.max(...data.map(r=>r.total));
+  const missed = data.filter(r=>r.total===0).length;
+  const half   = Math.floor(data.length/2);
+  const f1     = data.slice(0,half).reduce((a,r)=>a+r.total,0)/Math.max(half,1);
+  const f2     = data.slice(half).reduce((a,r)=>a+r.total,0)/Math.max(data.length-half,1);
+  const tPct   = f1>0?Math.round((f2-f1)/f1*100):0;
+  // Streak
+  let streak=0, bestStreak=0, cur=0;
+  for(const r of data){if(r.total>0){streak++;bestStreak=Math.max(bestStreak,streak);}else streak=0;}
+  for(let i=data.length-1;i>=0;i--){if(data[i].total>0)cur++;else break;}
+  const sCls = cur>=7?'streak-hot':cur>=3?'streak-ok':'streak-cold';
+  const sIco = cur>=7?'🔥':cur>=3?'✅':'❄️';
+  document.getElementById('trk-stats').innerHTML = `
+    <div class="ts"><div class="ts-val kv-g">${fmt(avg)} L</div><div class="ts-lbl">Daily Avg</div><div class="ts-sub">${tPct>=0?'▲':'▼'} ${Math.abs(tPct)}% trend</div></div>
+    <div class="ts"><div class="ts-val kv-t">${fmt(total)} L</div><div class="ts-lbl">Total Period</div><div class="ts-sub">${data.length} days</div></div>
+    <div class="ts"><div class="ts-val kv-b">${fmt(best)} L</div><div class="ts-lbl">Best Day</div><div class="ts-sub">peak</div></div>
+    <div class="ts"><div class="ts-val kv-r">${missed}</div><div class="ts-lbl">Missed Days</div><div class="ts-sub">zero collection</div></div>
+    <div class="ts"><div><span class="streak ${sCls}">${sIco} ${cur}-day streak</span></div><div class="ts-lbl" style="margin-top:6px;">Active Streak</div><div class="ts-sub">Best: ${bestStreak} days</div></div>`;
+  if (_trkChart) { _trkChart.destroy(); _trkChart=null; }
+  const ctx = document.getElementById('trk-chart')?.getContext('2d');
+  if (ctx) {
+    const ds = [{label:'Collected (L)',data:data.map(r=>r.total),borderColor:'#0a7c52',backgroundColor:'rgba(10,124,82,.1)',fill:true,tension:.3,borderWidth:2,pointRadius:2}];
+    if (goal>0) ds.push({label:`Target (${goal} L)`,data:data.map(()=>goal),borderColor:'#c97a00',borderDash:[5,5],borderWidth:1.5,pointRadius:0,fill:false});
+    _trkChart = new Chart(ctx,{type:'line',data:{labels:data.map(r=>fmtDate(r.date)),datasets:ds},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bottom',labels:{font:{family:'DM Sans',size:11},boxWidth:12}}},scales:{x:{grid:{display:false},ticks:{maxTicksLimit:10,font:{family:'DM Mono',size:10}}},y:{min:0,ticks:{callback:v=>fmt(v)+'L',font:{family:'DM Mono',size:10}},grid:{color:'rgba(10,80,50,.06)'}}}}});
+  }
+  const sorted = [...data].sort((a,b)=>b.total-a.total);
+  const mkBars = rows => rows.map(r=>`<div class="mini-bar-row"><div class="mini-bar-lbl">${fmtDate(r.date)}</div><div class="mini-bar-track"><div class="mini-bar-fill" style="width:${best>0?Math.round(r.total/best*100):0}%"></div></div><div class="mini-bar-val">${fmt(r.total)} L</div></div>`).join('');
+  document.getElementById('trk-best').innerHTML  = mkBars(sorted.slice(0,5));
+  document.getElementById('trk-worst').innerHTML = mkBars([...sorted].reverse().slice(0,5));
+}
+
+// ══════════════════════════════════════════════════════
+//  RENDER: DISTRICT COMPARISON
+// ══════════════════════════════════════════════════════
+function renderDistComp() {
+  const data = _filtered;
+  const dists = [...new Set(data.map(r=>(r.district||'').trim().toUpperCase()).filter(Boolean))].sort();
+  const grid  = document.getElementById('dist-grid');
+  if (!dists.length) { grid.innerHTML=emptyHtml('No district data','Your sheet needs a District column (column A in the wide-format sheet).'); return; }
+  const stats = dists.map(d=>{
+    const rows  = data.filter(r=>(r.district||'').toUpperCase()===d);
+    const total = rows.reduce((a,r)=>a+r.total,0);
+    const dates = new Set(rows.map(r=>r.date));
+    const socs  = new Set(rows.map(r=>r.society));
+    const missed= rows.filter(r=>r.total===0).length;
+    const isMyl = /^MYL$/i.test(d);
+    return {d, total, avg:total/Math.max(dates.size,1), socs:socs.size, dates:dates.size, missed, isMyl};
+  });
+  if (_distChart) { _distChart.destroy(); _distChart=null; }
+  const ctx = document.getElementById('dist-chart')?.getContext('2d');
+  if (ctx) {
+    const pal = ['#0a7c52','#0e9080','#1a56a6','#c97a00','#c0392b','#6b3fa0'];
+    _distChart = new Chart(ctx,{type:'bar',data:{labels:stats.map(s=>s.d),datasets:[{label:'Total (L)',data:stats.map(s=>s.total),backgroundColor:stats.map((s,i)=>s.isMyl?'#0a7c52':pal[(i+1)%pal.length]+'bb'),borderRadius:6}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>`${fmt(c.raw)} L`}}},scales:{x:{grid:{display:false},ticks:{font:{size:11}}},y:{ticks:{callback:v=>fmt(v)+'L',font:{family:'DM Mono',size:10}},grid:{color:'rgba(10,80,50,.06)'}}}}});
+  }
+  const maxT = Math.max(...stats.map(s=>s.total),1);
+  grid.innerHTML = stats.map(s=>`
+    <div class="dist-card ${s.isMyl?'focus':''}">
+      <div class="dist-head">${s.isMyl?'⭐':'🗺'} ${s.d}${s.isMyl?' <span style="font-size:10px;font-weight:400;color:var(--txt3);">(focus)</span>':''}</div>
+      <div class="mini-bar-track" style="margin-bottom:10px;"><div class="mini-bar-fill" style="width:${Math.round(s.total/maxT*100)}%;background:${s.isMyl?'var(--green)':'var(--blue)'};height:7px;"></div></div>
+      <div class="dist-row"><span class="dist-row-lbl">Total Collection</span><span class="dist-val">${fmt(s.total)} L</span></div>
+      <div class="dist-row"><span class="dist-row-lbl">Daily Average</span><span class="dist-val">${fmt(s.avg)} L/day</span></div>
+      <div class="dist-row"><span class="dist-row-lbl">Active Societies</span><span class="dist-val">${s.socs}</span></div>
+      <div class="dist-row"><span class="dist-row-lbl">Days on Record</span><span class="dist-val">${s.dates}</span></div>
+      <div class="dist-row"><span class="dist-row-lbl">Missed Days</span><span class="dist-val" style="color:${s.missed>0?'var(--red)':'var(--green)'}">${s.missed}</span></div>
+    </div>`).join('');
+}
+
+// ══════════════════════════════════════════════════════
+//  RENDER: EXPANSION PLAN
+// ══════════════════════════════════════════════════════
+function renderExpansion() {
+  const data = _filtered;
+  if (!data.length) { document.getElementById('exp-kpis').innerHTML=emptyHtml('No data','Connect your sheet first.'); return; }
+  const socs = [...new Set(data.map(r=>r.society))];
+  const stats = socs.map(s=>{
+    const rows = data.filter(r=>r.society===s).sort((a,b)=>a.date.localeCompare(b.date));
+    const total = rows.reduce((a,r)=>a+r.total,0);
+    const avg   = total/Math.max(rows.length,1);
+    const missed= rows.filter(r=>r.total===0).length;
+    const missP = Math.round(missed/Math.max(rows.length,1)*100);
+    const half  = Math.floor(rows.length/2);
+    const f1    = rows.slice(0,half).reduce((a,r)=>a+r.total,0)/Math.max(half,1);
+    const f2    = rows.slice(half).reduce((a,r)=>a+r.total,0)/Math.max(rows.length-half,1);
+    const tP    = f1>0?Math.round((f2-f1)/f1*100):0;
+    return {name:s,total,avg,missed,missP,tP};
+  });
+  const grow = stats.filter(s=>s.tP>=15&&s.missP<20).sort((a,b)=>b.tP-a.tP).slice(0,5);
+  const dead = stats.filter(s=>s.missP>=50).sort((a,b)=>b.missP-a.missP).slice(0,5);
+  const risk = stats.filter(s=>s.missP>=20&&s.missP<50&&s.tP<0).sort((a,b)=>a.tP-b.tP).slice(0,5);
+  document.getElementById('exp-kpis').innerHTML=`
+    <div class="hcard hc-g"><div class="hc-lbl">High Growth</div><div class="hc-val kv-g">${grow.length}</div><div class="hc-sub">≥15% upward trend</div></div>
+    <div class="hcard hc-r"><div class="hc-lbl">Needs Reactivation</div><div class="hc-val kv-r">${dead.length}</div><div class="hc-sub">≥50% missed days</div></div>
+    <div class="hcard hc-a"><div class="hc-lbl">At Risk</div><div class="hc-val kv-a">${risk.length}</div><div class="hc-sub">declining + high missed</div></div>
+    <div class="hcard hc-b"><div class="hc-lbl">Stable</div><div class="hc-val kv-b">${stats.length-grow.length-dead.length-risk.length}</div><div class="hc-sub">consistent performance</div></div>`;
+  const mkCard = (s,type) => {
+    const cfg = {grow:{ico:'🚀',cls:'grow',tag:'tg-grow',lbl:'Scale Up'},risk:{ico:'⚠️',cls:'risk',tag:'tg-risk',lbl:'Intervene'},dead:{ico:'💤',cls:'dead',tag:'tg-dead',lbl:'Reactivate'}};
+    const c = cfg[type];
+    return `<div class="exp-card ${c.cls}"><div style="font-size:18px;flex-shrink:0;">${c.ico}</div><div><div class="exp-title">${s.name} <span class="exp-tag ${c.tag}">${c.lbl}</span></div><div class="exp-detail">Avg ${fmt(s.avg)} L/day · Missed ${s.missP}% · Trend ${s.tP>=0?'▲':'▼'}${Math.abs(s.tP)}%</div></div></div>`;
+  };
+  document.getElementById('exp-grow').innerHTML = grow.length ? grow.map(s=>mkCard(s,'grow')).join('') : emptyHtml('None found','No society meets the high-growth threshold.');
+  document.getElementById('exp-dead').innerHTML = dead.length ? dead.map(s=>mkCard(s,'dead')).join('') : emptyHtml('None found','No society has ≥50% missed days.');
+  document.getElementById('exp-risk').innerHTML = risk.length ? risk.map(s=>mkCard(s,'risk')).join('') : emptyHtml('None found','No at-risk societies in this period.');
+  if (_expChart) { _expChart.destroy(); _expChart=null; }
+  const ctx = document.getElementById('exp-chart')?.getContext('2d');
+  if (ctx) {
+    const top = [...stats].sort((a,b)=>b.avg-a.avg).slice(0,12);
+    const pal = top.map(s=>grow.find(g=>g.name===s.name)?'#0a7c52':dead.find(d=>d.name===s.name)?'#c0392b':risk.find(r=>r.name===s.name)?'#c97a00':'#1a56a6');
+    _expChart = new Chart(ctx,{type:'bar',data:{labels:top.map(s=>s.name.length>12?s.name.slice(0,11)+'…':s.name),datasets:[{data:top.map(s=>s.avg),backgroundColor:pal.map(c=>c+'cc'),borderRadius:4}]},options:{responsive:true,maintainAspectRatio:false,indexAxis:'y',plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>`Avg ${fmt(c.raw)} L/day`}}},scales:{x:{ticks:{callback:v=>fmt(v)+'L',font:{family:'DM Mono',size:10}},grid:{color:'rgba(10,80,50,.06)'}},y:{grid:{display:false},ticks:{font:{size:10}}}}}});
+  }
+}
+
+// ══════════════════════════════════════════════════════
+//  AI INSIGHTS
+// ══════════════════════════════════════════════════════
+async function generateInsights() {
+  if (!_filtered.length) { toast('No data loaded.',true); return; }
+  const btn=document.getElementById('ai-btn'), out=document.getElementById('ai-out');
+  btn.disabled=true; btn.textContent='⏳ Analysing…';
+  out.innerHTML=`<div class="ai-thinking"><div class="ai-dot"></div><div class="ai-dot"></div><div class="ai-dot"></div><span>Analysing ${_filtered.length} records…</span></div>`;
+  const socs  = [...new Set(_filtered.map(r=>r.society))];
+  const dates = [...new Set(_filtered.map(r=>r.date))].sort();
+  const totalL= _filtered.reduce((a,r)=>a+r.total,0);
+  const daily = totalL/Math.max(dates.length,1);
+  const missed= _filtered.filter(r=>r.total===0);
+  const dist  = document.getElementById('dist-filter')?.value||'All';
+  const socMap={};
+  for(const r of _filtered){if(!socMap[r.society])socMap[r.society]={t:0,n:0,m:0};socMap[r.society].t+=r.total;socMap[r.society].n++;socMap[r.society].m+=r.total===0?1:0;}
+  const socList=Object.entries(socMap).map(([name,v])=>({name,avg:v.t/Math.max(v.n,1),missed:v.m})).sort((a,b)=>b.avg-a.avg);
+  const half=Math.floor(dates.length/2);
+  const f1=_filtered.filter(r=>dates.indexOf(r.date)<half).reduce((a,r)=>a+r.total,0)/Math.max(half,1);
+  const f2=_filtered.filter(r=>dates.indexOf(r.date)>=half).reduce((a,r)=>a+r.total,0)/Math.max(dates.length-half,1);
+  const trend=f2>f1?'improving':f2<f1?'declining':'stable';
+  const top8 = socList.slice(0,8).map((s,i)=>(i+1)+'. '+s.name+': avg '+Math.round(s.avg)+' L/day, missed '+s.missed+' days').join('\n');
+  const bot5 = socList.slice(-5).map(s=>s.name+': avg '+Math.round(s.avg)+' L/day, missed '+s.missed).join('\n');
+  const prompt = 'You are a dairy cooperative analyst for Mayiladuthurai District DCMPU (MYL), Tamil Nadu. Goal: increase raw milk collection volumes.\n\n'
+    + 'DATA:\n- Period: '+dates[0]+' to '+dates[dates.length-1]+' ('+dates.length+' days)\n'
+    + '- District: '+dist+'\n'
+    + '- Societies: '+socs.length+', Total: '+Math.round(totalL).toLocaleString()+' L, Daily avg: '+Math.round(daily)+' L\n'
+    + '- Trend: '+trend+' (first half avg: '+Math.round(f1)+' L, second half: '+Math.round(f2)+' L)\n'
+    + '- Missed days: '+missed.length+' across '+new Set(missed.map(r=>r.society)).size+' societies\n\n'
+    + 'TOP 8:\n'+top8+'\n\nBOTTOM 5:\n'+bot5+'\n\n'
+    + 'Return EXACTLY 5 insights as a JSON array. Each: {"type":"positive"|"warning"|"critical","title":"max 8 words","body":"2-3 sentences, specific numbers, actionable advice to boost collection"}.\nReturn ONLY the JSON array, no markdown.';  try {
+    const res  = await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:1000,messages:[{role:'user',content:prompt}]})});
+    const d    = await res.json();
+    const raw  = d.content?.map(c=>c.text||'').join('').replace(/`+json|`+/g,'').trim();
+    const ins  = JSON.parse(raw);
+    const tmap = {positive:'ins-card',warning:'ins-card warn',critical:'ins-card crit'};
+    out.innerHTML = ins.map(i=>`<div class="${tmap[i.type]||'ins-card'}"><div class="ins-title">${i.title}</div><div class="ins-body">${i.body}</div></div>`).join('');
+    const ctx = document.getElementById('ai-ctx');
+    if (ctx) ctx.textContent=`${dates.length} days · ${socs.length} societies · ${Math.round(totalL).toLocaleString()} L · Trend: ${trend}`;
+  } catch(e) {
+    out.innerHTML=`<div class="alert-card ac-r"><div class="ac-ico">⚠️</div><div><div class="ac-t">Could not generate insights</div><div class="ac-d">${e.message}</div></div></div>`;
+  }
+  btn.disabled=false; btn.textContent='✨ Regenerate';
 }
 </script>
 </body>
