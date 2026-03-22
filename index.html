@@ -792,8 +792,8 @@ body{background:var(--bg);color:var(--txt);font-family:var(--font);font-size:13.
             <div style="font-size:10.5px;color:var(--txt3);margin-top:2px;">Free · 1500 req/day</div>
           </button>
           <button class="provider-btn" id="prov-groq" onclick="setProvider('groq')">
-            <span style="font-size:16px;">⚡</span> Groq (Llama 3)
-            <div style="font-size:10.5px;color:var(--txt3);margin-top:2px;">Free · Fast inference</div>
+            <span style="font-size:16px;">⚡</span> Groq (Free)
+            <div style="font-size:10.5px;color:var(--txt3);margin-top:2px;">Llama 3.3 · Fast · No card</div>
           </button>
         </div>
 
@@ -805,7 +805,15 @@ body{background:var(--bg);color:var(--txt);font-family:var(--font);font-size:13.
           <div class="set-hint" style="margin-bottom:8px;">Get free key at <a href="https://aistudio.google.com/app/apikey" target="_blank">aistudio.google.com →</a> · Model used: <code>gemini-2.0-flash</code> · 1500 free requests/day, no credit card needed</div>
         </div>
         <div id="prov-info-groq" class="prov-info" style="display:none;">
-          <div class="set-hint" style="margin-bottom:8px;">Get free key at <a href="https://console.groq.com/keys" target="_blank">console.groq.com →</a> · Model used: <code>llama3-8b-8192</code> · Free tier, very fast</div>
+          <div class="set-hint" style="margin-bottom:8px;">Get free key at <a href="https://console.groq.com/keys" target="_blank">console.groq.com →</a> · No credit card needed · Very fast inference</div>
+          <label class="set-label" style="margin-bottom:4px;">Groq Model</label>
+          <select class="ctrl" id="groq-model-sel" onchange="saveSettings()" style="width:100%;margin-bottom:4px;">
+            <option value="llama-3.3-70b-versatile">🧠 Llama 3.3 70B — Smartest, best reports (recommended)</option>
+            <option value="llama3-8b-8192">⚡ Llama 3 8B — Fastest, lightweight</option>
+            <option value="llama-3.1-8b-instant">🚀 Llama 3.1 8B Instant — Ultra fast</option>
+            <option value="mixtral-8x7b-32768">🔀 Mixtral 8x7B — Long context (32K tokens)</option>
+          </select>
+          <div style="font-size:11px;color:var(--txt3);">All models are free on Groq's free tier · 14,400 requests/day</div>
         </div>
 
         <label class="set-label">API Key</label>
@@ -1278,7 +1286,7 @@ body{background:var(--bg);color:var(--txt);font-family:var(--font);font-size:13.
 const LS_KEY = 'myl_v1';
 let _rows  = [];          // [{date,society,district,morning,evening,total,notes}]
 let _filtered = [];       // filtered by date range + district
-let _cfg   = {url:'', interval:0, apiKey:'', provider:'gemini'};
+let _cfg   = {url:'', interval:0, apiKey:'', provider:'groq', groqModel:'llama-3.3-70b-versatile'};
 let _timer = null;
 let _syncLogs = [];
 let _dlPage = 0;
@@ -2042,11 +2050,12 @@ function updateAlertBadge() {
 function loadSettings() {
   try {
     const d = JSON.parse(localStorage.getItem(LS_KEY)||'{}');
-    _cfg.url      = d.url      || '';
-    _cfg.interval = d.interval || 0;
-    _cfg.apiKey   = d.apiKey   || '';
-    _cfg.provider = d.provider || 'gemini';
-    _syncLogs     = d.logs     || [];
+    _cfg.url       = d.url       || '';
+    _cfg.interval  = d.interval  || 0;
+    _cfg.apiKey    = d.apiKey    || '';
+    _cfg.provider  = d.provider  || 'groq';
+    _cfg.groqModel = d.groqModel || 'llama-3.3-70b-versatile';
+    _syncLogs      = d.logs      || [];
     if (d.url) {
       const el = document.getElementById('gs-url'); if(el) el.value=d.url;
     }
@@ -2056,6 +2065,9 @@ function loadSettings() {
     if (d.apiKey) {
       const el = document.getElementById('api-key-inp'); if(el) el.value=d.apiKey;
     }
+    if (d.groqModel) {
+      const el = document.getElementById('groq-model-sel'); if(el) el.value=d.groqModel;
+    }
     renderSyncLog();
     if (_cfg.url && _cfg.interval>0) startTimer();
   } catch(e){}
@@ -2063,11 +2075,12 @@ function loadSettings() {
 
 function saveSettings() {
   try {
-    const url = document.getElementById('gs-url')?.value?.trim()||_cfg.url;
-    const interval = parseInt(document.getElementById('gs-interval')?.value||'0')||0;
-    const apiKey = document.getElementById('api-key-inp')?.value?.trim()||_cfg.apiKey;
-    _cfg.url=url; _cfg.interval=interval; _cfg.apiKey=apiKey;
-    localStorage.setItem(LS_KEY, JSON.stringify({url,interval,apiKey,provider:_cfg.provider,logs:_syncLogs.slice(-30)}));
+    const url       = document.getElementById('gs-url')?.value?.trim()||_cfg.url;
+    const interval  = parseInt(document.getElementById('gs-interval')?.value||'0')||0;
+    const apiKey    = document.getElementById('api-key-inp')?.value?.trim()||_cfg.apiKey;
+    const groqModel = document.getElementById('groq-model-sel')?.value||_cfg.groqModel||'llama-3.3-70b-versatile';
+    _cfg.url=url; _cfg.interval=interval; _cfg.apiKey=apiKey; _cfg.groqModel=groqModel;
+    localStorage.setItem(LS_KEY, JSON.stringify({url,interval,apiKey,provider:_cfg.provider,groqModel,logs:_syncLogs.slice(-30)}));
     if (interval>0) startTimer(); else if(_timer) { clearInterval(_timer); _timer=null; }
   } catch(e){}
 }
@@ -2173,7 +2186,7 @@ function setProvider(p) {
   if (st) st.textContent = '';
 }
 
-function initProviderUI() { setProvider(_cfg.provider || 'gemini'); }
+function initProviderUI() { setProvider(_cfg.provider || 'groq'); }
 
 async function callAI(prompt, maxTokens=1500) {
   const key = getApiKey();
@@ -2202,10 +2215,11 @@ async function callAI(prompt, maxTokens=1500) {
   }
 
   if (provider === 'groq') {
+    const model = document.getElementById('groq-model-sel')?.value || _cfg.groqModel || 'llama-3.3-70b-versatile';
     const res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
       method:'POST',
       headers:{'Content-Type':'application/json','Authorization':`Bearer ${key}`},
-      body:JSON.stringify({model:'llama3-8b-8192',max_tokens:maxTokens,temperature:0.4,messages:[{role:'user',content:prompt}]})
+      body:JSON.stringify({model,max_tokens:maxTokens,temperature:0.4,messages:[{role:'user',content:prompt}]})
     });
     const d = await res.json();
     if (!res.ok) throw new Error(d.error?.message || `Groq error ${res.status}`);
@@ -2228,7 +2242,8 @@ async function testApiKey() {
   if (statusEl) { statusEl.textContent='⏳ Testing…'; statusEl.style.color='var(--txt3)'; }
   try {
     await callAI('Reply with only: ok', 10);
-    if (statusEl) { statusEl.textContent='✅ Key valid — AI features ready (' + (_cfg.provider||'gemini') + ')'; statusEl.style.color='#137333'; }
+    const modelName = _cfg.provider==='groq' ? (document.getElementById('groq-model-sel')?.value||_cfg.groqModel) : _cfg.provider==='gemini' ? 'gemini-2.0-flash' : 'claude-sonnet-4-6';
+    if (statusEl) { statusEl.textContent='✅ Key valid — AI ready · ' + (_cfg.provider||'groq') + ' · ' + modelName; statusEl.style.color='#137333'; }
     _cfg.apiKey = key; saveSettings();
   } catch(e) {
     if (statusEl) { statusEl.textContent='❌ ' + e.message; statusEl.style.color='#c5221f'; }
