@@ -6,6 +6,9 @@
 <title>MYL Milk Intelligence</title>
 <link href="https://fonts.googleapis.com/css2?family=Google+Sans:wght@400;500;600&family=Roboto:wght@300;400;500&family=Roboto+Mono:wght@400;500&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <style>
 :root {
   --bg:       #f8f9fa;
@@ -525,6 +528,12 @@ body{background:var(--bg);color:var(--txt);font-family:var(--font);font-size:13.
     <div class="sb-item" onclick="goTab('tracker',this)">
       <div class="sb-ico">📍</div><div class="sb-lbl">Society Tracker</div>
     </div>
+    <div class="sb-item" onclick="goTab('tracker_all',this)">
+      <div class="sb-ico">📊</div><div class="sb-lbl">All Societies</div>
+    </div>
+    <div class="sb-item" onclick="goTab('village_table',this)">
+      <div class="sb-ico">🐄</div><div class="sb-lbl">Village Milch Table</div>
+    </div>
     <div class="sb-item" onclick="goTab('distcomp',this)">
       <div class="sb-ico">🗺</div><div class="sb-lbl">District Comparison</div>
     </div>
@@ -659,6 +668,23 @@ body{background:var(--bg);color:var(--txt);font-family:var(--font);font-size:13.
         </div>
       </div>
 
+      <!-- BMC Utilisation + Flush/Lean Banner -->
+      <div class="g2" style="margin-bottom:12px;">
+        <div class="kcard kc-b" style="display:flex;flex-direction:column;justify-content:center;">
+          <div class="kc-lbl">🏭 BMC / Cattle Base Utilisation</div>
+          <div class="kc-val kv-b" id="kpi-bmc-util">—</div>
+          <div class="kc-sub" id="kpi-bmc-sub">of total district milk potential</div>
+          <div style="margin-top:8px;height:6px;background:var(--s2);border-radius:100px;overflow:hidden;">
+            <div id="kpi-bmc-bar" style="height:100%;border-radius:100px;background:#4285f4;transition:width .5s;width:0%;"></div>
+          </div>
+        </div>
+        <div class="kcard" id="season-banner" style="background:linear-gradient(135deg,#e8f0fe,#f8f9fa);border:1px solid #c5d9f8;">
+          <div class="kc-lbl" id="season-lbl">📅 Season Status</div>
+          <div class="kc-val" id="season-val" style="font-size:18px;font-weight:500;">—</div>
+          <div class="kc-sub" id="season-sub">—</div>
+        </div>
+      </div>
+
       <div class="g2">
         <div class="card">
           <div class="card-t"><span class="ico">📈</span> Daily Collection Trend</div>
@@ -703,11 +729,13 @@ body{background:var(--bg);color:var(--txt);font-family:var(--font);font-size:13.
                 <th onclick="sortDL('morning')">Morning (L)</th>
                 <th onclick="sortDL('evening')">Evening (L)</th>
                 <th onclick="sortDL('total')">Total (L)</th>
+                <th onclick="sortDL('fat')">Fat %</th>
+                <th onclick="sortDL('snf')">SNF %</th>
                 <th>Status</th>
                 <th>Notes</th>
               </tr>
             </thead>
-            <tbody id="dl-body"><tr><td colspan="7" class="empty">Loading…</td></tr></tbody>
+            <tbody id="dl-body"><tr><td colspan="9" class="empty">Loading…</td></tr></tbody>
           </table>
         </div>
         <div style="text-align:right;margin-top:8px;">
@@ -743,10 +771,12 @@ body{background:var(--bg);color:var(--txt);font-family:var(--font);font-size:13.
                 <th>Active Days</th>
                 <th>Reporting %</th>
                 <th>Best Day</th>
+                <th>L / Member</th>
+                <th>NDDB Tier</th>
                 <th>Status</th>
               </tr>
             </thead>
-            <tbody id="ss-body"><tr><td colspan="8" class="empty">No data</td></tr></tbody>
+            <tbody id="ss-body"><tr><td colspan="10" class="empty">No data</td></tr></tbody>
           </table>
         </div>
         <div id="ss-count" style="font-size:11.5px;color:var(--txt3);margin-top:8px;font-family:var(--mono);"></div>
@@ -777,11 +807,7 @@ body{background:var(--bg);color:var(--txt);font-family:var(--font);font-size:13.
 
       <div class="set-card">
         <div class="set-title">🤖 AI Provider &amp; API Key</div>
-        <div class="set-sub">
-          Choose your AI provider. All keys are stored only in this browser and sent directly to the provider — never to any other server.
-        </div>
-
-        <!-- Provider toggle -->
+        <div class="set-sub">Choose your AI provider. Keys stored only in this browser, sent directly to the provider.</div>
         <div style="display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap;">
           <button class="provider-btn" id="prov-anthropic" onclick="setProvider('anthropic')">
             <span style="font-size:16px;">🟣</span> Anthropic Claude
@@ -796,27 +822,24 @@ body{background:var(--bg);color:var(--txt);font-family:var(--font);font-size:13.
             <div style="font-size:10.5px;color:var(--txt3);margin-top:2px;">Llama 3.3 · Fast · No card</div>
           </button>
         </div>
-
-        <!-- Provider-specific instructions -->
         <div id="prov-info-anthropic" class="prov-info" style="display:none;">
-          <div class="set-hint" style="margin-bottom:8px;">Get key at <a href="https://console.anthropic.com/settings/keys" target="_blank">console.anthropic.com →</a> · Model used: <code>claude-sonnet-4-6</code></div>
+          <div class="set-hint">Get key at <a href="https://console.anthropic.com/settings/keys" target="_blank">console.anthropic.com →</a> · Model: <code>claude-sonnet-4-6</code></div>
         </div>
         <div id="prov-info-gemini" class="prov-info" style="display:none;">
-          <div class="set-hint" style="margin-bottom:8px;">Get free key at <a href="https://aistudio.google.com/app/apikey" target="_blank">aistudio.google.com →</a> · Model used: <code>gemini-2.0-flash</code> · 1500 free requests/day, no credit card needed</div>
+          <div class="set-hint">Get free key at <a href="https://aistudio.google.com/app/apikey" target="_blank">aistudio.google.com →</a> · Model: <code>gemini-2.0-flash</code> · 1500 req/day free</div>
         </div>
         <div id="prov-info-groq" class="prov-info" style="display:none;">
-          <div class="set-hint" style="margin-bottom:8px;">Get free key at <a href="https://console.groq.com/keys" target="_blank">console.groq.com →</a> · No credit card needed · Very fast inference</div>
+          <div class="set-hint" style="margin-bottom:8px;">Get free key at <a href="https://console.groq.com/keys" target="_blank">console.groq.com →</a> · No credit card needed</div>
           <label class="set-label" style="margin-bottom:4px;">Groq Model</label>
           <select class="ctrl" id="groq-model-sel" onchange="saveSettings()" style="width:100%;margin-bottom:4px;">
-            <option value="llama-3.3-70b-versatile">🧠 Llama 3.3 70B — Smartest, best reports (recommended)</option>
-            <option value="llama3-8b-8192">⚡ Llama 3 8B — Fastest, lightweight</option>
+            <option value="llama-3.3-70b-versatile">🧠 Llama 3.3 70B — Smartest (recommended)</option>
+            <option value="llama3-8b-8192">⚡ Llama 3 8B — Fastest</option>
             <option value="llama-3.1-8b-instant">🚀 Llama 3.1 8B Instant — Ultra fast</option>
-            <option value="mixtral-8x7b-32768">🔀 Mixtral 8x7B — Long context (32K tokens)</option>
+            <option value="mixtral-8x7b-32768">🔀 Mixtral 8x7B — Long context 32K</option>
           </select>
-          <div style="font-size:11px;color:var(--txt3);">All models are free on Groq's free tier · 14,400 requests/day</div>
+          <div style="font-size:11px;color:var(--txt3);">All Groq models free · 14,400 req/day</div>
         </div>
-
-        <label class="set-label">API Key</label>
+        <label class="set-label" style="margin-top:10px;">API Key</label>
         <div style="display:flex;gap:8px;margin-bottom:6px;align-items:center;">
           <input type="password" class="ctrl" id="api-key-inp" placeholder="Paste your API key here…" style="flex:1;font-family:var(--mono);font-size:12.5px;" oninput="saveSettings()">
           <button class="btn btn-o" onclick="toggleApiKeyVis()" style="padding:6px 12px;">👁</button>
@@ -889,6 +912,13 @@ body{background:var(--bg);color:var(--txt);font-family:var(--font);font-size:13.
         <button class="btn" style="background:#fdecea;color:var(--red);border:1px solid rgba(192,57,43,.2);" onclick="clearData()">Clear Data</button>
       </div>
 
+      <div class="set-card">
+        <div class="set-title">🧑‍🌾 Society Member Count (for Productivity Metrics)</div>
+        <div class="set-sub">Enter the number of farmer-members per society to enable litres-per-member productivity analysis in Society Summary. Leave blank to skip.</div>
+        <div id="member-count-editor" style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px;max-height:300px;overflow-y:auto;"></div>
+        <button class="btn btn-p" style="margin-top:10px;" onclick="saveMemberCounts()">Save Member Counts</button>
+      </div>
+
     </div>
 
     <!-- ═══ MANAGEMENT HUB ═══ -->
@@ -915,14 +945,20 @@ body{background:var(--bg);color:var(--txt);font-family:var(--font);font-size:13.
         <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:14px;">
           <div class="card-t" style="margin:0;"><span class="ico">📍</span> Society Tracker</div>
           <select class="soc-picker" id="trk-picker" onchange="renderTracker()"><option value="">— Select a Society —</option></select>
-          <div style="display:flex;align-items:center;gap:6px;margin-left:auto;">
+          <div style="display:flex;align-items:center;gap:6px;">
             <span style="font-size:12px;color:var(--txt2);font-weight:500;">Daily Target (L):</span>
             <input type="number" class="goal-inp" id="trk-goal" value="200" min="0" oninput="renderTracker()">
           </div>
+          <div style="display:flex;align-items:center;gap:6px;margin-left:auto;">
+            <span style="font-size:12px;color:var(--txt2);font-weight:500;">Monthly Target (L):</span>
+            <input type="number" class="goal-inp" id="trk-monthly-goal" value="6000" min="0" oninput="renderTracker()" style="width:110px;">
+          </div>
         </div>
-        <div id="trk-empty" class="empty"><div class="empty-ico">📍</div><div class="empty-t">Select a society above</div><div class="empty-s">Set a daily target and monitor performance against it.</div></div>
+        <div id="trk-empty" class="empty"><div class="empty-ico">📍</div><div class="empty-t">Select a society above</div><div class="empty-s">Set daily and monthly targets to monitor performance.</div></div>
         <div id="trk-content" style="display:none;">
           <div style="font-size:12px;color:var(--txt3);font-family:var(--mono);margin-bottom:12px;padding:6px 10px;background:var(--bg);border-radius:6px;" id="trk-date-info"></div>
+          <!-- Monthly achievement banner -->
+          <div id="trk-monthly-banner" style="margin-bottom:12px;"></div>
           <div class="g5" style="margin-bottom:14px;" id="trk-stats"></div>
           <div class="card" style="box-shadow:none;border:1px solid var(--brd);margin-bottom:12px;">
             <div class="card-t"><span class="ico">📈</span> Daily Collection vs Target</div>
@@ -1131,30 +1167,37 @@ body{background:var(--bg);color:var(--txt);font-family:var(--font);font-size:13.
 
     <!-- ═══ REPORTS ═══ -->
     <div class="tab-panel" id="tab-reports">
-      <div class="g2" style="margin-bottom:16px;">
-        <!-- Report type selector -->
+
+      <!-- Config row -->
+      <div class="g3" style="margin-bottom:14px;">
         <div class="card">
           <div class="card-t"><span class="ico">📅</span> Report Period</div>
-          <div style="display:flex;gap:10px;flex-wrap:wrap;">
+          <div style="display:flex;gap:8px;flex-wrap:wrap;">
             <button class="report-type-btn active" id="rpt-daily-btn" onclick="setReportType('daily')">📅 Daily</button>
             <button class="report-type-btn" id="rpt-weekly-btn" onclick="setReportType('weekly')">📆 Weekly</button>
             <button class="report-type-btn" id="rpt-monthly-btn" onclick="setReportType('monthly')">🗓 Monthly</button>
           </div>
         </div>
-        <!-- Report scope selector -->
         <div class="card">
-          <div class="card-t"><span class="ico">🎯</span> Report For</div>
-          <div style="display:flex;gap:10px;flex-wrap:wrap;">
-            <button class="report-scope-btn active" id="rpt-dist-btn" onclick="setReportScope('district')">🏛 Mayiladuthurai District</button>
-            <button class="report-scope-btn" id="rpt-soc-btn" onclick="setReportScope('society')">🏘 Individual Society</button>
+          <div class="card-t"><span class="ico">🎯</span> Report Scope</div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap;">
+            <button class="report-scope-btn active" id="rpt-dist-btn" onclick="setReportScope('district')">🏛 District</button>
+            <button class="report-scope-btn" id="rpt-soc-btn" onclick="setReportScope('society')">🏘 Society</button>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-t"><span class="ico">📤</span> Export Format</div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap;">
+            <button class="btn btn-p" onclick="exportReportPDF()" id="btn-pdf" style="gap:6px;">📄 PDF Report</button>
+            <button class="btn btn-o" onclick="exportReportExcel()" id="btn-excel" style="gap:6px;">📊 Excel Export</button>
           </div>
         </div>
       </div>
 
-      <!-- Society selector (shown only for society scope) -->
+      <!-- Society selector -->
       <div id="soc-selector-row" style="display:none;margin-bottom:14px;">
         <div class="card">
-          <div class="card-t"><span class="ico">🐄</span> Select Society <span style="font-size:12px;color:var(--txt3);font-weight:400;">— ranked by cattle population from census data</span></div>
+          <div class="card-t"><span class="ico">🏘</span> Select Society</div>
           <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
             <select class="dist-sel" id="report-soc-select" style="min-width:260px;font-size:13.5px;padding:8px 12px;" onchange="onReportSocChange()">
               <option value="">— Select a Society —</option>
@@ -1164,24 +1207,156 @@ body{background:var(--bg);color:var(--txt);font-family:var(--font);font-size:13.
         </div>
       </div>
 
-      <!-- Generate button + status -->
+      <!-- Monthly target input for report -->
+      <div class="card" style="margin-bottom:14px;">
+        <div class="card-t"><span class="ico">🎯</span> Monthly Targets (L/month per society) <span style="font-size:11.5px;color:var(--txt3);font-weight:400;margin-left:8px;">Set targets to compute achievement % in report</span></div>
+        <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:8px;">
+          <div style="font-size:13px;color:var(--txt2);">Default target for all societies:</div>
+          <input type="number" class="goal-inp" id="rpt-default-target" value="6000" min="0" style="width:120px;" oninput="saveTargets()">
+          <span style="font-size:12px;color:var(--txt3);">L/month (individual overrides below)</span>
+        </div>
+        <div id="target-editor" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:8px;max-height:220px;overflow-y:auto;"></div>
+      </div>
+
+      <!-- Generate button -->
       <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px;flex-wrap:wrap;">
-        <button class="ai-btn" id="rpt-gen-btn" onclick="generateReport()" style="font-size:14px;padding:12px 28px;">
-          ✨ Generate Intelligent Report
-        </button>
-        <div style="font-size:12.5px;color:var(--txt3);" id="rpt-config-summary">Daily report · Mayiladuthurai District</div>
+        <button class="ai-btn" id="rpt-gen-btn" onclick="generateReport()" style="font-size:14px;padding:12px 28px;">✨ Generate AI Report</button>
+        <div style="font-size:12.5px;color:var(--txt3);" id="rpt-config-summary">Monthly report · Mayiladuthurai District</div>
       </div>
 
       <!-- Report preview -->
       <div class="card" id="rpt-preview-card" style="display:none;">
         <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px;flex-wrap:wrap;">
           <div class="card-t" style="margin:0;flex:1;" id="rpt-preview-title">Report</div>
-          <button class="btn btn-o" style="font-size:12px;padding:6px 14px;" onclick="copyReport()">📋 Copy</button>
-          <button class="btn btn-p" style="font-size:12px;padding:6px 14px;" onclick="downloadReport()">⬇ Download</button>
+          <button class="btn btn-o" style="font-size:12px;padding:6px 14px;" onclick="copyReport()">📋 Copy Text</button>
+          <button class="btn btn-p" style="font-size:12px;padding:6px 14px;" onclick="exportReportPDF()">📄 Download PDF</button>
+          <button class="btn btn-o" style="font-size:12px;padding:6px 14px;" onclick="exportReportExcel()">📊 Download Excel</button>
         </div>
         <div class="report-preview" id="rpt-preview-body"></div>
       </div>
     </div>
+
+    <!-- ═══ ALL SOCIETIES TRACKER ═══ -->
+    <div class="tab-panel" id="tab-tracker_all">
+      <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:14px;">
+        <div>
+          <div style="font-size:14px;font-weight:500;color:var(--txt);">All Societies — Performance Tracker</div>
+          <div style="font-size:12px;color:var(--txt3);">Monthly target achievement · Toppers · Laggards · Trend for every society</div>
+        </div>
+        <div style="display:flex;gap:8px;margin-left:auto;flex-wrap:wrap;">
+          <select class="dist-sel" id="ta-sort" onchange="renderTrackerAll()" style="min-width:160px;">
+            <option value="total_desc">Sort: Total ↓</option>
+            <option value="achievement_desc">Sort: Target % ↓</option>
+            <option value="trend_desc">Sort: Trend ↓</option>
+            <option value="missed_desc">Sort: Missed ↓</option>
+            <option value="name_asc">Sort: Name A–Z</option>
+          </select>
+          <select class="dist-sel" id="ta-filter" onchange="renderTrackerAll()" style="min-width:130px;">
+            <option value="">All Societies</option>
+            <option value="topper">🏆 Toppers</option>
+            <option value="laggard">⚠️ Laggards</option>
+            <option value="ontrack">✅ On Track</option>
+            <option value="missed">🚫 High Missed</option>
+          </select>
+          <input type="text" class="dr-inp" id="ta-search" placeholder="Search society…" oninput="renderTrackerAll()" style="min-width:160px;">
+        </div>
+      </div>
+
+      <!-- Summary KPIs -->
+      <div class="g4" style="margin-bottom:14px;" id="ta-kpis"></div>
+
+      <!-- Topper / Laggard highlight row -->
+      <div class="g2" style="margin-bottom:14px;">
+        <div class="card" style="border-top:3px solid #34a853;">
+          <div class="card-t"><span class="ico">🏆</span> Top 5 — Toppers</div>
+          <div id="ta-toppers"></div>
+        </div>
+        <div class="card" style="border-top:3px solid #ea4335;">
+          <div class="card-t"><span class="ico">⚠️</span> Bottom 5 — Laggards</div>
+          <div id="ta-laggards"></div>
+        </div>
+      </div>
+
+      <!-- Full society table -->
+      <div class="card" style="padding:0;overflow:hidden;">
+        <div style="padding:12px 16px;border-bottom:1px solid var(--brd);display:flex;align-items:center;justify-content:space-between;">
+          <div class="card-t" style="margin:0;"><span class="ico">📋</span> All Societies — Detailed View</div>
+          <div id="ta-count" style="font-size:12px;color:var(--txt3);font-family:var(--mono);"></div>
+        </div>
+        <div style="overflow-x:auto;">
+          <table class="tbl" id="ta-table">
+            <thead><tr>
+              <th style="width:28px;">#</th>
+              <th>Society</th>
+              <th>Monthly Target</th>
+              <th>Collected</th>
+              <th>Achievement %</th>
+              <th>Daily Avg</th>
+              <th>Missed Days</th>
+              <th>Rep %</th>
+              <th>Trend</th>
+              <th>NDDB Tier</th>
+              <th>Status</th>
+            </tr></thead>
+            <tbody id="ta-body"><tr><td colspan="11" class="empty">Load data to see all societies</td></tr></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══ VILLAGE MILCH TABLE ═══ -->
+    <div class="tab-panel" id="tab-village_table">
+      <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:14px;">
+        <div>
+          <div style="font-size:14px;font-weight:500;color:var(--txt);">Village Milch Animal vs Milk Procurement</div>
+          <div style="font-size:12px;color:var(--txt3);">Best villages at top · Worst at bottom · Milk utilisation efficiency per village</div>
+        </div>
+        <div style="display:flex;gap:8px;margin-left:auto;flex-wrap:wrap;">
+          <select class="dist-sel" id="vt-block" onchange="renderVillageTable()" style="min-width:150px;">
+            <option value="">All Blocks</option>
+            <option>Kollidam</option><option>Kuthalam</option>
+            <option>Mayiladuthurai</option><option>Sembanarkoil</option><option>Sirkali</option>
+          </select>
+          <select class="dist-sel" id="vt-sort" onchange="renderVillageTable()" style="min-width:170px;">
+            <option value="util_desc">Sort: Utilisation % ↓ (Best first)</option>
+            <option value="util_asc">Sort: Utilisation % ↑ (Worst first)</option>
+            <option value="potential_desc">Sort: Potential ↓</option>
+            <option value="animals_desc">Sort: Animals ↓</option>
+            <option value="village_asc">Sort: Village A–Z</option>
+          </select>
+          <input type="text" class="dr-inp" id="vt-search" placeholder="Search village…" oninput="renderVillageTable()" style="min-width:150px;">
+        </div>
+      </div>
+
+      <!-- Summary KPIs -->
+      <div class="g4" style="margin-bottom:14px;" id="vt-kpis"></div>
+
+      <!-- Village table -->
+      <div class="card" style="padding:0;overflow:hidden;">
+        <div style="padding:12px 16px;border-bottom:1px solid var(--brd);display:flex;align-items:center;justify-content:space-between;">
+          <div class="card-t" style="margin:0;"><span class="ico">🗺</span> Village-wise Milch Animal vs Procurement</div>
+          <div id="vt-count" style="font-size:12px;color:var(--txt3);font-family:var(--mono);"></div>
+        </div>
+        <div style="overflow-x:auto;">
+          <table class="tbl" id="vt-table">
+            <thead><tr>
+              <th style="width:28px;">#</th>
+              <th>Village</th>
+              <th>Block</th>
+              <th>Milch Animals</th>
+              <th>Milk Potential (L/day)</th>
+              <th>Actual Procured (L/day avg)</th>
+              <th>Utilisation %</th>
+              <th>Gap (L/day)</th>
+              <th>Viability</th>
+              <th>Remarks</th>
+            </tr></thead>
+            <tbody id="vt-body"><tr><td colspan="10" class="empty">Load data to see village analysis</td></tr></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
 
     <!-- ═══ DAILY MANAGEMENT BOARD ═══ -->
     <div class="tab-panel" id="tab-daily_mgmt">
@@ -1217,7 +1392,7 @@ body{background:var(--bg);color:var(--txt);font-family:var(--font);font-size:13.
       </div>
 
       <!-- PDCA + Theory of Constraints -->
-      <div class="g2">
+      <div class="g2" style="margin-bottom:14px;">
         <div class="card">
           <div class="card-t"><span class="ico">🔄</span> PDCA Cycle — Today's Interventions</div>
           <div id="dm-pdca"></div>
@@ -1227,6 +1402,18 @@ body{background:var(--bg);color:var(--txt);font-family:var(--font);font-size:13.
           <div style="font-size:12.5px;color:var(--txt3);margin-bottom:10px;">Societies that constrain district total the most (lowest volume / highest missed rate)</div>
           <div id="dm-constraints"></div>
         </div>
+      </div>
+
+      <!-- AMUL MORNING CHECKLIST -->
+      <div class="card">
+        <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:14px;">
+          <div class="card-t" style="margin:0;"><span class="ico">☀️</span> Amul-Style Morning 10-Point Checklist</div>
+          <span style="font-size:11.5px;color:var(--txt3);">Field officer completes by 8 AM · saves to browser</span>
+          <button class="btn btn-o" onclick="resetChecklist()" style="margin-left:auto;font-size:12px;padding:5px 12px;">↺ Reset</button>
+          <button class="btn btn-p" onclick="saveChecklist()" style="font-size:12px;padding:5px 14px;">💾 Save</button>
+        </div>
+        <div id="morning-checklist" style="display:grid;grid-template-columns:1fr 1fr;gap:8px;"></div>
+        <div id="checklist-score" style="margin-top:12px;padding:10px 14px;border-radius:8px;background:var(--bg);font-size:13px;font-weight:500;text-align:center;"></div>
       </div>
     </div>
 
@@ -1247,7 +1434,7 @@ body{background:var(--bg);color:var(--txt);font-family:var(--font);font-size:13.
           <div style="max-height:320px;overflow-y:auto;" id="pareto-table"></div>
         </div>
       </div>
-      <div class="g2">
+      <div class="g2" style="margin-bottom:14px;">
         <div class="card">
           <div class="card-t"><span class="ico">💡</span> Focus Zone — Top 20% (Protect &amp; Grow)</div>
           <div id="pareto-top20"></div>
@@ -1256,6 +1443,10 @@ body{background:var(--bg);color:var(--txt);font-family:var(--font);font-size:13.
           <div class="card-t"><span class="ico">🚑</span> Leverage Zone — Bottom 50% (Urgent Attention)</div>
           <div id="pareto-bottom50"></div>
         </div>
+      </div>
+      <div class="card">
+        <div class="card-t"><span class="ico">🔁</span> Recovery Potential Ranking <span style="font-size:11.5px;color:var(--txt3);font-weight:400;margin-left:8px;">Societies with highest gap between best-day and current avg · prioritise for field visits</span></div>
+        <div id="pareto-recovery"></div>
       </div>
     </div>
 
@@ -1340,26 +1531,39 @@ function goTab(id, el) {
   document.getElementById('tab-' + id)?.classList.add('act');
   if (el) el.classList.add('act');
   _activeTab = id;
-  const titles = {overview:'Overview', hub:'Management Hub', tracker:'Society Tracker', distcomp:'District Comparison', expansion:'Expansion Plan', insights:'AI Insights', cattle:'Cattle Planning', actionplan:'Action Plan', reports:'Reports', daily_mgmt:'Daily Management Board', pareto:'Pareto Analysis', scorecard:'Balanced Scorecard', daily:'Daily Log', summary:'Society Summary', alerts:'Alerts', settings:'Settings'};
+  const titles = {overview:'Overview', hub:'Management Hub', tracker:'Society Tracker', tracker_all:'All Societies — Tracker', village_table:'Village Milch Animal vs Procurement', distcomp:'District Comparison', expansion:'Expansion Plan', insights:'AI Insights', cattle:'Cattle Planning', actionplan:'Action Plan', reports:'Reports & Export', daily_mgmt:'Daily Management Board', pareto:'Pareto Analysis', scorecard:'Balanced Scorecard', daily:'Daily Log', summary:'Society Summary', alerts:'Alerts', settings:'Settings'};
   document.getElementById('pgtitle').textContent = titles[id] || id;
   renderActiveTab();
   if (window.innerWidth < 768) closeMobSB();
 }
 
 function renderActiveTab() {
+  updateAlertBadge();
+  populateReportSocieties();
   if (_activeTab === 'overview')    renderOverview();
   if (_activeTab === 'hub')         renderHub();
+  if (_activeTab === 'tracker_all')  renderTrackerAll();
+  if (_activeTab === 'village_table') renderVillageTable();
   if (_activeTab === 'tracker')     renderTracker();
   if (_activeTab === 'distcomp')    renderDistComp();
   if (_activeTab === 'expansion')   renderExpansion();
   if (_activeTab === 'cattle')      renderCattle();
   if (_activeTab === 'actionplan')  renderBestWorst();
-  if (_activeTab === 'daily_mgmt')  renderDailyMgmt();
+  if (_activeTab === 'daily_mgmt')  { renderDailyMgmt(); renderChecklist(); }
+  if (_activeTab === 'settings')    renderMemberEditor();
   if (_activeTab === 'pareto')      renderPareto();
   if (_activeTab === 'scorecard')   renderScorecard();
   if (_activeTab === 'daily')       renderDailyLog();
   if (_activeTab === 'summary')     renderSummary();
   if (_activeTab === 'alerts')      renderAlerts();
+  if (_activeTab === 'reports')     { populateReportSocieties(); renderTargetEditor(); }
+  if (_activeTab === 'insights') {
+    const dates = [...new Set(_filtered.map(r=>r.date))].sort();
+    const totalL = _filtered.reduce((a,r)=>a+r.total,0);
+    const socs   = new Set(_filtered.map(r=>r.society)).size;
+    const ctx = document.getElementById('ai-ctx');
+    if (ctx && _filtered.length) ctx.textContent = `${dates.length} days · ${socs} societies · ${Math.round(totalL).toLocaleString()} L`;
+  }
 }
 
 let _sbCol = false;
@@ -1419,23 +1623,46 @@ function applyDateRange(render=true) {
 }
 
 function renderAll() {
-  renderOverview();
-  renderDailyLog();
-  renderSummary();
-  renderAlerts();
+  // Always recompute these lightweight things
   updateAlertBadge();
   populateReportSocieties();
-  // Re-render whichever tab is active
+
+  // Re-render only the active tab — every render function reads _filtered directly
+  // so switching date range while on any tab immediately shows correct filtered data
   const active = _activeTab;
-  if (active === 'hub')        renderHub();
-  if (active === 'tracker')    renderTracker();
-  if (active === 'distcomp')   renderDistComp();
-  if (active === 'expansion')  renderExpansion();
-  if (active === 'cattle')     renderCattle();
-  if (active === 'actionplan') renderBestWorst();
-  if (active === 'daily_mgmt') renderDailyMgmt();
-  if (active === 'pareto')     renderPareto();
-  if (active === 'scorecard')  renderScorecard();
+
+  // These 4 always need updating as they feed sidebar badge + alert count
+  renderAlerts();
+
+  // Render the currently visible tab
+  if (active === 'overview')    renderOverview();
+  else if (active === 'hub')        renderHub();
+  else if (active === 'tracker_all')  renderTrackerAll();
+  else if (active === 'village_table') renderVillageTable();
+  else if (active === 'tracker')    renderTracker();
+  else if (active === 'distcomp')   renderDistComp();
+  else if (active === 'expansion')  renderExpansion();
+  else if (active === 'cattle')     renderCattle();
+  else if (active === 'actionplan') { renderBestWorst(); }
+  else if (active === 'daily_mgmt') { renderDailyMgmt(); renderChecklist(); }
+  else if (active === 'settings')   renderMemberEditor();
+  else if (active === 'pareto')     renderPareto();
+  else if (active === 'scorecard')  renderScorecard();
+  else if (active === 'daily')      renderDailyLog();
+  else if (active === 'summary')    renderSummary();
+  else if (active === 'insights')   { /* AI tab — update context label only */
+    const dates = [...new Set(_filtered.map(r=>r.date))].sort();
+    const totalL = _filtered.reduce((a,r)=>a+r.total,0);
+    const socs = new Set(_filtered.map(r=>r.society)).size;
+    const ctx = document.getElementById('ai-ctx');
+    if (ctx) ctx.textContent = `${dates.length} days · ${socs} societies · ${Math.round(totalL).toLocaleString()} L · range updated`;
+  }
+  else if (active === 'reports')    { populateReportSocieties(); renderTargetEditor(); }
+
+  // Always keep daily/summary/alerts fresh for the sidebar badge and quick switching
+  if (active !== 'daily')   renderDailyLog();
+  if (active !== 'summary') renderSummary();
+  if (active !== 'overview') renderOverview();
 }
 
 // ══════════════════════════════════════════════════════
@@ -1447,7 +1674,9 @@ const COL_MAP = {
   morning: ['morning','mor','morning_l','morning(l)','morning l','am','am(l)','காலை','காலை (லி)','mor(l)'],
   evening: ['evening','eve','evening_l','evening(l)','evening l','pm','pm(l)','மாலை','மாலை (லி)','eve(l)'],
   total:   ['total','total_l','total(l)','total l','daily total','collection','மொத்தம்','tot','quantity','qty','litres','liters'],
-  notes:   ['notes','note','remarks','comments','observation','குறிப்பு']
+  notes:   ['notes','note','remarks','comments','observation','குறிப்பு'],
+  fat:     ['fat','fat%','fat %','fat(%)','கொழுப்பு','f%'],
+  snf:     ['snf','snf%','snf %','snf(%)','திட்டமல்லா','solids not fat','s.n.f']
 };
 
 function detectCol(headers, key) {
@@ -1631,6 +1860,7 @@ function csvParse(text) {
   const di=detectCol(headers,'date'), si=detectCol(headers,'society');
   const mi=detectCol(headers,'morning'), ei=detectCol(headers,'evening');
   const ti=detectCol(headers,'total'), ni=detectCol(headers,'notes');
+  const fi=detectCol(headers,'fat'), sni=detectCol(headers,'snf');
 
   if (di<0||si<0) throw new Error(`Could not find required columns (Date, Society). Headers found: ${headers.slice(0,6).join(', ')}`);
 
@@ -1645,7 +1875,9 @@ function csvParse(text) {
     const eve = ei>=0 ? (parseFloat(cols[ei])||0) : 0;
     let tot = ti>=0 ? (parseFloat(cols[ti])||0) : (mor+eve);
     if (!tot && (mor||eve)) tot = mor+eve;
-    rows.push({date:dateStr, society:soc, district:'', morning:mor, evening:eve, total:tot, notes:ni>=0?(cols[ni]||'').trim():''});
+    const fat = fi>=0 ? (parseFloat(cols[fi])||null) : null;
+    const snf = sni>=0 ? (parseFloat(cols[sni])||null) : null;
+    rows.push({date:dateStr, society:soc, district:'', morning:mor, evening:eve, total:tot, notes:ni>=0?(cols[ni]||'').trim():'', fat, snf});
   }
   return rows;
 }
@@ -1710,6 +1942,26 @@ function renderOverview() {
   sv('kpi-missed', missedDays);
   sv('kpi-days',  dates.length);
 
+  // BMC / cattle base utilisation
+  const milkPot = CATTLE_DATA.reduce((a,r)=>a+r.milk_potential,0);
+  const dailyAvg = totalL/Math.max(dates.length,1);
+  const utilPct  = milkPot>0 ? Math.round(dailyAvg/milkPot*100) : 0;
+  sv('kpi-bmc-util', utilPct+'%');
+  sv('kpi-bmc-sub', `${fmt(dailyAvg)} L/day of ${fmt(milkPot)} L/day potential`);
+  const bmcBar = document.getElementById('kpi-bmc-bar');
+  if (bmcBar) { bmcBar.style.width=Math.min(utilPct,100)+'%'; bmcBar.style.background=utilPct>=60?'#34a853':utilPct>=30?'#fbbc04':'#ea4335'; }
+
+  // Season banner
+  const curMonth = new Date().getMonth(); // 0=Jan
+  const FLUSH=[9,10,11,0,1]; // Oct–Feb
+  const LEAN=[2,3,4,5,6];    // Mar–Jul
+  const isFl=FLUSH.includes(curMonth), isLe=LEAN.includes(curMonth);
+  sv('season-val', isFl?'🌾 Flush Season':isLe?'☀️ Lean Season':'🍂 Transition');
+  sv('season-lbl', isFl?'📅 Flush Season (Oct–Feb)':isLe?'📅 Lean Season (Mar–Jul)':'📅 Transition Season');
+  sv('season-sub', isFl?'Higher volumes expected · focus on chilling & transport capacity':isLe?'Lower volumes · retention incentives & fodder support critical':'Moderate volumes · prepare for flush season ramp-up');
+  const sb = document.getElementById('season-banner');
+  if (sb) sb.style.background = isFl?'linear-gradient(135deg,#e6f4ea,#f8f9fa)':isLe?'linear-gradient(135deg,#fef7e0,#f8f9fa)':'linear-gradient(135deg,#e8f0fe,#f8f9fa)';
+
   // Trend chart – daily total
   const dailyTotals = dates.map(d => ({
     date:d,
@@ -1730,6 +1982,16 @@ function renderTrend(dailyTotals) {
   const ctx = document.getElementById('trend-chart')?.getContext('2d');
   if (!ctx) return;
   if (_trendChart) _trendChart.destroy();
+
+  // Seasonal index: Tamil Nadu flush (Oct-Feb) vs lean (Mar-Jul) baseline
+  // Relative weight: flush=1.15, intermediate=1.0, lean=0.85
+  const SEASONAL_IDX = [0.85,0.85,0.85,0.85,0.85,0.90,1.00,1.05,1.05,1.15,1.15,1.10]; // Jan–Dec
+  const globalAvg = dailyTotals.reduce((a,d)=>a+d.total,0) / Math.max(dailyTotals.length,1);
+  const seasonalBaseline = dailyTotals.map(d => {
+    const m = parseInt((d.date||'').split('-')[1]||'6') - 1;
+    return Math.round(globalAvg * SEASONAL_IDX[m]);
+  });
+
   _trendChart = new Chart(ctx, {
     type:'line',
     data:{
@@ -1743,11 +2005,24 @@ function renderTrend(dailyTotals) {
         pointRadius: dailyTotals.length>60?0:3,
         tension:.35,
         fill:true
+      },{
+        label:'Seasonal Baseline (L)',
+        data: seasonalBaseline,
+        borderColor:'#fbbc04',
+        backgroundColor:'transparent',
+        borderWidth:1.5,
+        pointRadius:0,
+        borderDash:[5,4],
+        tension:.4,
+        fill:false
       }]
     },
     options:{
       responsive:true, maintainAspectRatio:false,
-      plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>`${fmt(c.raw)} L`}}},
+      plugins:{
+        legend:{display:true,position:'bottom',labels:{font:{family:'Google Sans',size:11},boxWidth:12,padding:14}},
+        tooltip:{callbacks:{label:c=>`${c.dataset.label}: ${fmt(c.raw)} L`}}
+      },
       scales:{
         x:{grid:{display:false},ticks:{maxTicksLimit:8,font:{family:'DM Mono',size:10}}},
         y:{ticks:{callback:v=>fmt(v)+'L',font:{family:'DM Mono',size:10}},grid:{color:'rgba(10,80,50,.06)'}}
@@ -1894,12 +2169,16 @@ function renderDailyLog() {
     const st  = r.total===0 ? '<span class="bdg b-r">Missed</span>'
                : pct!==null&&pct<70 ? `<span class="bdg b-a">Low (${pct}%)</span>`
                : '<span class="bdg b-g">Normal</span>';
+    const fatVal  = r.fat!=null  ? `<span style="font-family:var(--mono);${r.fat<3.5?'color:var(--g-red);':r.fat>=4.5?'color:var(--g-green);':''}">${r.fat.toFixed(1)}%</span>` : '<span style="color:var(--txt3);">—</span>';
+    const snfVal  = r.snf!=null  ? `<span style="font-family:var(--mono);${r.snf<8.5?'color:var(--g-red);':''}">${r.snf.toFixed(1)}%</span>` : '<span style="color:var(--txt3);">—</span>';
     return `<tr>
       <td style="font-family:var(--mono);font-size:12px;">${fmtDate(r.date)}</td>
       <td style="font-weight:500;">${r.society}</td>
       <td style="font-family:var(--mono);">${r.morning||'—'}</td>
       <td style="font-family:var(--mono);">${r.evening||'—'}</td>
       <td style="font-family:var(--mono);font-weight:600;color:var(--green);">${fmt(r.total)}</td>
+      <td>${fatVal}</td>
+      <td>${snfVal}</td>
       <td>${st}</td>
       <td style="font-size:12px;color:var(--txt2);">${r.notes||''}</td>
     </tr>`;
@@ -1956,10 +2235,23 @@ function renderSummary() {
   }
 
   const maxTotal = Math.max(...data.map(d=>d.total));
+  const memberCounts = loadMemberCounts();
+  // NDDB tier classification based on daily avg
+  function nddbTier(avg) {
+    if (avg>=300) return {lbl:'A — Elite',   cls:'b-g',  tip:'≥300 L/day · Self-sustaining'};
+    if (avg>=150) return {lbl:'B — Growth',  cls:'b-g',  tip:'150–300 L/day · Growth potential'};
+    if (avg>=50)  return {lbl:'C — Support', cls:'b-a',  tip:'50–150 L/day · Needs support'};
+    return               {lbl:'D — Review',  cls:'b-r',  tip:'<50 L/day · Viability review'};
+  }
   const html = data.map((d,i)=>{
     const pct = maxTotal>0 ? Math.round(d.total/maxTotal*100) : 0;
     const statusCls = d.repPct>=80?'b-g':d.repPct>=50?'b-a':'b-r';
     const statusLbl = d.repPct>=80?'Active':d.repPct>=50?'Moderate':'Low';
+    const tier = nddbTier(d.avg);
+    const memberCount = memberCounts[d.name] || 0;
+    const lPerMember  = (memberCount > 0 && d.activeDays > 0)
+      ? `<span style="font-family:var(--mono);color:var(--g-blue);">${fmt(d.avg/memberCount)} L</span>`
+      : '<span style="color:var(--txt3);font-size:11.5px;">—</span>';
     return `<tr>
       <td style="color:var(--txt3);font-family:var(--mono);">${i+1}</td>
       <td style="font-weight:500;">${d.name}</td>
@@ -1974,6 +2266,8 @@ function renderSummary() {
         <div class="pbar"><div class="pfill" style="width:${d.repPct}%;background:${d.repPct>=80?'var(--green)':d.repPct>=50?'var(--amber)':'var(--red)'};"></div></div>
       </td>
       <td style="font-family:var(--mono);">${fmt(d.best)} L</td>
+      <td>${lPerMember}</td>
+      <td><span class="bdg ${tier.cls}" title="${tier.tip}">${tier.lbl}</span></td>
       <td><span class="bdg ${statusCls}">${statusLbl}</span></td>
     </tr>`;
   }).join('');
@@ -1983,6 +2277,20 @@ function renderSummary() {
 // ══════════════════════════════════════════════════════
 //  RENDER: ALERTS
 // ══════════════════════════════════════════════════════
+// Tamil Nadu festival calendar (MM-DD format, recurring annually)
+const TN_FESTIVALS = {
+  '01-14':'Pongal','01-15':'Mattu Pongal','01-16':'Kanum Pongal',
+  '01-26':'Republic Day','04-14':'Tamil New Year / Vishu',
+  '08-15':'Independence Day','10-02':'Gandhi Jayanti',
+  '11-01':'Karthigai Deepam (approx)','11-14':'Diwali (approx)',
+  '12-25':'Christmas','12-31':'New Year Eve'
+};
+function isFestivalDay(dateStr) {
+  if (!dateStr) return null;
+  const mmdd = dateStr.slice(5); // "MM-DD"
+  return TN_FESTIVALS[mmdd] || null;
+}
+
 function renderAlerts() {
   const tod = today();
   const data = _filtered.filter(r => r.date <= tod);   // belt-and-suspenders: no future dates
@@ -2004,14 +2312,17 @@ function renderAlerts() {
   sv('al-low',    low.length);
 
   const cards = [
-    ...missed.map(r=>`
-      <div class="alert-card ac-r">
-        <div class="ac-ico">🚫</div>
+    ...missed.map(r=>{
+      const fest = isFestivalDay(r.date);
+      const festTag = fest ? `<span style="display:inline-block;padding:1px 8px;background:#fef7e0;color:#ea8600;border-radius:100px;font-size:10.5px;margin-left:6px;">🎉 ${fest}</span>` : '';
+      return `
+      <div class="alert-card ${fest?'ac-a':'ac-r'}">
+        <div class="ac-ico">${fest?'🎉':'🚫'}</div>
         <div>
-          <div class="ac-t">${r.society} — Zero Collection</div>
-          <div class="ac-d">${fmtDate(r.date)} · Immediate field follow-up required.${r.notes?` Note: ${r.notes}`:''}</div>
+          <div class="ac-t">${r.society} — Zero Collection${festTag}</div>
+          <div class="ac-d">${fmtDate(r.date)} · ${fest?'Likely festival/holiday closure — verify and log.':'Immediate field follow-up required.'}${r.notes?` Note: ${r.notes}`:''}</div>
         </div>
-      </div>`),
+      </div>`;}),
     ...low.map(r=>{
       const pct=Math.round(r.total/socAvg[r.society]*100);
       return `
@@ -2056,18 +2367,10 @@ function loadSettings() {
     _cfg.provider  = d.provider  || 'groq';
     _cfg.groqModel = d.groqModel || 'llama-3.3-70b-versatile';
     _syncLogs      = d.logs      || [];
-    if (d.url) {
-      const el = document.getElementById('gs-url'); if(el) el.value=d.url;
-    }
-    if (d.interval) {
-      const el = document.getElementById('gs-interval'); if(el) el.value=d.interval;
-    }
-    if (d.apiKey) {
-      const el = document.getElementById('api-key-inp'); if(el) el.value=d.apiKey;
-    }
-    if (d.groqModel) {
-      const el = document.getElementById('groq-model-sel'); if(el) el.value=d.groqModel;
-    }
+    if (d.url)      { const el=document.getElementById('gs-url');       if(el) el.value=d.url; }
+    if (d.interval) { const el=document.getElementById('gs-interval');  if(el) el.value=d.interval; }
+    if (d.apiKey)   { const el=document.getElementById('api-key-inp');  if(el) el.value=d.apiKey; }
+    if (d.groqModel){ const el=document.getElementById('groq-model-sel'); if(el) el.value=d.groqModel; }
     renderSyncLog();
     if (_cfg.url && _cfg.interval>0) startTimer();
   } catch(e){}
@@ -2075,10 +2378,10 @@ function loadSettings() {
 
 function saveSettings() {
   try {
-    const url       = document.getElementById('gs-url')?.value?.trim()||_cfg.url;
-    const interval  = parseInt(document.getElementById('gs-interval')?.value||'0')||0;
-    const apiKey    = document.getElementById('api-key-inp')?.value?.trim()||_cfg.apiKey;
-    const groqModel = document.getElementById('groq-model-sel')?.value||_cfg.groqModel||'llama-3.3-70b-versatile';
+    const url       = document.getElementById('gs-url')?.value?.trim()        || _cfg.url;
+    const interval  = parseInt(document.getElementById('gs-interval')?.value||'0') || 0;
+    const apiKey    = document.getElementById('api-key-inp')?.value?.trim()   || _cfg.apiKey;
+    const groqModel = document.getElementById('groq-model-sel')?.value        || _cfg.groqModel || 'llama-3.3-70b-versatile';
     _cfg.url=url; _cfg.interval=interval; _cfg.apiKey=apiKey; _cfg.groqModel=groqModel;
     localStorage.setItem(LS_KEY, JSON.stringify({url,interval,apiKey,provider:_cfg.provider,groqModel,logs:_syncLogs.slice(-30)}));
     if (interval>0) startTimer(); else if(_timer) { clearInterval(_timer); _timer=null; }
@@ -2165,6 +2468,18 @@ function fmtDate(d){
   const months=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
   return `${+day} ${months[+m-1]} ${y}`;
 }
+function emptyHtml(title, sub){return `<div class="empty"><div class="empty-ico">📭</div><div class="empty-t">${title}</div><div class="empty-s">${sub}</div></div>`;}
+function toast(msg, err=false){
+  const el=document.getElementById('toast');
+  el.textContent=msg;
+  el.style.background=err?'#8b1a13':'#162119';
+  el.classList.add('show');
+  setTimeout(()=>el.classList.remove('show'),3000);
+}
+
+// ══════════════════════════════════════════════════════
+//  AI PROVIDER — unified callAI() for Anthropic/Gemini/Groq
+// ══════════════════════════════════════════════════════
 function getApiKey() {
   const key = (document.getElementById('api-key-inp')?.value?.trim()) || _cfg.apiKey || '';
   if (!key) throw new Error('No API key set. Go to ⚙️ Settings → AI Provider and enter your key.');
@@ -2190,7 +2505,7 @@ function initProviderUI() { setProvider(_cfg.provider || 'groq'); }
 
 async function callAI(prompt, maxTokens=1500) {
   const key = getApiKey();
-  const provider = _cfg.provider || 'gemini';
+  const provider = _cfg.provider || 'groq';
 
   if (provider === 'anthropic') {
     const res = await fetch('https://api.anthropic.com/v1/messages', {
@@ -2229,59 +2544,45 @@ async function callAI(prompt, maxTokens=1500) {
   throw new Error('Unknown provider: ' + provider);
 }
 
+function extractJSON(raw) {
+  if (!raw) throw new Error('Empty response from AI');
+  let s = raw.replace(/```json\s*/gi,'').replace(/```\s*/g,'').trim();
+  const arrStart = s.indexOf('['), objStart = s.indexOf('{');
+  let start, opener, closer;
+  if (arrStart === -1 && objStart === -1) throw new Error('No JSON found in AI response');
+  if (arrStart === -1 || (objStart !== -1 && objStart < arrStart)) { start=objStart; opener='{'; closer='}'; }
+  else { start=arrStart; opener='['; closer=']'; }
+  let depth=0, end=-1;
+  for (let i=start;i<s.length;i++) {
+    if(s[i]===opener[0])depth++;
+    else if(s[i]===closer){depth--;if(depth===0){end=i;break;}}
+  }
+  if (end===-1) throw new Error('Malformed JSON in AI response');
+  return s.slice(start,end+1);
+}
+
 function toggleApiKeyVis() {
   const inp = document.getElementById('api-key-inp');
-  if (!inp) return;
-  inp.type = inp.type === 'password' ? 'text' : 'password';
+  if (inp) inp.type = inp.type==='password' ? 'text' : 'password';
 }
 
 async function testApiKey() {
   const statusEl = document.getElementById('api-key-status');
   const key = document.getElementById('api-key-inp')?.value?.trim();
   if (!key) { if(statusEl){statusEl.textContent='⚠️ Enter a key first';statusEl.style.color='#ea8600';} return; }
-  if (statusEl) { statusEl.textContent='⏳ Testing…'; statusEl.style.color='var(--txt3)'; }
+  if (statusEl){statusEl.textContent='⏳ Testing…';statusEl.style.color='var(--txt3)';}
   try {
     await callAI('Reply with only: ok', 10);
-    const modelName = _cfg.provider==='groq' ? (document.getElementById('groq-model-sel')?.value||_cfg.groqModel) : _cfg.provider==='gemini' ? 'gemini-2.0-flash' : 'claude-sonnet-4-6';
-    if (statusEl) { statusEl.textContent='✅ Key valid — AI ready · ' + (_cfg.provider||'groq') + ' · ' + modelName; statusEl.style.color='#137333'; }
-    _cfg.apiKey = key; saveSettings();
+    const model = _cfg.provider==='groq' ? (document.getElementById('groq-model-sel')?.value||_cfg.groqModel)
+                : _cfg.provider==='gemini' ? 'gemini-2.0-flash' : 'claude-sonnet-4-6';
+    if(statusEl){statusEl.textContent='✅ Key valid — AI ready · '+(_cfg.provider)+' · '+model;statusEl.style.color='#137333';}
+    _cfg.apiKey=key; saveSettings();
   } catch(e) {
-    if (statusEl) { statusEl.textContent='❌ ' + e.message; statusEl.style.color='#c5221f'; }
+    if(statusEl){statusEl.textContent='❌ '+e.message;statusEl.style.color='#c5221f';}
   }
 }
 
-// Robustly extract first JSON array or object from a string
-// Handles ```json fences, trailing text, and nested structures
-function extractJSON(raw) {
-  if (!raw) throw new Error('Empty response from API');
-  // Strip markdown fences
-  let s = raw.replace(/```json\s*/gi,'').replace(/```\s*/g,'').trim();
-  // Find first [ or {
-  const arrStart = s.indexOf('['), objStart = s.indexOf('{');
-  let start = -1, end = -1, opener, closer;
-  if (arrStart === -1 && objStart === -1) throw new Error('No JSON found in response');
-  if (arrStart === -1) { start = objStart; opener='['; closer=']'; }  // fallback
-  else if (objStart === -1 || arrStart < objStart) { start = arrStart; opener='['; closer=']'; }
-  else { start = objStart; opener='{'; closer='}'; }
-  // Walk to find matching closer
-  let depth = 0;
-  for (let i = start; i < s.length; i++) {
-    if (s[i] === opener[0]) depth++;
-    else if (s[i] === closer) { depth--; if (depth === 0) { end = i; break; } }
-  }
-  if (end === -1) throw new Error('Malformed JSON in response');
-  return s.slice(start, end+1);
-}
-function emptyHtml(title, sub){return `<div class="empty"><div class="empty-ico">📭</div><div class="empty-t">${title}</div><div class="empty-s">${sub}</div></div>`;}
-function toast(msg, err=false){
-  const el=document.getElementById('toast');
-  el.textContent=msg;
-  el.style.background=err?'#8b1a13':'#162119';
-  el.classList.add('show');
-  setTimeout(()=>el.classList.remove('show'),3000);
-}
-// ══════════════════════════════════════════════════════
-//  RENDER: MANAGEMENT HUB
+
 // ══════════════════════════════════════════════════════
 function renderHub() {
   const data = _filtered;
@@ -2436,7 +2737,28 @@ function renderTracker() {
   const infoBar = document.getElementById('trk-date-info');
   if (infoBar) infoBar.textContent = dateLabel;
 
-  // Chart
+  // Monthly target banner
+  const monthlyGoal = parseFloat(document.getElementById('trk-monthly-goal')?.value) || 0;
+  const monthlyBanner = document.getElementById('trk-monthly-banner');
+  if (monthlyBanner && monthlyGoal > 0) {
+    const achPct = Math.round(total / monthlyGoal * 100);
+    const achColor = achPct >= 100 ? '#34a853' : achPct >= 75 ? '#fbbc04' : '#ea4335';
+    const achLabel = achPct >= 100 ? '🏆 Target Achieved!' : achPct >= 75 ? '📈 On Track' : '⚠️ Below Target';
+    monthlyBanner.innerHTML = `
+      <div style="background:${achColor}18;border:1px solid ${achColor}44;border-radius:8px;padding:12px 16px;display:flex;align-items:center;gap:16px;flex-wrap:wrap;">
+        <div>
+          <div style="font-size:13px;font-weight:600;color:${achColor};">${achLabel}</div>
+          <div style="font-size:12px;color:var(--txt2);margin-top:2px;">Monthly Target: ${fmt(monthlyGoal)} L &nbsp;·&nbsp; Collected: ${fmt(total)} L &nbsp;·&nbsp; Achievement: <strong>${achPct}%</strong></div>
+        </div>
+        <div style="flex:1;min-width:120px;">
+          <div style="height:8px;background:var(--s2);border-radius:100px;overflow:hidden;">
+            <div style="height:100%;width:${Math.min(achPct,100)}%;background:${achColor};border-radius:100px;transition:width .5s;"></div>
+          </div>
+          <div style="font-size:11px;color:var(--txt3);margin-top:3px;">${Math.max(0, monthlyGoal - total) > 0 ? fmt(monthlyGoal - total) + ' L remaining' : 'Surplus: ' + fmt(total - monthlyGoal) + ' L'}</div>
+        </div>
+      </div>`;
+  } else if (monthlyBanner) { monthlyBanner.innerHTML = ''; }
+
   if (_trkChart) { _trkChart.destroy(); _trkChart = null; }
   const ctx = document.getElementById('trk-chart')?.getContext('2d');
   if (ctx) {
@@ -3599,11 +3921,650 @@ function renderPareto() {
     + '<span class="priority-chip '+(s.rep<30?'pc-high':s.rep<60?'pc-medium':'pc-low')+'">'+(s.rep<30?'Critical':s.rep<60?'At Risk':'Low')+'</span>'
     + '</div>'
   ).join('');
+
+  // Recovery Potential score = (bestDay - currentAvg) × (repRate/100)
+  // High recovery potential + currently low = priority field visit
+  const rpEl = document.getElementById('pareto-recovery');
+  if (rpEl) {
+    const rpStats = socs.map(s => {
+      const rows  = _filtered.filter(r => r.society === s);
+      const best  = Math.max(...rows.map(r=>r.total), 0);
+      const active= rows.filter(r=>r.total>0).length;
+      const avg   = active>0 ? rows.filter(r=>r.total>0).reduce((a,r)=>a+r.total,0)/active : 0;
+      const rep   = Math.round(active/Math.max(totalDays,1)*100);
+      const rp    = Math.round((best - avg) * (rep/100));
+      return { name:s, best, avg, rep, rp };
+    }).filter(s=>s.rp>0).sort((a,b)=>b.rp-a.rp).slice(0,8);
+
+    rpEl.innerHTML = rpStats.length ? rpStats.map((s,i)=>`
+      <div class="dm-metric-row">
+        <div>
+          <div style="font-size:13px;font-weight:500;color:var(--txt);">${i+1}. ${s.name}</div>
+          <div style="font-size:11.5px;color:var(--txt3);">Avg: ${fmt(s.avg)} L · Best: ${fmt(s.best)} L · Rep: ${s.rep}%</div>
+        </div>
+        <div style="text-align:right;">
+          <div style="font-size:14px;font-weight:600;color:#ea4335;">+${fmt(s.rp)} L</div>
+          <div style="font-size:10.5px;color:var(--txt3);">recovery potential</div>
+        </div>
+      </div>`).join('') : '<div style="padding:20px;text-align:center;color:var(--txt3);">All societies at or near peak performance.</div>';
+  }
 }
 
 // ══════════════════════════════════════════════════════
-//  BALANCED SCORECARD + OKR
+//  MONTHLY TARGETS MANAGEMENT
 // ══════════════════════════════════════════════════════
+function loadTargets() {
+  try { return JSON.parse(localStorage.getItem('myl_targets') || '{}'); } catch(e) { return {}; }
+}
+function saveTargets() {
+  try {
+    const def = parseFloat(document.getElementById('rpt-default-target')?.value) || 6000;
+    const inputs = document.querySelectorAll('.target-inp');
+    const t = { _default: def };
+    inputs.forEach(inp => { if (inp.value) t[inp.dataset.soc] = parseFloat(inp.value) || 0; });
+    localStorage.setItem('myl_targets', JSON.stringify(t));
+  } catch(e) {}
+}
+function getTarget(soc) {
+  const t = loadTargets();
+  return t[soc] || t['_default'] || 6000;
+}
+function renderTargetEditor() {
+  const el = document.getElementById('target-editor');
+  if (!el) return;
+  const socs = [...new Set(_rows.map(r => r.society))].sort();
+  const t = loadTargets();
+  const def = t['_default'] || 6000;
+  if (document.getElementById('rpt-default-target')) document.getElementById('rpt-default-target').value = def;
+  if (!socs.length) { el.innerHTML = '<div style="color:var(--txt3);font-size:12.5px;">Load data first.</div>'; return; }
+  el.innerHTML = socs.map(s => `
+    <div style="display:flex;align-items:center;gap:8px;padding:5px 10px;border:1px solid var(--brd);border-radius:6px;background:var(--bg);">
+      <div style="flex:1;font-size:12px;font-weight:500;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;" title="${s}">${s}</div>
+      <input type="number" class="target-inp ctrl" data-soc="${s}" value="${t[s]||''}" placeholder="${def}" style="width:90px;font-size:12px;padding:3px 7px;" oninput="saveTargets()">
+      <span style="font-size:10.5px;color:var(--txt3);">L/mo</span>
+    </div>`).join('');
+}
+
+// ══════════════════════════════════════════════════════
+//  RENDER: ALL SOCIETIES TRACKER
+// ══════════════════════════════════════════════════════
+function renderTrackerAll() {
+  if (!_filtered.length) {
+    document.getElementById('ta-body').innerHTML = '<tr><td colspan="11" class="empty">Connect your sheet to see all societies.</td></tr>';
+    return;
+  }
+  const dates    = [...new Set(_filtered.map(r => r.date))].sort();
+  const totalDays = dates.length;
+  const socs     = [...new Set(_filtered.map(r => r.society))];
+  const sortBy   = document.getElementById('ta-sort')?.value || 'total_desc';
+  const filterBy = document.getElementById('ta-filter')?.value || '';
+  const q        = (document.getElementById('ta-search')?.value || '').toUpperCase();
+
+  function nddbTier(avg) {
+    if (avg >= 300) return { lbl: 'A', cls: 'b-g' };
+    if (avg >= 150) return { lbl: 'B', cls: 'b-g' };
+    if (avg >= 50)  return { lbl: 'C', cls: 'b-a' };
+    return { lbl: 'D', cls: 'b-r' };
+  }
+
+  let stats = socs.map(s => {
+    const rows    = _filtered.filter(r => r.society === s);
+    const total   = rows.reduce((a, r) => a + r.total, 0);
+    const active  = rows.filter(r => r.total > 0).length;
+    const missed  = rows.filter(r => r.total === 0).length;
+    const avg     = active > 0 ? total / active : 0;
+    const rep     = Math.round(active / Math.max(totalDays, 1) * 100);
+    const half    = Math.floor(rows.length / 2);
+    const f1      = rows.slice(0, half).reduce((a, r) => a + r.total, 0) / Math.max(half, 1);
+    const f2      = rows.slice(half).reduce((a, r) => a + r.total, 0) / Math.max(rows.length - half, 1);
+    const tPct    = f1 > 0 ? Math.round((f2 - f1) / f1 * 100) : 0;
+    const target  = getTarget(s);
+    const achPct  = target > 0 ? Math.round(total / target * 100) : null;
+    return { s, total, active, missed, avg, rep, tPct, target, achPct };
+  });
+
+  // Sort
+  if (sortBy === 'total_desc')       stats.sort((a, b) => b.total - a.total);
+  else if (sortBy === 'achievement_desc') stats.sort((a, b) => (b.achPct||0) - (a.achPct||0));
+  else if (sortBy === 'trend_desc')  stats.sort((a, b) => b.tPct - a.tPct);
+  else if (sortBy === 'missed_desc') stats.sort((a, b) => b.missed - a.missed);
+  else if (sortBy === 'name_asc')    stats.sort((a, b) => a.s.localeCompare(b.s));
+
+  // Classify toppers/laggards (top 20% = toppers, bottom 20% = laggards by achievement)
+  const ranked  = [...stats].sort((a, b) => (b.achPct||0) - (a.achPct||0));
+  const topN    = Math.ceil(ranked.length * 0.2);
+  const toppers = new Set(ranked.slice(0, topN).map(s => s.s));
+  const laggards= new Set(ranked.slice(-topN).map(s => s.s));
+
+  // Filter
+  let data = stats.filter(s => {
+    if (q && !s.s.includes(q)) return false;
+    if (filterBy === 'topper'  && !toppers.has(s.s))  return false;
+    if (filterBy === 'laggard' && !laggards.has(s.s)) return false;
+    if (filterBy === 'ontrack' && (s.achPct === null || s.achPct < 75)) return false;
+    if (filterBy === 'missed'  && s.missed < 3)       return false;
+    return true;
+  });
+
+  // Summary KPIs
+  const totalAll   = stats.reduce((a, s) => a + s.total, 0);
+  const onTrack    = stats.filter(s => s.achPct !== null && s.achPct >= 75).length;
+  const achieved   = stats.filter(s => s.achPct !== null && s.achPct >= 100).length;
+  const critical   = stats.filter(s => s.rep < 40).length;
+  document.getElementById('ta-kpis').innerHTML = `
+    <div class="hcard hc-g"><div class="hc-lbl">Total Societies</div><div class="hc-val kv-g">${socs.length}</div><div class="hc-sub">${totalDays} days tracked</div></div>
+    <div class="hcard hc-b"><div class="hc-lbl">Target Achieved</div><div class="hc-val kv-b">${achieved}</div><div class="hc-sub">≥100% of monthly target</div></div>
+    <div class="hcard hc-a"><div class="hc-lbl">On Track</div><div class="hc-val kv-a">${onTrack}</div><div class="hc-sub">≥75% target achievement</div></div>
+    <div class="hcard hc-r"><div class="hc-lbl">Critical</div><div class="hc-val kv-r">${critical}</div><div class="hc-sub"><40% reporting rate</div></div>`;
+
+  // Toppers & Laggards highlight
+  const topList = ranked.slice(0, 5);
+  const lagList = ranked.slice(-5).reverse();
+  document.getElementById('ta-toppers').innerHTML = topList.map((s, i) => `
+    <div class="dm-metric-row">
+      <div><div style="font-size:13px;font-weight:500;color:var(--txt);">${i+1}. ${s.s}</div>
+      <div style="font-size:11.5px;color:var(--txt3);">${fmt(s.total)} L · Avg ${fmt(s.avg)} L/day · Rep ${s.rep}%</div></div>
+      <div style="text-align:right;"><div style="font-size:14px;font-weight:600;color:#34a853;">${s.achPct !== null ? s.achPct + '%' : '—'}</div>
+      <div style="font-size:10px;color:var(--txt3);">achievement</div></div>
+    </div>`).join('');
+  document.getElementById('ta-laggards').innerHTML = lagList.map((s, i) => `
+    <div class="dm-metric-row">
+      <div><div style="font-size:13px;font-weight:500;color:var(--txt);">${i+1}. ${s.s}</div>
+      <div style="font-size:11.5px;color:var(--txt3);">${fmt(s.total)} L · Missed ${s.missed} days · Rep ${s.rep}%</div></div>
+      <div style="text-align:right;"><div style="font-size:14px;font-weight:600;color:#ea4335;">${s.achPct !== null ? s.achPct + '%' : '—'}</div>
+      <div style="font-size:10px;color:var(--txt3);">achievement</div></div>
+    </div>`).join('');
+
+  document.getElementById('ta-count').textContent = `${data.length} of ${socs.length} societies`;
+
+  if (!data.length) {
+    document.getElementById('ta-body').innerHTML = '<tr><td colspan="11" style="text-align:center;padding:24px;color:var(--txt3);">No societies match the filter.</td></tr>';
+    return;
+  }
+
+  document.getElementById('ta-body').innerHTML = data.map((s, i) => {
+    const tier     = nddbTier(s.avg);
+    const tChip    = s.tPct > 5  ? `<span class="trend-chip tc-up">▲${s.tPct}%</span>`
+                   : s.tPct < -5 ? `<span class="trend-chip tc-dn">▼${Math.abs(s.tPct)}%</span>`
+                   :               `<span class="trend-chip tc-eq">→</span>`;
+    const achColor = s.achPct === null ? 'var(--txt3)' : s.achPct >= 100 ? '#34a853' : s.achPct >= 75 ? '#fbbc04' : '#ea4335';
+    const achBar   = s.achPct !== null ? `<div style="height:4px;background:var(--s2);border-radius:100px;margin-top:3px;overflow:hidden;"><div style="height:100%;width:${Math.min(s.achPct,100)}%;background:${achColor};border-radius:100px;"></div></div>` : '';
+    const rowCls   = toppers.has(s.s) ? 'style="background:#f0faf4;"' : laggards.has(s.s) ? 'style="background:#fff9f9;"' : '';
+    const badge    = toppers.has(s.s) ? '<span style="font-size:10px;background:#e6f4ea;color:#137333;padding:1px 6px;border-radius:100px;margin-left:4px;">🏆 Top</span>'
+                   : laggards.has(s.s) ? '<span style="font-size:10px;background:#fce8e6;color:#c5221f;padding:1px 6px;border-radius:100px;margin-left:4px;">⚠️ Lag</span>' : '';
+    const statusCls = s.rep >= 80 ? 'b-g' : s.rep >= 50 ? 'b-a' : 'b-r';
+    const statusLbl = s.rep >= 80 ? 'Active' : s.rep >= 50 ? 'Moderate' : 'Low';
+    return `<tr ${rowCls}>
+      <td style="color:var(--txt3);font-family:var(--mono);">${i+1}</td>
+      <td style="font-weight:500;">${s.s}${badge}</td>
+      <td style="font-family:var(--mono);">${fmt(s.target)} L</td>
+      <td style="font-family:var(--mono);font-weight:600;color:var(--green);">${fmt(s.total)} L</td>
+      <td><span style="font-family:var(--mono);font-weight:600;color:${achColor};">${s.achPct !== null ? s.achPct + '%' : '—'}</span>${achBar}</td>
+      <td style="font-family:var(--mono);">${fmt(s.avg)} L</td>
+      <td style="font-family:var(--mono);color:${s.missed > 5 ? '#ea4335' : 'var(--txt2)'};">${s.missed}</td>
+      <td><span style="font-family:var(--mono);">${s.rep}%</span></td>
+      <td>${tChip}</td>
+      <td><span class="bdg ${tier.cls}">${tier.lbl}</span></td>
+      <td><span class="bdg ${statusCls}">${statusLbl}</span></td>
+    </tr>`;
+  }).join('');
+}
+
+// ══════════════════════════════════════════════════════
+//  RENDER: VILLAGE MILCH TABLE
+// ══════════════════════════════════════════════════════
+function renderVillageTable() {
+  const block  = document.getElementById('vt-block')?.value || '';
+  const sortBy = document.getElementById('vt-sort')?.value || 'util_desc';
+  const q      = (document.getElementById('vt-search')?.value || '').toLowerCase();
+
+  // Build society→avg procurement map from _filtered
+  const socAvgMap = {};
+  if (_filtered.length) {
+    const socs = [...new Set(_filtered.map(r => r.society))];
+    socs.forEach(s => {
+      const rows = _filtered.filter(r => r.society === s && r.total > 0);
+      socAvgMap[s.toUpperCase()] = rows.length > 0 ? rows.reduce((a, r) => a + r.total, 0) / rows.length : 0;
+    });
+  }
+
+  let data = CATTLE_DATA.filter(r => {
+    if (block && r.block !== block) return false;
+    if (q && !r.village.toLowerCase().includes(q)) return false;
+    return true;
+  }).map(r => {
+    const procured   = socAvgMap[r.village.toUpperCase()] || 0;
+    const potential  = r.milk_potential || 0;
+    const utilPct    = potential > 0 ? Math.round(procured / potential * 100) : 0;
+    const gap        = Math.max(0, potential - procured);
+    return { ...r, procured, utilPct, gap };
+  });
+
+  // Sort
+  if (sortBy === 'util_desc')      data.sort((a, b) => b.utilPct - a.utilPct);
+  else if (sortBy === 'util_asc')  data.sort((a, b) => a.utilPct - b.utilPct);
+  else if (sortBy === 'potential_desc') data.sort((a, b) => b.milk_potential - a.milk_potential);
+  else if (sortBy === 'animals_desc')   data.sort((a, b) => b.milk_animals - a.milk_animals);
+  else if (sortBy === 'village_asc')    data.sort((a, b) => a.village.localeCompare(b.village));
+
+  // Summary KPIs
+  const totalAnimals   = data.reduce((a, r) => a + r.milk_animals, 0);
+  const totalPotential = data.reduce((a, r) => a + r.milk_potential, 0);
+  const totalProcured  = data.reduce((a, r) => a + r.procured, 0);
+  const overallUtil    = totalPotential > 0 ? Math.round(totalProcured / totalPotential * 100) : 0;
+  const withData       = data.filter(r => r.procured > 0).length;
+  document.getElementById('vt-kpis').innerHTML = `
+    <div class="hcard hc-b"><div class="hc-lbl">Villages</div><div class="hc-val kv-b">${data.length}</div><div class="hc-sub">${withData} with procurement data</div></div>
+    <div class="hcard hc-g"><div class="hc-lbl">Total Milch Animals</div><div class="hc-val kv-g">${fmt(totalAnimals)}</div><div class="hc-sub">cattle + buffalo</div></div>
+    <div class="hcard hc-t"><div class="hc-lbl">Milk Potential</div><div class="hc-val kv-t">${fmt(totalPotential)} L/day</div><div class="hc-sub">estimated district potential</div></div>
+    <div class="hcard ${overallUtil >= 60 ? 'hc-g' : overallUtil >= 30 ? 'hc-a' : 'hc-r'}"><div class="hc-lbl">Overall Utilisation</div><div class="hc-val ${overallUtil >= 60 ? 'kv-g' : overallUtil >= 30 ? 'kv-a' : 'kv-r'}">${overallUtil}%</div><div class="hc-sub">${fmt(totalProcured)} L/day procured</div></div>`;
+
+  document.getElementById('vt-count').textContent = `${data.length} villages`;
+
+  const vbColors = { High: '#34a853', Medium: '#4285f4', Low: '#fbbc04', 'Not Viable': '#ea4335' };
+  document.getElementById('vt-body').innerHTML = data.map((r, i) => {
+    const utilColor = r.utilPct >= 60 ? '#34a853' : r.utilPct >= 30 ? '#fbbc04' : r.procured === 0 ? '#9aa0a6' : '#ea4335';
+    const utilBar   = `<div style="height:4px;background:var(--s2);border-radius:100px;margin-top:3px;overflow:hidden;width:80px;"><div style="height:100%;width:${Math.min(r.utilPct,100)}%;background:${utilColor};border-radius:100px;"></div></div>`;
+    const remarks   = r.procured === 0 ? 'No procurement data' : r.utilPct >= 80 ? '✅ Excellent utilisation' : r.utilPct >= 50 ? '📈 Good, scope to grow' : r.utilPct >= 20 ? '⚠️ Low utilisation' : '🚨 Very low — intervene';
+    return `<tr>
+      <td style="color:var(--txt3);font-family:var(--mono);">${i+1}</td>
+      <td style="font-weight:500;">${r.village}</td>
+      <td><span style="font-size:11.5px;padding:2px 8px;border-radius:100px;background:#e8f0fe;color:#1a56a6;">${r.block}</span></td>
+      <td style="font-family:var(--mono);">${r.milk_animals.toLocaleString('en-IN')}</td>
+      <td style="font-family:var(--mono);">${r.milk_potential.toLocaleString('en-IN')}</td>
+      <td style="font-family:var(--mono);font-weight:600;color:var(--green);">${r.procured > 0 ? fmt(r.procured) : '<span style="color:var(--txt3);">—</span>'}</td>
+      <td><span style="font-family:var(--mono);font-weight:600;color:${utilColor};">${r.procured > 0 ? r.utilPct + '%' : '—'}</span>${r.procured > 0 ? utilBar : ''}</td>
+      <td style="font-family:var(--mono);color:var(--txt2);">${r.gap > 0 ? fmt(r.gap) : '—'}</td>
+      <td><span class="bdg" style="background:${vbColors[r.viability]}22;color:${vbColors[r.viability]};border:1px solid ${vbColors[r.viability]}44;">${r.viability}</span></td>
+      <td style="font-size:12px;color:var(--txt2);">${remarks}</td>
+    </tr>`;
+  }).join('');
+}
+
+// ══════════════════════════════════════════════════════
+//  PDF EXPORT — Detailed Authority Report
+// ══════════════════════════════════════════════════════
+function exportReportPDF() {
+  if (!_filtered.length) { toast('No data loaded.', true); return; }
+  if (typeof window.jspdf === 'undefined') { toast('PDF library loading… try again in 2s', true); return; }
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+
+  const from    = document.getElementById('dr-from')?.value || '';
+  const to      = document.getElementById('dr-to')?.value || '';
+  const dist    = document.getElementById('dist-filter')?.value || 'All Districts';
+  const dates   = [...new Set(_filtered.map(r => r.date))].sort();
+  const socs    = [...new Set(_filtered.map(r => r.society))];
+  const totalL  = _filtered.reduce((a, r) => a + r.total, 0);
+  const dailyAvg= totalL / Math.max(dates.length, 1);
+  const missed  = _filtered.filter(r => r.total === 0).length;
+  const totalDays = dates.length;
+
+  // Per-society stats
+  const socStats = socs.map(s => {
+    const rows   = _filtered.filter(r => r.society === s);
+    const total  = rows.reduce((a, r) => a + r.total, 0);
+    const active = rows.filter(r => r.total > 0).length;
+    const ms     = rows.filter(r => r.total === 0).length;
+    const avg    = active > 0 ? total / active : 0;
+    const rep    = Math.round(active / Math.max(totalDays, 1) * 100);
+    const target = getTarget(s);
+    const ach    = target > 0 ? Math.round(total / target * 100) : null;
+    const half   = Math.floor(rows.length / 2);
+    const f1     = rows.slice(0, half).reduce((a, r) => a + r.total, 0) / Math.max(half, 1);
+    const f2     = rows.slice(half).reduce((a, r) => a + r.total, 0) / Math.max(rows.length - half, 1);
+    const trend  = f1 > 0 ? Math.round((f2 - f1) / f1 * 100) : 0;
+    return { name: s, total, avg: Math.round(avg), ms, rep, ach, trend };
+  }).sort((a, b) => b.total - a.total);
+
+  const pageW = 210, margin = 14;
+  let y = margin;
+
+  // ── HEADER ──
+  doc.setFillColor(26, 115, 232);
+  doc.rect(0, 0, pageW, 28, 'F');
+  doc.setTextColor(255, 255, 255);
+  doc.setFontSize(14); doc.setFont('helvetica', 'bold');
+  doc.text('Mayiladuthurai District Cooperative Milk Producers Union', margin, 10);
+  doc.setFontSize(10); doc.setFont('helvetica', 'normal');
+  doc.text('Milk Procurement Intelligence Report — For Official Use', margin, 17);
+  doc.text(`Period: ${from || dates[0]} to ${to || dates[dates.length-1]}  |  District: ${dist}  |  Generated: ${new Date().toLocaleDateString('en-IN')}`, margin, 23);
+  y = 34;
+
+  // ── EXECUTIVE SUMMARY ──
+  doc.setTextColor(30, 30, 30);
+  doc.setFontSize(11); doc.setFont('helvetica', 'bold');
+  doc.text('1. EXECUTIVE SUMMARY', margin, y); y += 6;
+  doc.setFontSize(9); doc.setFont('helvetica', 'normal');
+  const summaryLines = [
+    `Total milk procured during the period: ${Math.round(totalL).toLocaleString('en-IN')} Litres across ${socs.length} societies over ${totalDays} days.`,
+    `District daily average: ${Math.round(dailyAvg).toLocaleString('en-IN')} L/day.  Total missed collection events: ${missed}.`,
+    `Top society: ${socStats[0]?.name || '—'} (${Math.round(socStats[0]?.total || 0).toLocaleString('en-IN')} L).  ` +
+    `Lowest society: ${socStats[socStats.length-1]?.name || '—'} (${Math.round(socStats[socStats.length-1]?.total || 0).toLocaleString('en-IN')} L).`
+  ];
+  summaryLines.forEach(line => {
+    const wrapped = doc.splitTextToSize(line, pageW - margin * 2);
+    doc.text(wrapped, margin, y); y += wrapped.length * 5 + 1;
+  });
+  y += 3;
+
+  // ── KPI TABLE ──
+  doc.setFontSize(11); doc.setFont('helvetica', 'bold');
+  doc.text('2. KEY PERFORMANCE INDICATORS', margin, y); y += 4;
+  doc.autoTable({
+    startY: y,
+    head: [['Metric', 'Value', 'Benchmark']],
+    body: [
+      ['Total Procurement', Math.round(totalL).toLocaleString('en-IN') + ' L', '—'],
+      ['Daily Average', Math.round(dailyAvg).toLocaleString('en-IN') + ' L/day', 'Target varies by society'],
+      ['Active Societies', socs.length.toString(), 'All societies'],
+      ['Missed Collection Events', missed.toString(), '0 (target)'],
+      ['Reporting Rate', Math.round((totalDays * socs.length - missed) / (totalDays * socs.length) * 100) + '%', '≥ 90%'],
+      ['Target Achievement (avg)', Math.round(socStats.reduce((a, s) => a + (s.ach || 0), 0) / socStats.length) + '%', '≥ 100%'],
+    ],
+    theme: 'striped',
+    headStyles: { fillColor: [26, 115, 232], textColor: 255, fontSize: 9, fontStyle: 'bold' },
+    bodyStyles: { fontSize: 9 },
+    margin: { left: margin, right: margin },
+    tableWidth: pageW - margin * 2,
+  });
+  y = doc.lastAutoTable.finalY + 6;
+
+  // ── TOPPERS & LAGGARDS ──
+  doc.setFontSize(11); doc.setFont('helvetica', 'bold');
+  doc.text('3. TOPPERS & LAGGARDS', margin, y); y += 4;
+  const top5   = socStats.slice(0, 5);
+  const last5  = socStats.slice(-5);
+  doc.autoTable({
+    startY: y,
+    head: [['Rank', 'Society (Top 5)', 'Total (L)', 'Avg L/day', 'Achievement%', 'Trend']],
+    body: top5.map((s, i) => [
+      (i+1).toString(), s.name, Math.round(s.total).toLocaleString('en-IN'),
+      s.avg.toLocaleString('en-IN'), s.ach !== null ? s.ach + '%' : '—',
+      s.trend >= 0 ? '▲ ' + s.trend + '%' : '▼ ' + Math.abs(s.trend) + '%'
+    ]),
+    theme: 'striped',
+    headStyles: { fillColor: [52, 168, 83], textColor: 255, fontSize: 9 },
+    bodyStyles: { fontSize: 9 },
+    margin: { left: margin, right: margin },
+    tableWidth: pageW - margin * 2,
+  });
+  y = doc.lastAutoTable.finalY + 4;
+  doc.autoTable({
+    startY: y,
+    head: [['Rank', 'Society (Laggards)', 'Total (L)', 'Missed Days', 'Rep %', 'Achievement%']],
+    body: last5.map((s, i) => [
+      (i+1).toString(), s.name, Math.round(s.total).toLocaleString('en-IN'),
+      s.ms.toString(), s.rep + '%', s.ach !== null ? s.ach + '%' : '—'
+    ]),
+    theme: 'striped',
+    headStyles: { fillColor: [217, 48, 37], textColor: 255, fontSize: 9 },
+    bodyStyles: { fontSize: 9 },
+    margin: { left: margin, right: margin },
+    tableWidth: pageW - margin * 2,
+  });
+  y = doc.lastAutoTable.finalY + 6;
+
+  // ── NEW PAGE: FULL SOCIETY TABLE ──
+  doc.addPage();
+  y = margin;
+  doc.setFontSize(11); doc.setFont('helvetica', 'bold');
+  doc.text('4. SOCIETY-WISE DETAILED PERFORMANCE', margin, y); y += 4;
+  doc.autoTable({
+    startY: y,
+    head: [['#', 'Society', 'Total (L)', 'Daily Avg', 'Monthly Target', 'Achievement%', 'Missed', 'Rep%', 'Trend']],
+    body: socStats.map((s, i) => [
+      (i+1).toString(), s.name,
+      Math.round(s.total).toLocaleString('en-IN'),
+      s.avg.toLocaleString('en-IN'),
+      getTarget(s.name).toLocaleString('en-IN'),
+      s.ach !== null ? s.ach + '%' : '—',
+      s.ms.toString(), s.rep + '%',
+      (s.trend >= 0 ? '▲ ' : '▼ ') + Math.abs(s.trend) + '%'
+    ]),
+    theme: 'striped',
+    headStyles: { fillColor: [26, 115, 232], textColor: 255, fontSize: 8, fontStyle: 'bold' },
+    bodyStyles: { fontSize: 8 },
+    alternateRowStyles: { fillColor: [245, 247, 250] },
+    didParseCell: (data) => {
+      if (data.column.index === 5 && data.section === 'body') {
+        const val = parseInt(data.cell.text[0]);
+        if (!isNaN(val)) {
+          data.cell.styles.textColor = val >= 100 ? [52, 168, 83] : val >= 75 ? [230, 160, 0] : [217, 48, 37];
+          data.cell.styles.fontStyle = 'bold';
+        }
+      }
+    },
+    margin: { left: margin, right: margin },
+    tableWidth: pageW - margin * 2,
+  });
+  y = doc.lastAutoTable.finalY + 6;
+
+  // ── VILLAGE MILCH TABLE ──
+  if (y > 220) { doc.addPage(); y = margin; }
+  doc.setFontSize(11); doc.setFont('helvetica', 'bold');
+  doc.text('5. VILLAGE MILCH ANIMAL vs PROCUREMENT (Top 20 by Utilisation)', margin, y); y += 4;
+  const socAvgMap2 = {};
+  socs.forEach(s => {
+    const rows = _filtered.filter(r => r.society === s && r.total > 0);
+    socAvgMap2[s.toUpperCase()] = rows.length > 0 ? rows.reduce((a, r) => a + r.total, 0) / rows.length : 0;
+  });
+  const villageData = CATTLE_DATA.map(r => {
+    const proc = socAvgMap2[r.village.toUpperCase()] || 0;
+    const util = r.milk_potential > 0 ? Math.round(proc / r.milk_potential * 100) : 0;
+    return { ...r, proc, util };
+  }).filter(r => r.proc > 0).sort((a, b) => b.util - a.util).slice(0, 20);
+  doc.autoTable({
+    startY: y,
+    head: [['Village', 'Block', 'Animals', 'Potential L/day', 'Procured L/day', 'Util %']],
+    body: villageData.map(r => [
+      r.village, r.block,
+      r.milk_animals.toLocaleString('en-IN'),
+      r.milk_potential.toLocaleString('en-IN'),
+      Math.round(r.proc).toLocaleString('en-IN'),
+      r.util + '%'
+    ]),
+    theme: 'striped',
+    headStyles: { fillColor: [0, 137, 123], textColor: 255, fontSize: 8 },
+    bodyStyles: { fontSize: 8 },
+    margin: { left: margin, right: margin },
+    tableWidth: pageW - margin * 2,
+  });
+
+  // ── FOOTER on all pages ──
+  const pageCount = doc.internal.getNumberOfPages();
+  for (let i = 1; i <= pageCount; i++) {
+    doc.setPage(i);
+    doc.setFontSize(7.5); doc.setTextColor(150);
+    doc.text(`Mayiladuthurai DCMPU · Confidential · Page ${i} of ${pageCount}`, pageW / 2, 293, { align: 'center' });
+  }
+
+  const fname = `MYL_Report_${from || dates[0]}_${to || dates[dates.length-1]}.pdf`;
+  doc.save(fname);
+  toast(`✓ PDF downloaded: ${fname}`);
+}
+
+// ══════════════════════════════════════════════════════
+//  EXCEL EXPORT
+// ══════════════════════════════════════════════════════
+function exportReportExcel() {
+  if (!_filtered.length) { toast('No data loaded.', true); return; }
+  if (typeof XLSX === 'undefined') { toast('Excel library loading… try again in 2s', true); return; }
+
+  const wb       = XLSX.utils.book_new();
+  const from     = document.getElementById('dr-from')?.value || '';
+  const to       = document.getElementById('dr-to')?.value || '';
+  const dates    = [...new Set(_filtered.map(r => r.date))].sort();
+  const socs     = [...new Set(_filtered.map(r => r.society))];
+  const totalDays= dates.length;
+
+  // Sheet 1 — Summary
+  const totalL   = _filtered.reduce((a, r) => a + r.total, 0);
+  const missed   = _filtered.filter(r => r.total === 0).length;
+  const sumData  = [
+    ['Mayiladuthurai DCMPU — Milk Procurement Report'],
+    [`Period: ${from || dates[0]} to ${to || dates[dates.length-1]}`],
+    [],
+    ['Metric', 'Value'],
+    ['Total Procurement (L)', Math.round(totalL)],
+    ['Daily Average (L/day)', Math.round(totalL / Math.max(totalDays, 1))],
+    ['Total Societies', socs.length],
+    ['Days on Record', totalDays],
+    ['Missed Collection Events', missed],
+    ['Reporting Rate (%)', Math.round((totalDays * socs.length - missed) / (totalDays * socs.length) * 100)],
+  ];
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(sumData), 'Summary');
+
+  // Sheet 2 — Society Performance
+  const socStats = socs.map(s => {
+    const rows   = _filtered.filter(r => r.society === s);
+    const total  = rows.reduce((a, r) => a + r.total, 0);
+    const active = rows.filter(r => r.total > 0).length;
+    const ms     = rows.filter(r => r.total === 0).length;
+    const avg    = active > 0 ? total / active : 0;
+    const rep    = Math.round(active / Math.max(totalDays, 1) * 100);
+    const target = getTarget(s);
+    const ach    = target > 0 ? Math.round(total / target * 100) : null;
+    const half   = Math.floor(rows.length / 2);
+    const f1     = rows.slice(0, half).reduce((a, r) => a + r.total, 0) / Math.max(half, 1);
+    const f2     = rows.slice(half).reduce((a, r) => a + r.total, 0) / Math.max(rows.length - half, 1);
+    const trend  = f1 > 0 ? Math.round((f2 - f1) / f1 * 100) : 0;
+    return [s, Math.round(total), Math.round(avg), target, ach !== null ? ach : 'N/A', ms, rep, trend >= 0 ? '+' + trend : trend];
+  }).sort((a, b) => b[1] - a[1]);
+
+  const socSheet = [
+    ['Society', 'Total (L)', 'Daily Avg (L)', 'Monthly Target (L)', 'Achievement (%)', 'Missed Days', 'Reporting (%)', 'Trend (%)'],
+    ...socStats
+  ];
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(socSheet), 'Society Performance');
+
+  // Sheet 3 — Daily Log
+  const dlData = [
+    ['Date', 'Society', 'Morning (L)', 'Evening (L)', 'Total (L)', 'Fat %', 'SNF %', 'Notes'],
+    ..._filtered.map(r => [r.date, r.society, r.morning || 0, r.evening || 0, r.total, r.fat ?? '', r.snf ?? '', r.notes || ''])
+  ];
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(dlData), 'Daily Log');
+
+  // Sheet 4 — Village Milch Table
+  const socAvgMap = {};
+  socs.forEach(s => {
+    const rows = _filtered.filter(r => r.society === s && r.total > 0);
+    socAvgMap[s.toUpperCase()] = rows.length > 0 ? rows.reduce((a, r) => a + r.total, 0) / rows.length : 0;
+  });
+  const villageRows = CATTLE_DATA.map(r => {
+    const proc = socAvgMap[r.village.toUpperCase()] || 0;
+    const util = r.milk_potential > 0 ? Math.round(proc / r.milk_potential * 100) : 0;
+    return [r.village, r.block, r.milk_animals, r.milk_potential, Math.round(proc), util, r.milk_potential - proc > 0 ? Math.round(r.milk_potential - proc) : 0, r.viability];
+  }).sort((a, b) => b[5] - a[5]);
+  const vSheet = [
+    ['Village', 'Block', 'Milch Animals', 'Potential (L/day)', 'Procured (L/day avg)', 'Utilisation (%)', 'Gap (L/day)', 'Viability'],
+    ...villageRows
+  ];
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(vSheet), 'Village Milch Table');
+
+  const fname = `MYL_Export_${from || dates[0]}_${to || dates[dates.length-1]}.xlsx`;
+  XLSX.writeFile(wb, fname);
+  toast(`✓ Excel downloaded: ${fname}`);
+}
+
+// ══════════════════════════════════════════════════════
+//  MEMBER COUNT MANAGEMENT
+// ══════════════════════════════════════════════════════
+function loadMemberCounts() {
+  try { return JSON.parse(localStorage.getItem('myl_members')||'{}'); } catch(e) { return {}; }
+}
+function saveMemberCounts() {
+  const inputs = document.querySelectorAll('.member-inp');
+  const counts = {};
+  inputs.forEach(inp => { if (inp.value) counts[inp.dataset.soc] = parseInt(inp.value)||0; });
+  localStorage.setItem('myl_members', JSON.stringify(counts));
+  toast('✓ Member counts saved');
+  renderSummary();
+}
+function renderMemberEditor() {
+  const el = document.getElementById('member-count-editor');
+  if (!el) return;
+  const socs = [...new Set(_rows.map(r=>r.society))].sort();
+  const counts = loadMemberCounts();
+  if (!socs.length) { el.innerHTML='<div style="color:var(--txt3);font-size:12.5px;">Load your data first to see societies here.</div>'; return; }
+  el.innerHTML = socs.map(s=>`
+    <div style="display:flex;align-items:center;gap:8px;padding:6px 10px;border:1px solid var(--brd);border-radius:6px;background:var(--bg);">
+      <div style="flex:1;font-size:12.5px;font-weight:500;color:var(--txt);overflow:hidden;white-space:nowrap;text-overflow:ellipsis;" title="${s}">${s}</div>
+      <input type="number" class="member-inp ctrl" data-soc="${s}" value="${counts[s]||''}" placeholder="Members" style="width:80px;font-size:12px;padding:4px 8px;">
+    </div>`).join('');
+}
+
+// Hook into settings tab
+const _origGoTab = goTab;
+// ══════════════════════════════════════════════════════
+//  MORNING 10-POINT CHECKLIST (Amul-style)
+// ══════════════════════════════════════════════════════
+const CHECKLIST_ITEMS = [
+  {id:'cl1', ico:'📡', label:'All societies reported by 7 AM', sub:'Verify via SMS/phone for non-reporters'},
+  {id:'cl2', ico:'🚫', label:'Zero-collection societies identified', sub:'List names, initiate field call'},
+  {id:'cl3', ico:'🧪', label:'Fat/SNF within acceptable range', sub:'Min 3.5% fat, 8.5% SNF (cow milk)'},
+  {id:'cl4', ico:'🧑‍🌾', label:'New member additions logged', sub:'Update farmer register if any'},
+  {id:'cl5', ico:'❄️', label:'Chilling centre temp <10°C confirmed', sub:'BMC log checked and initialled'},
+  {id:'cl6', ico:'🚛', label:'Route vehicle departed on time', sub:'All collection vehicles dispatched'},
+  {id:'cl7', ico:'💸', label:'Yesterday\'s payment released', sub:'NEFT/bank transfer confirmed'},
+  {id:'cl8', ico:'🐄', label:'Animal disease reports checked', sub:'Vet dispensary contacted if any outbreak'},
+  {id:'cl9', ico:'🌿', label:'Fodder availability confirmed', sub:'No distress signal from society president'},
+  {id:'cl10',ico:'🌦️', label:'Weather/festival impact noted', sub:'Flag if likely to affect tomorrow\'s collection'},
+];
+
+function renderChecklist() {
+  const el = document.getElementById('morning-checklist');
+  if (!el) return;
+  const saved = JSON.parse(localStorage.getItem('myl_checklist_'+today())||'{}');
+  el.innerHTML = CHECKLIST_ITEMS.map(item => {
+    const state = saved[item.id] || 'pending';
+    return `<div class="cl-item cl-${state}" id="cld-${item.id}" onclick="cycleCheck('${item.id}')">
+      <div style="display:flex;align-items:flex-start;gap:10px;">
+        <div style="font-size:20px;flex-shrink:0;margin-top:1px;">${item.ico}</div>
+        <div style="flex:1;">
+          <div style="font-size:13px;font-weight:500;color:var(--txt);margin-bottom:2px;">${item.label}</div>
+          <div style="font-size:11.5px;color:var(--txt2);">${item.sub}</div>
+        </div>
+        <div class="cl-status-icon">${state==='ok'?'✅':state==='warn'?'⚠️':state==='na'?'➖':'○'}</div>
+      </div>
+    </div>`;
+  }).join('');
+  updateChecklistScore();
+}
+
+function cycleCheck(id) {
+  const saved = JSON.parse(localStorage.getItem('myl_checklist_'+today())||'{}');
+  const cur = saved[id]||'pending';
+  const next = {pending:'ok',ok:'warn',warn:'na',na:'pending'}[cur];
+  saved[id] = next;
+  localStorage.setItem('myl_checklist_'+today(), JSON.stringify(saved));
+  renderChecklist();
+}
+
+function saveChecklist() {
+  toast('✓ Checklist saved for ' + fmtDate(today()));
+}
+
+function resetChecklist() {
+  if (!confirm('Reset today\'s checklist?')) return;
+  localStorage.removeItem('myl_checklist_'+today());
+  renderChecklist();
+}
+
+function updateChecklistScore() {
+  const saved = JSON.parse(localStorage.getItem('myl_checklist_'+today())||'{}');
+  const ok   = Object.values(saved).filter(v=>v==='ok').length;
+  const warn = Object.values(saved).filter(v=>v==='warn').length;
+  const na   = Object.values(saved).filter(v=>v==='na').length;
+  const done = ok + warn + na;
+  const el = document.getElementById('checklist-score');
+  if (!el) return;
+  const pct = Math.round(done/CHECKLIST_ITEMS.length*100);
+  const color = ok===CHECKLIST_ITEMS.length ? '#34a853' : pct>=70 ? '#fbbc04' : '#ea4335';
+  el.style.background = color+'18';
+  el.style.color = color;
+  el.innerHTML = `${ok} ✅  ${warn} ⚠️  ${na} ➖  |  ${pct}% complete today — ${fmtDate(today())}`;
+}
 function renderScorecard() {
   if (!_filtered.length) {
     document.getElementById('bsc-quadrants').innerHTML = '<div style="grid-column:1/-1;padding:24px;text-align:center;color:var(--txt3);">Connect your sheet to see the Balanced Scorecard.</div>';
