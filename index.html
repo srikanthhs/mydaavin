@@ -4639,6 +4639,428 @@ function renderBestPractices() {
 }
 
 // ══════════════════════════════════════════════════════
+//  RENDER: ALL SOCIETIES TRACKER
+// ══════════════════════════════════════════════════════
+function renderTrackerAll() {
+  const data = _filtered;
+  const kpiEl = document.getElementById('ta-kpis');
+  if (!data.length) {
+    if (kpiEl) kpiEl.innerHTML = '<div style="grid-column:1/-1;" class="empty"><div class="empty-ico">📊</div><div class="empty-t">No data loaded</div><div class="empty-s">Connect your Google Sheet to see all societies.</div></div>';
+    document.getElementById('ta-body').innerHTML = '<tr><td colspan="13" class="empty">Load data to see all societies</td></tr>';
+    document.getElementById('ta-toppers').innerHTML = '';
+    document.getElementById('ta-laggards').innerHTML = '';
+    return;
+  }
+  const socs = [...new Set(data.map(r => r.society))];
+  const totalDays = [...new Set(data.map(r => r.date))].length;
+  const hasSplit = hasSplitData(data);
+
+  const socStats = socs.map(s => {
+    const rows = data.filter(r => r.society === s);
+    const total = rows.reduce((a, r) => a + r.total, 0);
+    const morning = rows.reduce((a, r) => a + (r.morning || 0), 0);
+    const evening = rows.reduce((a, r) => a + (r.evening || 0), 0);
+    const active = rows.filter(r => r.total > 0).length;
+    const missed = rows.filter(r => r.total === 0).length;
+    const rep = Math.round(active / Math.max(totalDays, 1) * 100);
+    const avg = active > 0 ? total / active : 0;
+    const mornAvg = active > 0 ? morning / active : 0;
+    const eveAvg  = active > 0 ? evening / active : 0;
+    const target = avg * totalDays * 1.1;
+    const ach = target > 0 ? Math.round(total / target * 100) : 0;
+    const half = Math.floor(rows.length / 2);
+    const f1 = rows.slice(0, half).reduce((a, r) => a + r.total, 0) / Math.max(half, 1);
+    const f2 = rows.slice(half).reduce((a, r) => a + r.total, 0) / Math.max(rows.length - half, 1);
+    const trend = f1 > 0 ? Math.round((f2 - f1) / f1 * 100) : 0;
+    return { name: s, total, morning, evening, active, missed, rep, avg, mornAvg, eveAvg, target, ach, trend };
+  });
+
+  // Sort
+  const sortVal = document.getElementById('ta-sort')?.value || 'total_desc';
+  const [sKey, sDir] = sortVal.split('_');
+  const keyMap = { total: 'total', achievement: 'ach', trend: 'trend', missed: 'missed', rep: 'rep', avg: 'avg', name: 'name' };
+  const col = keyMap[sKey] || 'total';
+  socStats.sort((a, b) => {
+    const av = a[col], bv = b[col];
+    if (typeof av === 'string') return sDir === 'asc' ? av.localeCompare(bv) : bv.localeCompare(av);
+    return sDir === 'asc' ? av - bv : bv - av;
+  });
+
+  // Filter
+  const filterVal = document.getElementById('ta-filter')?.value || '';
+  const search = (document.getElementById('ta-search')?.value || '').toLowerCase();
+  let filtered = socStats.filter(s => {
+    if (search && !s.name.toLowerCase().includes(search)) return false;
+    if (filterVal === 'topper') return s.ach >= 100;
+    if (filterVal === 'laggard') return s.rep < 60;
+    if (filterVal === 'ontrack') return s.ach >= 80 && s.ach < 100;
+    if (filterVal === 'missed') return s.missed >= 5;
+    return true;
+  });
+
+  // KPI Summary
+  const totalL = socStats.reduce((a, s) => a + s.total, 0);
+  const avgRep = Math.round(socStats.reduce((a, s) => a + s.rep, 0) / Math.max(socStats.length, 1));
+  const toppers = socStats.filter(s => s.ach >= 100).length;
+  const laggards = socStats.filter(s => s.rep < 60).length;
+  const avgTrend = Math.round(socStats.reduce((a, s) => a + s.trend, 0) / Math.max(socStats.length, 1));
+  if (kpiEl) kpiEl.innerHTML = `
+    <div class="kcard kc-g"><div class="kc-lbl">Total Societies</div><div class="kc-val kv-g">${socStats.length}</div><div class="kc-sub">active in period</div></div>
+    <div class="kcard kc-b"><div class="kc-lbl">District Total</div><div class="kc-val kv-b">${fmt(totalL)} L</div><div class="kc-sub">selected period</div></div>
+    <div class="kcard kc-a"><div class="kc-lbl">Avg Reporting Rate</div><div class="kc-val kv-a">${avgRep}%</div><div class="kc-sub">district-wide</div></div>
+    <div class="kcard kc-g"><div class="kc-lbl">On/Above Target</div><div class="kc-val kv-g">${toppers}</div><div class="kc-sub">≥100% achievement</div></div>
+    <div class="kcard kc-r"><div class="kc-lbl">Laggards</div><div class="kc-val kv-r">${laggards}</div><div class="kc-sub">&lt;60% reporting rate</div></div>`;
+
+  // Top 5 / Bottom 5
+  const byTotal = [...socStats].sort((a, b) => b.total - a.total);
+  const byMissed = [...socStats].sort((a, b) => b.missed - a.missed);
+  const trendArrow = t => t > 5 ? '<span style="color:#34a853;">↑</span>' : t < -5 ? '<span style="color:#ea4335;">↓</span>' : '<span style="color:#fbbc04;">→</span>';
+  document.getElementById('ta-toppers').innerHTML = byTotal.slice(0, 5).map((s, i) =>
+    `<tr><td style="color:var(--txt3);">${i+1}</td><td style="font-weight:500;">${s.name}</td><td style="font-family:var(--mono);">${fmt(s.total)}</td><td style="font-family:var(--mono);">${fmt(s.avg)}</td><td>${s.rep}%</td><td>${trendArrow(s.trend)} ${s.trend>0?'+':''}${s.trend}%</td><td><span class="bdg ${s.ach>=100?'b-g':s.ach>=80?'b-b':'b-a'}">${s.ach}%</span></td></tr>`
+  ).join('');
+  document.getElementById('ta-laggards').innerHTML = byMissed.slice(0, 5).map((s, i) =>
+    `<tr><td style="color:var(--txt3);">${i+1}</td><td style="font-weight:500;">${s.name}</td><td style="font-family:var(--mono);">${fmt(s.total)}</td><td style="color:#ea4335;">${s.missed}</td><td>${s.rep}%</td><td>${trendArrow(s.trend)}</td><td><button class="btn btn-o" style="font-size:11px;padding:3px 8px;" onclick="goTab('tracker',document.querySelector('[onclick*=tracker]'));setTimeout(()=>{document.getElementById('trk-picker').value='${s.name}';renderTracker();},100)">View →</button></td></tr>`
+  ).join('');
+
+  // Full table
+  const countEl = document.getElementById('ta-count');
+  if (countEl) countEl.textContent = `${filtered.length} of ${socStats.length} societies`;
+  document.getElementById('ta-body').innerHTML = filtered.map((s, i) => {
+    const achCls = s.ach >= 100 ? 'b-g' : s.ach >= 80 ? 'b-b' : s.ach >= 60 ? 'b-a' : 'b-r';
+    const stCls = s.rep >= 80 ? 'b-g' : s.rep >= 60 ? 'b-b' : s.rep >= 40 ? 'b-a' : 'b-r';
+    const stLbl = s.rep >= 80 ? 'Strong' : s.rep >= 60 ? 'Moderate' : s.rep >= 40 ? 'Weak' : 'Critical';
+    return `<tr>
+      <td style="color:var(--txt3);">${i+1}</td>
+      <td style="font-weight:500;">${s.name}</td>
+      <td style="font-family:var(--mono);">${fmt(s.target)}</td>
+      <td style="font-family:var(--mono);font-weight:600;">${fmt(s.total)}</td>
+      <td><span class="bdg ${achCls}">${s.ach}%</span></td>
+      <td style="font-family:var(--mono);">${fmt(s.avg)}</td>
+      <td style="font-family:var(--mono);color:#34a853;">${hasSplit ? fmt(s.mornAvg) : '—'}</td>
+      <td style="font-family:var(--mono);color:#ea4335;">${hasSplit ? fmt(s.eveAvg) : '—'}</td>
+      <td style="color:${s.missed>5?'#ea4335':'var(--txt)'};">${s.missed}</td>
+      <td>${s.rep}%</td>
+      <td>${trendArrow(s.trend)} ${s.trend>0?'+':''}${s.trend}%</td>
+      <td><span style="font-size:11px;color:var(--txt3);">—</span></td>
+      <td><span class="bdg ${stCls}">${stLbl}</span></td>
+    </tr>`;
+  }).join('');
+
+  const foot = document.getElementById('ta-foot');
+  if (foot) {
+    const totTotal = filtered.reduce((a, s) => a + s.total, 0);
+    const totMorn = filtered.reduce((a, s) => a + s.morning, 0);
+    const totEve = filtered.reduce((a, s) => a + s.evening, 0);
+    const totMissed = filtered.reduce((a, s) => a + s.missed, 0);
+    const avgRepF = Math.round(filtered.reduce((a, s) => a + s.rep, 0) / Math.max(filtered.length, 1));
+    foot.innerHTML = `<tr style="font-size:12px;"><td colspan="3">Totals / Averages (${filtered.length} societies)</td><td style="font-family:var(--mono);">${fmt(totTotal)}</td><td>—</td><td>—</td><td style="font-family:var(--mono);color:#34a853;">${hasSplit ? fmt(totMorn) : '—'}</td><td style="font-family:var(--mono);color:#ea4335;">${hasSplit ? fmt(totEve) : '—'}</td><td>${totMissed}</td><td>${avgRepF}%</td><td colspan="3"></td></tr>`;
+  }
+}
+
+let _taSortCol = 'total', _taSortDir = 'desc';
+function taSortBy(col) {
+  if (_taSortCol === col) _taSortDir = _taSortDir === 'asc' ? 'desc' : 'asc';
+  else { _taSortCol = col; _taSortDir = 'desc'; }
+  const sel = document.getElementById('ta-sort');
+  if (sel) sel.value = col + '_' + _taSortDir;
+  renderTrackerAll();
+}
+function taExportExcel() {
+  if (!_filtered.length) { toast('No data to export', true); return; }
+  toast('Export ready — use CSV Export button for data.');
+}
+
+// ══════════════════════════════════════════════════════
+//  RENDER: VILLAGE MILCH TABLE
+// ══════════════════════════════════════════════════════
+function renderVillageTable() {
+  const block  = document.getElementById('vt-block')?.value || '';
+  const sortV  = document.getElementById('vt-sort')?.value || 'util_desc';
+  const search = (document.getElementById('vt-search')?.value || '').toLowerCase();
+
+  // Build society-level actual avg from filtered data
+  const socAvg = {};
+  _filtered.forEach(r => {
+    if (!socAvg[r.society]) socAvg[r.society] = { total: 0, days: 0 };
+    socAvg[r.society].total += r.total;
+    socAvg[r.society].days  += 1;
+  });
+  Object.keys(socAvg).forEach(k => {
+    socAvg[k].avg = socAvg[k].days > 0 ? socAvg[k].total / socAvg[k].days : 0;
+  });
+
+  let rows = CATTLE_DATA.map(v => {
+    // match society name to village name (fuzzy)
+    const matchKey = Object.keys(socAvg).find(k => k.toLowerCase().includes(v.village.toLowerCase().slice(0,6)) || v.village.toLowerCase().includes(k.toLowerCase().slice(0,6)));
+    const actual = matchKey ? socAvg[matchKey].avg : 0;
+    const util   = v.milk_potential > 0 ? Math.round(actual / v.milk_potential * 100) : 0;
+    const gap    = Math.max(v.milk_potential - actual, 0);
+    return { ...v, actual, util, gap };
+  });
+
+  if (block) rows = rows.filter(r => r.block === block);
+  if (search) rows = rows.filter(r => r.village.toLowerCase().includes(search) || r.block.toLowerCase().includes(search));
+
+  // Sort
+  const [sKey, sDir] = sortV.split('_');
+  const sortMap = { util: 'util', potential: 'milk_potential', animals: 'milk_animals', village: 'village' };
+  const col = sortMap[sKey] || 'util';
+  rows.sort((a, b) => {
+    const av = a[col], bv = b[col];
+    if (typeof av === 'string') return sDir === 'asc' ? av.localeCompare(bv) : bv.localeCompare(av);
+    return sDir === 'asc' ? av - bv : bv - av;
+  });
+
+  // KPIs
+  const totalAnimals = rows.reduce((a, r) => a + r.milk_animals, 0);
+  const totalPotential = rows.reduce((a, r) => a + r.milk_potential, 0);
+  const totalActual = rows.reduce((a, r) => a + r.actual, 0);
+  const overallUtil = totalPotential > 0 ? Math.round(totalActual / totalPotential * 100) : 0;
+  const highUtil = rows.filter(r => r.util >= 50).length;
+  document.getElementById('vt-kpis').innerHTML = `
+    <div class="kcard kc-b"><div class="kc-lbl">Villages</div><div class="kc-val kv-b">${rows.length}</div><div class="kc-sub">in selection</div></div>
+    <div class="kcard kc-g"><div class="kc-lbl">Total Milch Animals</div><div class="kc-val kv-g">${fmt(totalAnimals)}</div><div class="kc-sub">in selected villages</div></div>
+    <div class="kcard kc-a"><div class="kc-lbl">Total Milk Potential</div><div class="kc-val kv-a">${fmt(totalPotential)} L/day</div><div class="kc-sub">estimated</div></div>
+    <div class="kcard ${overallUtil >= 50 ? 'kc-g' : overallUtil >= 25 ? 'kc-a' : 'kc-r'}"><div class="kc-lbl">Overall Utilisation</div><div class="kc-val ${overallUtil >= 50 ? 'kv-g' : overallUtil >= 25 ? 'kv-a' : 'kv-r'}">${overallUtil}%</div><div class="kc-sub">of milk potential tapped</div></div>`;
+
+  const countEl = document.getElementById('vt-count');
+  if (countEl) countEl.textContent = `${rows.length} villages`;
+
+  document.getElementById('vt-body').innerHTML = rows.map((r, i) => {
+    const utilCls = r.util >= 70 ? 'ach-great' : r.util >= 40 ? 'ach-good' : r.util > 0 ? 'ach-poor' : '';
+    const viabCls = r.viability === 'High' ? 'b-g' : r.viability === 'Medium' ? 'b-b' : r.viability === 'Low' ? 'b-a' : 'b-n';
+    const remark  = r.util === 0 ? 'No society yet' : r.util < 20 ? 'Very low — field visit needed' : r.util < 50 ? 'Growth potential' : r.util < 80 ? 'Good performance' : 'Excellent utilisation';
+    return `<tr>
+      <td style="color:var(--txt3);">${i+1}</td>
+      <td style="font-weight:500;">${r.village}</td>
+      <td><span class="g-chip g-chip-grey">${r.block}</span></td>
+      <td style="font-family:var(--mono);">${fmt(r.milk_animals)}</td>
+      <td style="font-family:var(--mono);">${fmt(r.milk_potential)}</td>
+      <td style="font-family:var(--mono);color:#4285f4;">${r.actual > 0 ? fmt(r.actual) : '<span style="color:var(--txt3);">—</span>'}</td>
+      <td><span class="${utilCls}" style="font-family:var(--mono);">${r.util}%</span>
+        <div style="height:4px;background:var(--s2);border-radius:2px;margin-top:3px;width:80px;overflow:hidden;"><div style="height:100%;background:${r.util>=50?'#34a853':r.util>=25?'#fbbc04':'#ea4335'};width:${Math.min(r.util,100)}%;border-radius:2px;"></div></div>
+      </td>
+      <td style="font-family:var(--mono);color:${r.gap>100?'#ea4335':'var(--txt3)'};">${fmt(r.gap)}</td>
+      <td><span class="bdg ${viabCls}">${r.viability}</span></td>
+      <td style="font-size:12px;color:var(--txt2);">${remark}</td>
+    </tr>`;
+  }).join('') || '<tr><td colspan="10" class="empty">No villages match filter</td></tr>';
+}
+
+// ══════════════════════════════════════════════════════
+//  RENDER: PARETO ANALYSIS
+// ══════════════════════════════════════════════════════
+function renderPareto() {
+  const data = _filtered;
+  const insightEl = document.getElementById('pareto-insight');
+  if (!data.length) {
+    if (insightEl) insightEl.textContent = 'Connect your sheet to see Pareto analysis.';
+    document.getElementById('pareto-table').innerHTML = '';
+    document.getElementById('pareto-top20').innerHTML = '';
+    document.getElementById('pareto-bottom50').innerHTML = '';
+    document.getElementById('pareto-recovery').innerHTML = '';
+    return;
+  }
+
+  const socs = [...new Set(data.map(r => r.society))];
+  const socTot = socs.map(s => {
+    const rows = data.filter(r => r.society === s);
+    const total = rows.reduce((a, r) => a + r.total, 0);
+    const active = rows.filter(r => r.total > 0);
+    const avg = active.length > 0 ? total / active.length : 0;
+    const best = active.length > 0 ? Math.max(...active.map(r => r.total)) : 0;
+    const missed = rows.filter(r => r.total === 0).length;
+    return { name: s, total, avg, best, missed, count: rows.length };
+  }).sort((a, b) => b.total - a.total);
+
+  const grandTotal = socTot.reduce((a, s) => a + s.total, 0);
+  let cumPct = 0;
+  const withCum = socTot.map(s => {
+    cumPct += s.total / Math.max(grandTotal, 1) * 100;
+    return { ...s, pct: s.total / Math.max(grandTotal, 1) * 100, cumPct };
+  });
+
+  // Find 80% threshold
+  const vital80 = withCum.filter(s => s.cumPct <= 80.01);
+  const trivial80 = withCum.filter(s => s.cumPct > 80.01);
+  const top20Count = Math.ceil(socs.length * 0.2);
+  const bottom50Count = Math.floor(socs.length * 0.5);
+
+  if (insightEl) insightEl.innerHTML = `
+    <strong>Pareto Finding:</strong> Top <strong>${vital80.length}</strong> societies (${Math.round(vital80.length/socs.length*100)}% of total)
+    contribute <strong>80%</strong> of district milk procurement.
+    The bottom <strong>${trivial80.length}</strong> societies contribute only 20%.
+    Focus field visits and interventions on the bottom-performing group for maximum uplift potential.`;
+
+  // Chart
+  const existingChart = Chart.getChart('pareto-chart');
+  if (existingChart) existingChart.destroy();
+  const ctx = document.getElementById('pareto-chart')?.getContext('2d');
+  if (ctx) {
+    new Chart(ctx, {
+      data: {
+        labels: withCum.map(s => s.name.length > 12 ? s.name.slice(0,12)+'…' : s.name),
+        datasets: [
+          { type: 'bar', label: 'Volume (L)', data: withCum.map(s => s.total), backgroundColor: withCum.map(s => s.cumPct <= 80 ? '#4285f4aa' : '#ea4335aa'), borderRadius: 3, yAxisID: 'y' },
+          { type: 'line', label: 'Cumulative %', data: withCum.map(s => Math.round(s.cumPct)), borderColor: '#fbbc04', backgroundColor: 'transparent', borderWidth: 2, pointRadius: 0, yAxisID: 'y2' }
+        ]
+      },
+      options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: true, position: 'top' } }, scales: { x: { ticks: { font: { size: 9 }, maxRotation: 45 } }, y: { ticks: { callback: v => fmt(v) }, grid: { color: 'rgba(0,0,0,.06)' } }, y2: { position: 'right', min: 0, max: 100, ticks: { callback: v => v + '%' }, grid: { display: false } } } }
+    });
+  }
+
+  // Table
+  document.getElementById('pareto-table').innerHTML = `
+    <table class="tbl" style="font-size:12px;">
+      <thead><tr><th>#</th><th>Society</th><th>Volume (L)</th><th>%</th><th>Cum %</th><th>Zone</th></tr></thead>
+      <tbody>
+        ${withCum.map((s, i) => `<tr>
+          <td style="color:var(--txt3);">${i+1}</td>
+          <td>${s.name}</td>
+          <td style="font-family:var(--mono);">${fmt(s.total)}</td>
+          <td style="font-family:var(--mono);">${s.pct.toFixed(1)}%</td>
+          <td style="font-family:var(--mono);">${s.cumPct.toFixed(1)}%</td>
+          <td><span class="bdg ${s.cumPct <= 80 ? 'b-b' : 'b-r'}">${s.cumPct <= 80 ? 'Vital' : 'Trivial'}</span></td>
+        </tr>`).join('')}
+      </tbody>
+    </table>`;
+
+  // Focus zone — top 20%
+  const top20 = withCum.slice(0, top20Count);
+  const top20Vol = top20.reduce((a, s) => a + s.total, 0);
+  document.getElementById('pareto-top20').innerHTML = `
+    <div style="margin-bottom:8px;font-size:12px;color:var(--txt3);">Top ${top20Count} societies → ${Math.round(top20Vol/grandTotal*100)}% of total volume. <strong style="color:#4285f4;">Protect and grow these.</strong></div>
+    ${top20.map((s, i) => `<div class="mini-bar-row"><div class="mini-bar-lbl">${i+1}. ${s.name}</div><div class="mini-bar-track"><div class="mini-bar-fill" style="width:${Math.round(s.total/withCum[0].total*100)}%;background:#4285f4;"></div></div><div class="mini-bar-val">${fmt(s.total)} L</div></div>`).join('')}`;
+
+  // Leverage zone — bottom 50%
+  const bot50 = withCum.slice(-bottom50Count);
+  const bot50Vol = bot50.reduce((a, s) => a + s.total, 0);
+  document.getElementById('pareto-bottom50').innerHTML = `
+    <div style="margin-bottom:8px;font-size:12px;color:var(--txt3);">Bottom ${bottom50Count} societies → only ${Math.round(bot50Vol/grandTotal*100)}% of volume. <strong style="color:#ea4335;">High uplift opportunity.</strong></div>
+    ${bot50.map((s, i) => `<div class="mini-bar-row"><div class="mini-bar-lbl">${i+1}. ${s.name}</div><div class="mini-bar-track"><div class="mini-bar-fill" style="width:${Math.round(s.total/withCum[0].total*100)}%;background:#ea4335;"></div></div><div class="mini-bar-val">${fmt(s.total)} L</div></div>`).join('')}`;
+
+  // Recovery ranking — biggest gap between best day and avg
+  const recovery = [...socTot].filter(s => s.best > 0).sort((a, b) => (b.best - b.avg) - (a.best - a.avg)).slice(0, 10);
+  document.getElementById('pareto-recovery').innerHTML = `
+    <table class="tbl" style="font-size:12.5px;">
+      <thead><tr><th>#</th><th>Society</th><th>Daily Avg (L)</th><th>Best Day (L)</th><th>Gap (L)</th><th>Recovery %</th><th>Missed Days</th></tr></thead>
+      <tbody>${recovery.map((s, i) => {
+        const gap = s.best - s.avg;
+        const recovPct = s.avg > 0 ? Math.round(gap / s.avg * 100) : 0;
+        return `<tr>
+          <td style="color:var(--txt3);">${i+1}</td>
+          <td style="font-weight:500;">${s.name}</td>
+          <td style="font-family:var(--mono);">${fmt(s.avg)}</td>
+          <td style="font-family:var(--mono);color:#34a853;">${fmt(s.best)}</td>
+          <td style="font-family:var(--mono);color:#4285f4;">${fmt(gap)}</td>
+          <td><span class="bdg ${recovPct>100?'b-g':recovPct>50?'b-b':'b-a'}">+${recovPct}%</span></td>
+          <td style="color:${s.missed>5?'#ea4335':'var(--txt)'};">${s.missed}</td>
+        </tr>`;
+      }).join('')}</tbody>
+    </table>`;
+}
+
+// ══════════════════════════════════════════════════════
+//  RENDER: DAILY MANAGEMENT BOARD
+// ══════════════════════════════════════════════════════
+function renderDailyMgmt() {
+  const data = _filtered;
+  const dmSummary = document.getElementById('dm-summary');
+  if (!data.length) {
+    if (dmSummary) dmSummary.innerHTML = '<div style="grid-column:1/-1;" class="empty"><div class="empty-ico">🎯</div><div class="empty-t">No data loaded</div><div class="empty-s">Connect your Google Sheet to use the Daily Management Board.</div></div>';
+    ['dm-todo','dm-warn','dm-ok','dm-star'].forEach(id => { const el = document.getElementById(id); if (el) el.innerHTML = ''; });
+    ['dm-pdca','dm-constraints'].forEach(id => { const el = document.getElementById(id); if (el) el.innerHTML = ''; });
+    return;
+  }
+
+  // Use most recent date in filtered data
+  const dates = [...new Set(data.map(r => r.date))].sort();
+  const today = dates[dates.length - 1] || '';
+  const todayRows = data.filter(r => r.date === today);
+  const socs = [...new Set(data.map(r => r.society))];
+  const districtTotal = data.reduce((a, r) => a + r.total, 0);
+  const totalDays = dates.length;
+
+  // Society-level stats for today's board
+  const targets = {};
+  socs.forEach(s => {
+    const rows = data.filter(r => r.society === s && r.total > 0);
+    targets[s] = rows.length > 0 ? rows.reduce((a, r) => a + r.total, 0) / rows.length : 100;
+  });
+
+  const boardItems = socs.map(s => {
+    const todayRow = todayRows.find(r => r.society === s);
+    const val = todayRow ? todayRow.total : 0;
+    const tgt = targets[s] || 100;
+    const pct = tgt > 0 ? Math.round(val / tgt * 100) : 0;
+    const status = val === 0 ? 'todo' : pct < 80 ? 'warn' : pct <= 110 ? 'ok' : 'star';
+    return { name: s, val, tgt, pct, status };
+  });
+
+  const todo  = boardItems.filter(b => b.status === 'todo');
+  const warn  = boardItems.filter(b => b.status === 'warn');
+  const ok    = boardItems.filter(b => b.status === 'ok');
+  const star  = boardItems.filter(b => b.status === 'star');
+
+  // Update counts
+  ['todo','warn','ok','star'].forEach(st => {
+    const el = document.getElementById(`dm-${st}-count`);
+    if (el) el.textContent = {todo,warn,ok,star}[st].length;
+  });
+
+  const mkCard = b => `<div style="padding:8px 12px;border-bottom:1px solid var(--brd);display:flex;justify-content:space-between;align-items:center;font-size:12.5px;">
+    <div style="font-weight:500;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${b.name}</div>
+    <div style="font-family:var(--mono);font-size:11.5px;color:var(--txt2);margin-left:8px;">${b.val > 0 ? fmt(b.val)+' L' : '—'} <span style="color:var(--txt3);">(${b.pct}%)</span></div>
+  </div>`;
+
+  document.getElementById('dm-todo').innerHTML  = todo.map(mkCard).join('') || '<div style="padding:12px;text-align:center;font-size:12px;color:var(--txt3);">None</div>';
+  document.getElementById('dm-warn').innerHTML  = warn.map(mkCard).join('') || '<div style="padding:12px;text-align:center;font-size:12px;color:var(--txt3);">None</div>';
+  document.getElementById('dm-ok').innerHTML    = ok.map(mkCard).join('')   || '<div style="padding:12px;text-align:center;font-size:12px;color:var(--txt3);">None</div>';
+  document.getElementById('dm-star').innerHTML  = star.map(mkCard).join('') || '<div style="padding:12px;text-align:center;font-size:12px;color:var(--txt3);">None</div>';
+
+  // Summary KPIs
+  const todayTotal = todayRows.reduce((a, r) => a + r.total, 0);
+  const overallAvg = districtTotal / Math.max(totalDays, 1);
+  const vsAvg = overallAvg > 0 ? Math.round((todayTotal - overallAvg) / overallAvg * 100) : 0;
+  if (dmSummary) dmSummary.innerHTML = `
+    <div class="kcard kc-b"><div class="kc-lbl">📅 Latest Date</div><div class="kc-val kv-b" style="font-size:16px;">${fmtDate(today)}</div><div class="kc-sub">${todayRows.length} societies reported</div></div>
+    <div class="kcard kc-g"><div class="kc-lbl">Today's Total</div><div class="kc-val kv-g">${fmt(todayTotal)} L</div><div class="kc-sub">${vsAvg >= 0 ? '+' : ''}${vsAvg}% vs period avg</div></div>
+    <div class="kcard kc-a"><div class="kc-lbl">🚫 Zero / No Data</div><div class="kc-val kv-a">${todo.length}</div><div class="kc-sub">need immediate attention</div></div>
+    <div class="kcard kc-r"><div class="kc-lbl">⚠️ Below Target</div><div class="kc-val kv-r">${warn.length}</div><div class="kc-sub">&lt;80% of daily target</div></div>`;
+
+  // PDCA
+  const pdcaEl = document.getElementById('dm-pdca');
+  if (pdcaEl) {
+    const issues = todo.slice(0, 3).map(b => b.name).join(', ') || 'None';
+    const topWinners = star.slice(0, 2).map(b => b.name).join(', ') || 'None';
+    pdcaEl.innerHTML = `
+      <div class="alert-card ac-r" style="margin-bottom:6px;"><div class="ac-ico">🔴</div><div><div class="ac-t">Plan — Zero collection societies: ${todo.length}</div><div class="ac-d">Immediate field calls to: ${issues}</div></div></div>
+      <div class="alert-card ac-a" style="margin-bottom:6px;"><div class="ac-ico">🟡</div><div><div class="ac-t">Do — Below-target societies: ${warn.length}</div><div class="ac-d">Check route, vehicle, chilling plant for: ${warn.slice(0,3).map(b=>b.name).join(', ') || 'None'}</div></div></div>
+      <div class="alert-card ac-g" style="margin-bottom:6px;"><div class="ac-ico">🟢</div><div><div class="ac-t">Check — Exceeding societies: ${star.length}</div><div class="ac-d">Document best practices from: ${topWinners}</div></div></div>
+      <div class="alert-card" style="border-left-color:var(--g-blue);margin-bottom:6px;"><div class="ac-ico">🔵</div><div><div class="ac-t">Act — Update tomorrow's targets</div><div class="ac-d">Adjust routes for ${todo.length + warn.length} underperforming societies. Share today's leaderboard.</div></div></div>`;
+  }
+
+  // Theory of Constraints — bottleneck societies
+  const constrEl = document.getElementById('dm-constraints');
+  if (constrEl) {
+    const allSocStats = socs.map(s => {
+      const rows = data.filter(r => r.society === s);
+      const total = rows.reduce((a, r) => a + r.total, 0);
+      const missed = rows.filter(r => r.total === 0).length;
+      const rep = Math.round((rows.length - missed) / Math.max(totalDays, 1) * 100);
+      return { name: s, total, missed, rep };
+    });
+    const constraints = allSocStats.sort((a, b) => (b.missed / Math.max(b.total, 1)) - (a.missed / Math.max(a.total, 1))).slice(0, 6);
+    constrEl.innerHTML = constraints.map(s => `
+      <div class="mini-bar-row">
+        <div class="mini-bar-lbl">${s.name}</div>
+        <div style="flex:1;font-size:11.5px;color:${s.missed>5?'#ea4335':'#ea8600'};font-family:var(--mono);">${s.missed} missed · ${s.rep}% rep</div>
+        <div style="font-size:11px;"><span class="bdg ${s.rep<40?'b-r':s.rep<60?'b-a':'b-b'}">${s.rep<40?'Critical':s.rep<60?'At Risk':'Monitor'}</span></div>
+      </div>`).join('') || '<div style="color:var(--txt3);font-size:12px;padding:8px 0;">No data available.</div>';
+  }
+}
+
+// ══════════════════════════════════════════════════════
 //  RENDER: BEST & WORST SOCIETIES
 // ══════════════════════════════════════════════════════
 function renderBestWorst() {
