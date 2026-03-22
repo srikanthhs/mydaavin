@@ -2466,21 +2466,69 @@ function renderAll() {
 //  COLUMN DETECTION
 // ══════════════════════════════════════════════════════
 const COL_MAP = {
-  date:    ['date','தேதி','நாள்','dt','day','fecha','datum'],
-  society: ['society','society name','societyname','society_name','name','soc name','soc','centre','center','milk society','village','கிராமம்','சங்கம்','mpcs','dcs','dcs name','organisation'],
-  morning: ['mor','morning','mor(l)','morning_l','morning(l)','morning l','am','am(l)','காலை','காலை (லி)'],
-  evening: ['eve','evening','eve(l)','evening_l','evening(l)','evening l','pm','pm(l)','மாலை','மாலை (லி)'],
-  total:   ['total','total_l','total(l)','total l','daily total','collection','மொத்தம்','tot','quantity','qty','litres','liters'],
-  notes:   ['notes','note','remarks','comments','observation','குறிப்பு'],
-  fat:     ['fat','fat%','fat %','fat(%)','கொழுப்பு','f%'],
-  snf:     ['snf','snf%','snf %','snf(%)','திட்டமல்லா','solids not fat','s.n.f']
+  date: [
+    'date','dates','தேதி','நாள்','dt','day','days','fecha','datum','date of collection',
+    'collection date','report date','sl date','sl.date','ஸ்லிப் தேதி','slipdate'
+  ],
+  society: [
+    'society','society name','societyname','society_name','soc name','soc','soc.name',
+    'name','centre name','center name','centre','center','milk society','village society',
+    'கிராமம்','சங்கம்','mpcs','mpcs name','dcs','dcs name','organisation','org',
+    'collection centre','collection center','milk collection centre','unit','unit name',
+    'bmc','bmc name','dairy','dairy name','society id','soc id'
+  ],
+  morning: [
+    'mor','morning','mor(l)','morning_l','morning(l)','morning l','morning(litres)','morning litres',
+    'am','am(l)','காலை','காலை (லி)','காலை (l)','morning milk','m','m(l)','shift 1','first shift',
+    'am collection','morning collection','fore noon','forenoon'
+  ],
+  evening: [
+    'eve','evening','eve(l)','evening_l','evening(l)','evening l','evening(litres)','evening litres',
+    'pm','pm(l)','மாலை','மாலை (லி)','மாலை (l)','evening milk','e','e(l)','shift 2','second shift',
+    'pm collection','evening collection','after noon','afternoon'
+  ],
+  total: [
+    'total','total_l','total(l)','total l','daily total','total milk','total collection',
+    'total (l)','total(litres)','total litres','மொத்தம்','tot','tot(l)','quantity','qty',
+    'litres','liters','collection','milk','procured','procurement','volume','t','t(l)',
+    'grand total','day total','total procurement'
+  ],
+  notes: ['notes','note','remarks','comments','observation','குறிப்பு','remark','comment'],
+  fat:   ['fat','fat%','fat %','fat(%)','கொழுப்பு','f%','fat content','fat percentage'],
+  snf:   ['snf','snf%','snf %','snf(%)','திட்டமல்லா','solids not fat','s.n.f','snf content']
 };
 
 function detectCol(headers, key) {
   const aliases = COL_MAP[key] || [key];
-  const h = headers.map(x => (x||'').toString().toLowerCase().trim());
-  for (const a of aliases) { const i = h.indexOf(a.toLowerCase()); if (i>=0) return i; }
-  for (const a of aliases) { const i = h.findIndex(x => x.includes(a.toLowerCase())); if (i>=0) return i; }
+  // Normalise: strip BOM, trim, lowercase, collapse spaces
+  const h = headers.map(x => (x||'').toString()
+    .replace(/^\uFEFF/,'')   // strip UTF-8 BOM
+    .replace(/\r/g,'')       // strip CR
+    .toLowerCase()
+    .trim()
+    .replace(/\s+/g,' ')     // collapse spaces
+  );
+
+  // 1. Exact match
+  for (const a of aliases) {
+    const norm = a.toLowerCase().trim();
+    const i = h.indexOf(norm);
+    if (i >= 0) return i;
+  }
+  // 2. Contains match
+  for (const a of aliases) {
+    const norm = a.toLowerCase().trim();
+    const i = h.findIndex(x => x.includes(norm));
+    if (i >= 0) return i;
+  }
+  // 3. Any header contains any alias word (loose match for Tamil/compound names)
+  for (const a of aliases) {
+    const words = a.toLowerCase().trim().split(/\s+/);
+    if (words.length > 1) {
+      const i = h.findIndex(x => words.every(w => x.includes(w)));
+      if (i >= 0) return i;
+    }
+  }
   return -1;
 }
 
@@ -2530,15 +2578,20 @@ function isFileOrigin() {
   return window.location.protocol === 'file:';
 }
 
-async function tryFetch(url, timeoutMs=12000) {
+async function tryFetch(url, timeoutMs=15000) {
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), timeoutMs);
   try {
-    const r = await fetch(url, {cache:'no-store', mode:'cors', signal: controller.signal});
+    const r = await fetch(url, {
+      cache: 'no-store', mode: 'cors', signal: controller.signal,
+      headers: { 'Accept': 'text/csv,text/plain,*/*' }
+    });
     clearTimeout(timer);
     if (!r.ok) throw new Error('HTTP '+r.status);
     const text = await r.text();
     if (!text || text.trim().length < 10) throw new Error('Empty response');
+    if (text.trim().startsWith('<!DOCTYPE') || text.trim().startsWith('<html'))
+      throw new Error('Got HTML page instead of CSV — sheet may not be published publicly');
     return text;
   } catch(e) {
     clearTimeout(timer);
@@ -2549,82 +2602,81 @@ async function tryFetch(url, timeoutMs=12000) {
 async function gsFetch(rawUrl) {
   const isGoogle = /docs\.google\.com|drive\.google\.com/i.test(rawUrl);
   if (!isGoogle) {
-    const r = await fetch(rawUrl);
-    return r;
+    try { const r = await fetch(rawUrl, {cache:'no-store'}); return r; }
+    catch(e) { throw e; }
   }
 
   const info   = extractSheetKey(rawUrl);
   const gid    = extractGid(rawUrl);
   const isFile = isFileOrigin();
 
-  // Build all candidate URLs
+  // Primary URL: published CSV (most reliable across platforms)
   const csvUrl = info
-    ? (info.type==='pub'
-        ? 'https://docs.google.com/spreadsheets/d/e/'+info.key+'/pub?output=csv&gid='+gid
-        : 'https://docs.google.com/spreadsheets/d/'+info.key+'/export?format=csv&gid='+gid)
+    ? (info.type === 'pub'
+        ? `https://docs.google.com/spreadsheets/d/e/${info.key}/pub?output=csv&gid=${gid}&single=true`
+        : `https://docs.google.com/spreadsheets/d/${info.key}/export?format=csv&gid=${gid}`)
     : rawUrl;
 
+  // Alternative: gviz endpoint
   const gvizUrl = info
-    ? (info.type==='pub'
-        ? 'https://docs.google.com/spreadsheets/d/e/'+info.key+'/gviz/tq?tqx=out:csv&gid='+gid
-        : 'https://docs.google.com/spreadsheets/d/'+info.key+'/gviz/tq?tqx=out:csv&gid='+gid)
+    ? (info.type === 'pub'
+        ? `https://docs.google.com/spreadsheets/d/e/${info.key}/gviz/tq?tqx=out:csv&gid=${gid}`
+        : `https://docs.google.com/spreadsheets/d/${info.key}/gviz/tq?tqx=out:csv&gid=${gid}`)
     : null;
 
-  // CORS proxies ordered by reliability on mobile browsers
-  // allorigins and corsproxy.io work best on iOS/Android
-  const proxies = [
-    'https://api.allorigins.win/raw?url=',
-    'https://corsproxy.io/?',
-    'https://api.codetabs.com/v1/proxy?quest=',
-    'https://thingproxy.freeboard.io/fetch/',
-    'https://yacdn.org/proxy/',
-    'https://cors-anywhere.herokuapp.com/',
+  // Proxy builder functions — allorigins is most mobile-friendly
+  const proxyFns = [
+    u => `https://api.allorigins.win/raw?url=${encodeURIComponent(u)}`,
+    u => `https://corsproxy.io/?${encodeURIComponent(u)}`,
+    u => `https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(u)}`,
+    u => `https://thingproxy.freeboard.io/fetch/${encodeURIComponent(u)}`,
+    u => `https://yacdn.org/proxy/${encodeURIComponent(u)}`,
+    u => `https://api.allorigins.win/raw?url=${encodeURIComponent(u)}&cb=${Date.now()}`, // cache-bust
   ];
 
   const strategies = [];
 
-  // If NOT file origin, try direct first (works on most hosted deployments)
+  // Direct strategies (desktop/hosted — blocked on most mobile browsers by CORS)
   if (!isFile) {
-    if (gvizUrl) strategies.push({label:'gviz direct', fn: ()=>tryFetch(gvizUrl, 10000)});
-    strategies.push({label:'csv direct', fn: ()=>tryFetch(csvUrl, 10000)});
+    strategies.push({ label: 'csv-direct',  fn: () => tryFetch(csvUrl,  12000) });
+    if (gvizUrl)
+      strategies.push({ label: 'gviz-direct', fn: () => tryFetch(gvizUrl, 12000) });
   }
 
-  // Proxy strategies (essential for mobile, file://, and restricted networks)
-  const targetUrl = gvizUrl || csvUrl;
-  for (const proxy of proxies) {
-    strategies.push({
-      label: 'proxy:'+proxy.split('/')[2],
-      fn: ()=>tryFetch(proxy + encodeURIComponent(targetUrl), 15000)
-    });
+  // Proxy + CSV URL (essential for mobile)
+  for (const pf of proxyFns) {
+    const proxied = pf(csvUrl);
+    strategies.push({ label: `allorigins-csv`, fn: () => tryFetch(proxied, 20000) });
   }
-  // Fallback: proxy plain CSV url too
+
+  // Proxy + gviz URL as secondary fallback
   if (gvizUrl) {
-    for (const proxy of proxies.slice(0,3)) {
-      strategies.push({
-        label: 'proxy-csv:'+proxy.split('/')[2],
-        fn: ()=>tryFetch(proxy + encodeURIComponent(csvUrl), 15000)
-      });
+    for (const pf of proxyFns.slice(0, 3)) {
+      const proxied = pf(gvizUrl);
+      strategies.push({ label: `allorigins-gviz`, fn: () => tryFetch(proxied, 20000) });
     }
   }
 
   let lastErr = '';
-  for (const strategy of strategies) {
+  for (const s of strategies) {
     try {
-      addLog('Trying: '+strategy.label+'…','info');
-      const text = await strategy.fn();
-      addLog('✓ Fetched via '+strategy.label,'ok');
-      return { ok: true, text: ()=>Promise.resolve(text), status: 200 };
+      addLog(`Trying ${s.label}…`, 'info');
+      const text = await s.fn();
+      addLog(`✓ Data loaded via ${s.label}`, 'ok');
+      return { ok: true, text: () => Promise.resolve(text), status: 200 };
     } catch(e) {
-      lastErr = e.message || String(e);
-      addLog('✗ '+strategy.label+': '+lastErr,'err');
+      lastErr = (e.message || String(e)).slice(0, 100);
+      addLog(`✗ ${s.label}: ${lastErr}`, 'err');
     }
   }
 
   const hint = isFile
-    ? 'Opening as local file (file://) — browsers block Google Sheets access. Solutions: (1) python3 -m http.server 8080, then open http://localhost:8080, (2) Deploy to GitHub Pages or Netlify, (3) VS Code Live Server.'
-    : 'All fetch strategies failed. On mobile, ensure you have internet access. Also confirm your Google Sheet is published: File → Share → Publish to web → CSV. Last error: '+lastErr;
+    ? 'Local file:// — run: python3 -m http.server 8080 then open http://localhost:8080'
+    : `All ${strategies.length} methods failed. Confirm sheet is published publicly (File→Share→Publish to web→CSV). Mobile: check internet. Last error: ${lastErr}`;
   throw new Error(hint);
 }
+
+let _lastRawHeaders = []; // track raw headers from last successful parse for diagnostics
 
 function csvParse(text) {
   const lines = text.trim().split('\n');
@@ -2715,12 +2767,57 @@ function csvParse(text) {
 
   // ── FLAT FORMAT (original logic) ──────────────────────
   const headers = allRows[0];
-  const di=detectCol(headers,'date'), si=detectCol(headers,'society');
-  const mi=detectCol(headers,'morning'), ei=detectCol(headers,'evening');
-  const ti=detectCol(headers,'total'), ni=detectCol(headers,'notes');
+  _lastRawHeaders = headers.slice(); // save for diagnostics
+  let di=detectCol(headers,'date'), si=detectCol(headers,'society');
+  let mi=detectCol(headers,'morning'), ei=detectCol(headers,'evening');
+  let ti=detectCol(headers,'total'), ni=detectCol(headers,'notes');
   const fi=detectCol(headers,'fat'), sni=detectCol(headers,'snf');
 
-  if (di<0||si<0) throw new Error(`Could not find required columns (Date, Society). Headers found: ${headers.slice(0,6).join(', ')}`);
+  // ── POSITIONAL FALLBACK: if standard detection fails, try to infer from position ──
+  // Many Tamil Nadu DCMPU sheets have: Date | Society | Morning | Evening | Total | ...
+  if (di < 0 || si < 0) {
+    const h = headers.map(x => (x||'').toString().replace(/^\uFEFF/,'').toLowerCase().trim());
+    addLog(`Column detection failed. All headers: [${headers.map(x=>`"${x}"`).join(', ')}]`, 'err');
+
+    // Try: first column with a date-like value in row 2 = date col; first text col = society
+    if (allRows.length > 1) {
+      const row2 = allRows[1];
+      for (let c = 0; c < Math.min(row2.length, 5); c++) {
+        if (di < 0 && parseDate((row2[c]||'').toString())) di = c;
+        else if (si < 0 && di >= 0 && (row2[c]||'').toString().trim().match(/[a-zA-Z\u0B80-\u0BFF]{3,}/)) si = c;
+        if (di >= 0 && si >= 0) break;
+      }
+    }
+
+    if (di < 0 || si < 0) {
+      // Show all headers in error so user can fix sheet
+      const allH = headers.map((h,i) => `col${i+1}:"${(h||'').trim()}"`).join(', ');
+      throw new Error(
+        `Cannot find Date and Society columns.\n` +
+        `Your sheet headers: ${allH}\n` +
+        `Rename columns to: "Date" and "Society" (or Tamil equivalents: தேதி / சங்கம்).`
+      );
+    }
+    addLog(`Positional fallback: Date=col${di+1}, Society=col${si+1}`, 'info');
+  }
+
+  // If morning/evening still not found, try numeric columns after society
+  if (mi < 0 && ei < 0) {
+    // Look for numeric-valued columns in first data row
+    if (allRows.length > 1) {
+      const row2 = allRows[1];
+      const numCols = [];
+      for (let c = 0; c < row2.length; c++) {
+        if (c === di || c === si) continue;
+        const v = parseFloat((row2[c]||'').toString());
+        if (!isNaN(v) && v >= 0) numCols.push(c);
+      }
+      if (numCols.length >= 3) { mi = numCols[0]; ei = numCols[1]; ti = numCols[2]; }
+      else if (numCols.length === 2) { mi = numCols[0]; ei = numCols[1]; ti = -1; }
+      else if (numCols.length === 1) { ti = numCols[0]; }
+      if (numCols.length > 0) addLog(`Numeric fallback: Morning=col${mi<0?'N/A':mi+1}, Evening=col${ei<0?'N/A':ei+1}, Total=col${ti<0?'N/A':ti+1}`, 'info');
+    }
+  }
 
   const rows=[];
   for (let l=1;l<lines.length;l++) {
@@ -4061,9 +4158,24 @@ function renderDiagnostics() {
   const urlEl = document.getElementById('diag-url');
   const prvEl = document.getElementById('diag-provider');
   const fbEl  = document.getElementById('diag-fb');
+  const diagEl = document.getElementById('diag-status');
   if (urlEl) urlEl.textContent = _cfg.url || HARDCODED_URL;
   if (prvEl) prvEl.textContent = (_cfg.provider || HARDCODED_PROVIDER) + ' · key: ' + ((_cfg.apiKey||HARDCODED_APIKEY).slice(0,12)+'…');
   if (fbEl)  fbEl.textContent  = window._fbReady ? '✅ Connected' : '⏳ Not ready';
+
+  // Show detected columns from last parse
+  if (_lastRawHeaders.length && diagEl && !diagEl.innerHTML.includes('Testing')) {
+    const di = detectCol(_lastRawHeaders,'date'), si = detectCol(_lastRawHeaders,'society');
+    const mi = detectCol(_lastRawHeaders,'morning'), ei = detectCol(_lastRawHeaders,'evening');
+    const ti = detectCol(_lastRawHeaders,'total');
+    const col = n => n >= 0 ? `✅ col${n+1} "${_lastRawHeaders[n]}"` : '❌ NOT FOUND';
+    diagEl.innerHTML =
+      `<strong>Last sheet headers (${_lastRawHeaders.length} cols):</strong><br>` +
+      _lastRawHeaders.map((h,i) => `  col${i+1}: "${h}"`).join('<br>') +
+      `<br><br><strong>Column mapping:</strong><br>` +
+      `Date: ${col(di)}<br>Society: ${col(si)}<br>` +
+      `Morning: ${col(mi)}<br>Evening: ${col(ei)}<br>Total: ${col(ti)}`;
+  }
 }
 
 async function testFirebaseConn() {
