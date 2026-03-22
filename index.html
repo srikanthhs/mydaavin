@@ -477,6 +477,15 @@ body{background:var(--bg);color:var(--txt);font-family:var(--font);font-size:13.
   .topbar-right .btn-o{display:none;}
 }
 @media(max-width:480px){.g2,.g3,.g4,.g5{grid-template-columns:1fr;}}
+
+/* ── MORNING CHECKLIST ── */
+.cl-item{padding:10px 12px;border:1px solid var(--brd);border-radius:8px;cursor:pointer;transition:all .15s;background:var(--surface);}
+.cl-item:hover{border-color:var(--green);box-shadow:var(--sh1);}
+.cl-ok{border-left:3px solid #34a853;background:#f0faf4;}
+.cl-warn{border-left:3px solid #fbbc04;background:#fffdf0;}
+.cl-na{border-left:3px solid #9aa0a6;background:#f8f9fa;opacity:.7;}
+.cl-pending{border-left:3px solid var(--brd);}
+.cl-status-icon{font-size:16px;flex-shrink:0;}
 </style>
 </head>
 <body>
@@ -644,6 +653,23 @@ body{background:var(--bg);color:var(--txt);font-family:var(--font);font-size:13.
         </div>
       </div>
 
+      <!-- BMC Utilisation + Flush/Lean Banner -->
+      <div class="g2" style="margin-bottom:12px;">
+        <div class="kcard kc-b" style="display:flex;flex-direction:column;justify-content:center;">
+          <div class="kc-lbl">🏭 BMC / Cattle Base Utilisation</div>
+          <div class="kc-val kv-b" id="kpi-bmc-util">—</div>
+          <div class="kc-sub" id="kpi-bmc-sub">of total district milk potential</div>
+          <div style="margin-top:8px;height:6px;background:var(--s2);border-radius:100px;overflow:hidden;">
+            <div id="kpi-bmc-bar" style="height:100%;border-radius:100px;background:#4285f4;transition:width .5s;width:0%;"></div>
+          </div>
+        </div>
+        <div class="kcard" id="season-banner" style="background:linear-gradient(135deg,#e8f0fe,#f8f9fa);border:1px solid #c5d9f8;">
+          <div class="kc-lbl" id="season-lbl">📅 Season Status</div>
+          <div class="kc-val" id="season-val" style="font-size:18px;font-weight:500;">—</div>
+          <div class="kc-sub" id="season-sub">—</div>
+        </div>
+      </div>
+
       <div class="g2">
         <div class="card">
           <div class="card-t"><span class="ico">📈</span> Daily Collection Trend</div>
@@ -688,11 +714,13 @@ body{background:var(--bg);color:var(--txt);font-family:var(--font);font-size:13.
                 <th onclick="sortDL('morning')">Morning (L)</th>
                 <th onclick="sortDL('evening')">Evening (L)</th>
                 <th onclick="sortDL('total')">Total (L)</th>
+                <th onclick="sortDL('fat')">Fat %</th>
+                <th onclick="sortDL('snf')">SNF %</th>
                 <th>Status</th>
                 <th>Notes</th>
               </tr>
             </thead>
-            <tbody id="dl-body"><tr><td colspan="7" class="empty">Loading…</td></tr></tbody>
+            <tbody id="dl-body"><tr><td colspan="9" class="empty">Loading…</td></tr></tbody>
           </table>
         </div>
         <div style="text-align:right;margin-top:8px;">
@@ -728,10 +756,12 @@ body{background:var(--bg);color:var(--txt);font-family:var(--font);font-size:13.
                 <th>Active Days</th>
                 <th>Reporting %</th>
                 <th>Best Day</th>
+                <th>L / Member</th>
+                <th>NDDB Tier</th>
                 <th>Status</th>
               </tr>
             </thead>
-            <tbody id="ss-body"><tr><td colspan="8" class="empty">No data</td></tr></tbody>
+            <tbody id="ss-body"><tr><td colspan="10" class="empty">No data</td></tr></tbody>
           </table>
         </div>
         <div id="ss-count" style="font-size:11.5px;color:var(--txt3);margin-top:8px;font-family:var(--mono);"></div>
@@ -822,6 +852,13 @@ body{background:var(--bg);color:var(--txt);font-family:var(--font);font-size:13.
         <div class="set-title">🗑 Clear All Data</div>
         <div class="set-sub">Remove all fetched data from this browser session.</div>
         <button class="btn" style="background:#fdecea;color:var(--red);border:1px solid rgba(192,57,43,.2);" onclick="clearData()">Clear Data</button>
+      </div>
+
+      <div class="set-card">
+        <div class="set-title">🧑‍🌾 Society Member Count (for Productivity Metrics)</div>
+        <div class="set-sub">Enter the number of farmer-members per society to enable litres-per-member productivity analysis in Society Summary. Leave blank to skip.</div>
+        <div id="member-count-editor" style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px;max-height:300px;overflow-y:auto;"></div>
+        <button class="btn btn-p" style="margin-top:10px;" onclick="saveMemberCounts()">Save Member Counts</button>
       </div>
 
     </div>
@@ -1152,7 +1189,7 @@ body{background:var(--bg);color:var(--txt);font-family:var(--font);font-size:13.
       </div>
 
       <!-- PDCA + Theory of Constraints -->
-      <div class="g2">
+      <div class="g2" style="margin-bottom:14px;">
         <div class="card">
           <div class="card-t"><span class="ico">🔄</span> PDCA Cycle — Today's Interventions</div>
           <div id="dm-pdca"></div>
@@ -1162,6 +1199,18 @@ body{background:var(--bg);color:var(--txt);font-family:var(--font);font-size:13.
           <div style="font-size:12.5px;color:var(--txt3);margin-bottom:10px;">Societies that constrain district total the most (lowest volume / highest missed rate)</div>
           <div id="dm-constraints"></div>
         </div>
+      </div>
+
+      <!-- AMUL MORNING CHECKLIST -->
+      <div class="card">
+        <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:14px;">
+          <div class="card-t" style="margin:0;"><span class="ico">☀️</span> Amul-Style Morning 10-Point Checklist</div>
+          <span style="font-size:11.5px;color:var(--txt3);">Field officer completes by 8 AM · saves to browser</span>
+          <button class="btn btn-o" onclick="resetChecklist()" style="margin-left:auto;font-size:12px;padding:5px 12px;">↺ Reset</button>
+          <button class="btn btn-p" onclick="saveChecklist()" style="font-size:12px;padding:5px 14px;">💾 Save</button>
+        </div>
+        <div id="morning-checklist" style="display:grid;grid-template-columns:1fr 1fr;gap:8px;"></div>
+        <div id="checklist-score" style="margin-top:12px;padding:10px 14px;border-radius:8px;background:var(--bg);font-size:13px;font-weight:500;text-align:center;"></div>
       </div>
     </div>
 
@@ -1182,7 +1231,7 @@ body{background:var(--bg);color:var(--txt);font-family:var(--font);font-size:13.
           <div style="max-height:320px;overflow-y:auto;" id="pareto-table"></div>
         </div>
       </div>
-      <div class="g2">
+      <div class="g2" style="margin-bottom:14px;">
         <div class="card">
           <div class="card-t"><span class="ico">💡</span> Focus Zone — Top 20% (Protect &amp; Grow)</div>
           <div id="pareto-top20"></div>
@@ -1191,6 +1240,10 @@ body{background:var(--bg);color:var(--txt);font-family:var(--font);font-size:13.
           <div class="card-t"><span class="ico">🚑</span> Leverage Zone — Bottom 50% (Urgent Attention)</div>
           <div id="pareto-bottom50"></div>
         </div>
+      </div>
+      <div class="card">
+        <div class="card-t"><span class="ico">🔁</span> Recovery Potential Ranking <span style="font-size:11.5px;color:var(--txt3);font-weight:400;margin-left:8px;">Societies with highest gap between best-day and current avg · prioritise for field visits</span></div>
+        <div id="pareto-recovery"></div>
       </div>
     </div>
 
@@ -1288,7 +1341,8 @@ function renderActiveTab() {
   if (_activeTab === 'expansion')   renderExpansion();
   if (_activeTab === 'cattle')      renderCattle();
   if (_activeTab === 'actionplan')  renderBestWorst();
-  if (_activeTab === 'daily_mgmt')  renderDailyMgmt();
+  if (_activeTab === 'daily_mgmt')  { renderDailyMgmt(); renderChecklist(); }
+  if (_activeTab === 'settings')    renderMemberEditor();
   if (_activeTab === 'pareto')      renderPareto();
   if (_activeTab === 'scorecard')   renderScorecard();
   if (_activeTab === 'daily')       renderDailyLog();
@@ -1381,7 +1435,9 @@ const COL_MAP = {
   morning: ['morning','mor','morning_l','morning(l)','morning l','am','am(l)','காலை','காலை (லி)','mor(l)'],
   evening: ['evening','eve','evening_l','evening(l)','evening l','pm','pm(l)','மாலை','மாலை (லி)','eve(l)'],
   total:   ['total','total_l','total(l)','total l','daily total','collection','மொத்தம்','tot','quantity','qty','litres','liters'],
-  notes:   ['notes','note','remarks','comments','observation','குறிப்பு']
+  notes:   ['notes','note','remarks','comments','observation','குறிப்பு'],
+  fat:     ['fat','fat%','fat %','fat(%)','கொழுப்பு','f%'],
+  snf:     ['snf','snf%','snf %','snf(%)','திட்டமல்லா','solids not fat','s.n.f']
 };
 
 function detectCol(headers, key) {
@@ -1565,6 +1621,7 @@ function csvParse(text) {
   const di=detectCol(headers,'date'), si=detectCol(headers,'society');
   const mi=detectCol(headers,'morning'), ei=detectCol(headers,'evening');
   const ti=detectCol(headers,'total'), ni=detectCol(headers,'notes');
+  const fi=detectCol(headers,'fat'), sni=detectCol(headers,'snf');
 
   if (di<0||si<0) throw new Error(`Could not find required columns (Date, Society). Headers found: ${headers.slice(0,6).join(', ')}`);
 
@@ -1579,7 +1636,9 @@ function csvParse(text) {
     const eve = ei>=0 ? (parseFloat(cols[ei])||0) : 0;
     let tot = ti>=0 ? (parseFloat(cols[ti])||0) : (mor+eve);
     if (!tot && (mor||eve)) tot = mor+eve;
-    rows.push({date:dateStr, society:soc, district:'', morning:mor, evening:eve, total:tot, notes:ni>=0?(cols[ni]||'').trim():''});
+    const fat = fi>=0 ? (parseFloat(cols[fi])||null) : null;
+    const snf = sni>=0 ? (parseFloat(cols[sni])||null) : null;
+    rows.push({date:dateStr, society:soc, district:'', morning:mor, evening:eve, total:tot, notes:ni>=0?(cols[ni]||'').trim():'', fat, snf});
   }
   return rows;
 }
@@ -1644,6 +1703,26 @@ function renderOverview() {
   sv('kpi-missed', missedDays);
   sv('kpi-days',  dates.length);
 
+  // BMC / cattle base utilisation
+  const milkPot = CATTLE_DATA.reduce((a,r)=>a+r.milk_potential,0);
+  const dailyAvg = totalL/Math.max(dates.length,1);
+  const utilPct  = milkPot>0 ? Math.round(dailyAvg/milkPot*100) : 0;
+  sv('kpi-bmc-util', utilPct+'%');
+  sv('kpi-bmc-sub', `${fmt(dailyAvg)} L/day of ${fmt(milkPot)} L/day potential`);
+  const bmcBar = document.getElementById('kpi-bmc-bar');
+  if (bmcBar) { bmcBar.style.width=Math.min(utilPct,100)+'%'; bmcBar.style.background=utilPct>=60?'#34a853':utilPct>=30?'#fbbc04':'#ea4335'; }
+
+  // Season banner
+  const curMonth = new Date().getMonth(); // 0=Jan
+  const FLUSH=[9,10,11,0,1]; // Oct–Feb
+  const LEAN=[2,3,4,5,6];    // Mar–Jul
+  const isFl=FLUSH.includes(curMonth), isLe=LEAN.includes(curMonth);
+  sv('season-val', isFl?'🌾 Flush Season':isLe?'☀️ Lean Season':'🍂 Transition');
+  sv('season-lbl', isFl?'📅 Flush Season (Oct–Feb)':isLe?'📅 Lean Season (Mar–Jul)':'📅 Transition Season');
+  sv('season-sub', isFl?'Higher volumes expected · focus on chilling & transport capacity':isLe?'Lower volumes · retention incentives & fodder support critical':'Moderate volumes · prepare for flush season ramp-up');
+  const sb = document.getElementById('season-banner');
+  if (sb) sb.style.background = isFl?'linear-gradient(135deg,#e6f4ea,#f8f9fa)':isLe?'linear-gradient(135deg,#fef7e0,#f8f9fa)':'linear-gradient(135deg,#e8f0fe,#f8f9fa)';
+
   // Trend chart – daily total
   const dailyTotals = dates.map(d => ({
     date:d,
@@ -1664,6 +1743,16 @@ function renderTrend(dailyTotals) {
   const ctx = document.getElementById('trend-chart')?.getContext('2d');
   if (!ctx) return;
   if (_trendChart) _trendChart.destroy();
+
+  // Seasonal index: Tamil Nadu flush (Oct-Feb) vs lean (Mar-Jul) baseline
+  // Relative weight: flush=1.15, intermediate=1.0, lean=0.85
+  const SEASONAL_IDX = [0.85,0.85,0.85,0.85,0.85,0.90,1.00,1.05,1.05,1.15,1.15,1.10]; // Jan–Dec
+  const globalAvg = dailyTotals.reduce((a,d)=>a+d.total,0) / Math.max(dailyTotals.length,1);
+  const seasonalBaseline = dailyTotals.map(d => {
+    const m = parseInt((d.date||'').split('-')[1]||'6') - 1;
+    return Math.round(globalAvg * SEASONAL_IDX[m]);
+  });
+
   _trendChart = new Chart(ctx, {
     type:'line',
     data:{
@@ -1677,11 +1766,24 @@ function renderTrend(dailyTotals) {
         pointRadius: dailyTotals.length>60?0:3,
         tension:.35,
         fill:true
+      },{
+        label:'Seasonal Baseline (L)',
+        data: seasonalBaseline,
+        borderColor:'#fbbc04',
+        backgroundColor:'transparent',
+        borderWidth:1.5,
+        pointRadius:0,
+        borderDash:[5,4],
+        tension:.4,
+        fill:false
       }]
     },
     options:{
       responsive:true, maintainAspectRatio:false,
-      plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>`${fmt(c.raw)} L`}}},
+      plugins:{
+        legend:{display:true,position:'bottom',labels:{font:{family:'Google Sans',size:11},boxWidth:12,padding:14}},
+        tooltip:{callbacks:{label:c=>`${c.dataset.label}: ${fmt(c.raw)} L`}}
+      },
       scales:{
         x:{grid:{display:false},ticks:{maxTicksLimit:8,font:{family:'DM Mono',size:10}}},
         y:{ticks:{callback:v=>fmt(v)+'L',font:{family:'DM Mono',size:10}},grid:{color:'rgba(10,80,50,.06)'}}
@@ -1828,12 +1930,16 @@ function renderDailyLog() {
     const st  = r.total===0 ? '<span class="bdg b-r">Missed</span>'
                : pct!==null&&pct<70 ? `<span class="bdg b-a">Low (${pct}%)</span>`
                : '<span class="bdg b-g">Normal</span>';
+    const fatVal  = r.fat!=null  ? `<span style="font-family:var(--mono);${r.fat<3.5?'color:var(--g-red);':r.fat>=4.5?'color:var(--g-green);':''}">${r.fat.toFixed(1)}%</span>` : '<span style="color:var(--txt3);">—</span>';
+    const snfVal  = r.snf!=null  ? `<span style="font-family:var(--mono);${r.snf<8.5?'color:var(--g-red);':''}">${r.snf.toFixed(1)}%</span>` : '<span style="color:var(--txt3);">—</span>';
     return `<tr>
       <td style="font-family:var(--mono);font-size:12px;">${fmtDate(r.date)}</td>
       <td style="font-weight:500;">${r.society}</td>
       <td style="font-family:var(--mono);">${r.morning||'—'}</td>
       <td style="font-family:var(--mono);">${r.evening||'—'}</td>
       <td style="font-family:var(--mono);font-weight:600;color:var(--green);">${fmt(r.total)}</td>
+      <td>${fatVal}</td>
+      <td>${snfVal}</td>
       <td>${st}</td>
       <td style="font-size:12px;color:var(--txt2);">${r.notes||''}</td>
     </tr>`;
@@ -1890,10 +1996,23 @@ function renderSummary() {
   }
 
   const maxTotal = Math.max(...data.map(d=>d.total));
+  const memberCounts = loadMemberCounts();
+  // NDDB tier classification based on daily avg
+  function nddbTier(avg) {
+    if (avg>=300) return {lbl:'A — Elite',   cls:'b-g',  tip:'≥300 L/day · Self-sustaining'};
+    if (avg>=150) return {lbl:'B — Growth',  cls:'b-g',  tip:'150–300 L/day · Growth potential'};
+    if (avg>=50)  return {lbl:'C — Support', cls:'b-a',  tip:'50–150 L/day · Needs support'};
+    return               {lbl:'D — Review',  cls:'b-r',  tip:'<50 L/day · Viability review'};
+  }
   const html = data.map((d,i)=>{
     const pct = maxTotal>0 ? Math.round(d.total/maxTotal*100) : 0;
     const statusCls = d.repPct>=80?'b-g':d.repPct>=50?'b-a':'b-r';
     const statusLbl = d.repPct>=80?'Active':d.repPct>=50?'Moderate':'Low';
+    const tier = nddbTier(d.avg);
+    const memberCount = memberCounts[d.name] || 0;
+    const lPerMember  = (memberCount > 0 && d.activeDays > 0)
+      ? `<span style="font-family:var(--mono);color:var(--g-blue);">${fmt(d.avg/memberCount)} L</span>`
+      : '<span style="color:var(--txt3);font-size:11.5px;">—</span>';
     return `<tr>
       <td style="color:var(--txt3);font-family:var(--mono);">${i+1}</td>
       <td style="font-weight:500;">${d.name}</td>
@@ -1908,6 +2027,8 @@ function renderSummary() {
         <div class="pbar"><div class="pfill" style="width:${d.repPct}%;background:${d.repPct>=80?'var(--green)':d.repPct>=50?'var(--amber)':'var(--red)'};"></div></div>
       </td>
       <td style="font-family:var(--mono);">${fmt(d.best)} L</td>
+      <td>${lPerMember}</td>
+      <td><span class="bdg ${tier.cls}" title="${tier.tip}">${tier.lbl}</span></td>
       <td><span class="bdg ${statusCls}">${statusLbl}</span></td>
     </tr>`;
   }).join('');
@@ -1917,6 +2038,20 @@ function renderSummary() {
 // ══════════════════════════════════════════════════════
 //  RENDER: ALERTS
 // ══════════════════════════════════════════════════════
+// Tamil Nadu festival calendar (MM-DD format, recurring annually)
+const TN_FESTIVALS = {
+  '01-14':'Pongal','01-15':'Mattu Pongal','01-16':'Kanum Pongal',
+  '01-26':'Republic Day','04-14':'Tamil New Year / Vishu',
+  '08-15':'Independence Day','10-02':'Gandhi Jayanti',
+  '11-01':'Karthigai Deepam (approx)','11-14':'Diwali (approx)',
+  '12-25':'Christmas','12-31':'New Year Eve'
+};
+function isFestivalDay(dateStr) {
+  if (!dateStr) return null;
+  const mmdd = dateStr.slice(5); // "MM-DD"
+  return TN_FESTIVALS[mmdd] || null;
+}
+
 function renderAlerts() {
   const tod = today();
   const data = _filtered.filter(r => r.date <= tod);   // belt-and-suspenders: no future dates
@@ -1938,14 +2073,17 @@ function renderAlerts() {
   sv('al-low',    low.length);
 
   const cards = [
-    ...missed.map(r=>`
-      <div class="alert-card ac-r">
-        <div class="ac-ico">🚫</div>
+    ...missed.map(r=>{
+      const fest = isFestivalDay(r.date);
+      const festTag = fest ? `<span style="display:inline-block;padding:1px 8px;background:#fef7e0;color:#ea8600;border-radius:100px;font-size:10.5px;margin-left:6px;">🎉 ${fest}</span>` : '';
+      return `
+      <div class="alert-card ${fest?'ac-a':'ac-r'}">
+        <div class="ac-ico">${fest?'🎉':'🚫'}</div>
         <div>
-          <div class="ac-t">${r.society} — Zero Collection</div>
-          <div class="ac-d">${fmtDate(r.date)} · Immediate field follow-up required.${r.notes?` Note: ${r.notes}`:''}</div>
+          <div class="ac-t">${r.society} — Zero Collection${festTag}</div>
+          <div class="ac-d">${fmtDate(r.date)} · ${fest?'Likely festival/holiday closure — verify and log.':'Immediate field follow-up required.'}${r.notes?` Note: ${r.notes}`:''}</div>
         </div>
-      </div>`),
+      </div>`;}),
     ...low.map(r=>{
       const pct=Math.round(r.total/socAvg[r.society]*100);
       return `
@@ -3431,11 +3569,133 @@ function renderPareto() {
     + '<span class="priority-chip '+(s.rep<30?'pc-high':s.rep<60?'pc-medium':'pc-low')+'">'+(s.rep<30?'Critical':s.rep<60?'At Risk':'Low')+'</span>'
     + '</div>'
   ).join('');
+
+  // Recovery Potential score = (bestDay - currentAvg) × (repRate/100)
+  // High recovery potential + currently low = priority field visit
+  const rpEl = document.getElementById('pareto-recovery');
+  if (rpEl) {
+    const rpStats = socs.map(s => {
+      const rows  = _filtered.filter(r => r.society === s);
+      const best  = Math.max(...rows.map(r=>r.total), 0);
+      const active= rows.filter(r=>r.total>0).length;
+      const avg   = active>0 ? rows.filter(r=>r.total>0).reduce((a,r)=>a+r.total,0)/active : 0;
+      const rep   = Math.round(active/Math.max(totalDays,1)*100);
+      const rp    = Math.round((best - avg) * (rep/100));
+      return { name:s, best, avg, rep, rp };
+    }).filter(s=>s.rp>0).sort((a,b)=>b.rp-a.rp).slice(0,8);
+
+    rpEl.innerHTML = rpStats.length ? rpStats.map((s,i)=>`
+      <div class="dm-metric-row">
+        <div>
+          <div style="font-size:13px;font-weight:500;color:var(--txt);">${i+1}. ${s.name}</div>
+          <div style="font-size:11.5px;color:var(--txt3);">Avg: ${fmt(s.avg)} L · Best: ${fmt(s.best)} L · Rep: ${s.rep}%</div>
+        </div>
+        <div style="text-align:right;">
+          <div style="font-size:14px;font-weight:600;color:#ea4335;">+${fmt(s.rp)} L</div>
+          <div style="font-size:10.5px;color:var(--txt3);">recovery potential</div>
+        </div>
+      </div>`).join('') : '<div style="padding:20px;text-align:center;color:var(--txt3);">All societies at or near peak performance.</div>';
+  }
 }
 
 // ══════════════════════════════════════════════════════
-//  BALANCED SCORECARD + OKR
+//  MEMBER COUNT MANAGEMENT
 // ══════════════════════════════════════════════════════
+function loadMemberCounts() {
+  try { return JSON.parse(localStorage.getItem('myl_members')||'{}'); } catch(e) { return {}; }
+}
+function saveMemberCounts() {
+  const inputs = document.querySelectorAll('.member-inp');
+  const counts = {};
+  inputs.forEach(inp => { if (inp.value) counts[inp.dataset.soc] = parseInt(inp.value)||0; });
+  localStorage.setItem('myl_members', JSON.stringify(counts));
+  toast('✓ Member counts saved');
+  renderSummary();
+}
+function renderMemberEditor() {
+  const el = document.getElementById('member-count-editor');
+  if (!el) return;
+  const socs = [...new Set(_rows.map(r=>r.society))].sort();
+  const counts = loadMemberCounts();
+  if (!socs.length) { el.innerHTML='<div style="color:var(--txt3);font-size:12.5px;">Load your data first to see societies here.</div>'; return; }
+  el.innerHTML = socs.map(s=>`
+    <div style="display:flex;align-items:center;gap:8px;padding:6px 10px;border:1px solid var(--brd);border-radius:6px;background:var(--bg);">
+      <div style="flex:1;font-size:12.5px;font-weight:500;color:var(--txt);overflow:hidden;white-space:nowrap;text-overflow:ellipsis;" title="${s}">${s}</div>
+      <input type="number" class="member-inp ctrl" data-soc="${s}" value="${counts[s]||''}" placeholder="Members" style="width:80px;font-size:12px;padding:4px 8px;">
+    </div>`).join('');
+}
+
+// Hook into settings tab
+const _origGoTab = goTab;
+// ══════════════════════════════════════════════════════
+//  MORNING 10-POINT CHECKLIST (Amul-style)
+// ══════════════════════════════════════════════════════
+const CHECKLIST_ITEMS = [
+  {id:'cl1', ico:'📡', label:'All societies reported by 7 AM', sub:'Verify via SMS/phone for non-reporters'},
+  {id:'cl2', ico:'🚫', label:'Zero-collection societies identified', sub:'List names, initiate field call'},
+  {id:'cl3', ico:'🧪', label:'Fat/SNF within acceptable range', sub:'Min 3.5% fat, 8.5% SNF (cow milk)'},
+  {id:'cl4', ico:'🧑‍🌾', label:'New member additions logged', sub:'Update farmer register if any'},
+  {id:'cl5', ico:'❄️', label:'Chilling centre temp <10°C confirmed', sub:'BMC log checked and initialled'},
+  {id:'cl6', ico:'🚛', label:'Route vehicle departed on time', sub:'All collection vehicles dispatched'},
+  {id:'cl7', ico:'💸', label:'Yesterday\'s payment released', sub:'NEFT/bank transfer confirmed'},
+  {id:'cl8', ico:'🐄', label:'Animal disease reports checked', sub:'Vet dispensary contacted if any outbreak'},
+  {id:'cl9', ico:'🌿', label:'Fodder availability confirmed', sub:'No distress signal from society president'},
+  {id:'cl10',ico:'🌦️', label:'Weather/festival impact noted', sub:'Flag if likely to affect tomorrow\'s collection'},
+];
+
+function renderChecklist() {
+  const el = document.getElementById('morning-checklist');
+  if (!el) return;
+  const saved = JSON.parse(localStorage.getItem('myl_checklist_'+today())||'{}');
+  el.innerHTML = CHECKLIST_ITEMS.map(item => {
+    const state = saved[item.id] || 'pending';
+    return `<div class="cl-item cl-${state}" id="cld-${item.id}" onclick="cycleCheck('${item.id}')">
+      <div style="display:flex;align-items:flex-start;gap:10px;">
+        <div style="font-size:20px;flex-shrink:0;margin-top:1px;">${item.ico}</div>
+        <div style="flex:1;">
+          <div style="font-size:13px;font-weight:500;color:var(--txt);margin-bottom:2px;">${item.label}</div>
+          <div style="font-size:11.5px;color:var(--txt2);">${item.sub}</div>
+        </div>
+        <div class="cl-status-icon">${state==='ok'?'✅':state==='warn'?'⚠️':state==='na'?'➖':'○'}</div>
+      </div>
+    </div>`;
+  }).join('');
+  updateChecklistScore();
+}
+
+function cycleCheck(id) {
+  const saved = JSON.parse(localStorage.getItem('myl_checklist_'+today())||'{}');
+  const cur = saved[id]||'pending';
+  const next = {pending:'ok',ok:'warn',warn:'na',na:'pending'}[cur];
+  saved[id] = next;
+  localStorage.setItem('myl_checklist_'+today(), JSON.stringify(saved));
+  renderChecklist();
+}
+
+function saveChecklist() {
+  toast('✓ Checklist saved for ' + fmtDate(today()));
+}
+
+function resetChecklist() {
+  if (!confirm('Reset today\'s checklist?')) return;
+  localStorage.removeItem('myl_checklist_'+today());
+  renderChecklist();
+}
+
+function updateChecklistScore() {
+  const saved = JSON.parse(localStorage.getItem('myl_checklist_'+today())||'{}');
+  const ok   = Object.values(saved).filter(v=>v==='ok').length;
+  const warn = Object.values(saved).filter(v=>v==='warn').length;
+  const na   = Object.values(saved).filter(v=>v==='na').length;
+  const done = ok + warn + na;
+  const el = document.getElementById('checklist-score');
+  if (!el) return;
+  const pct = Math.round(done/CHECKLIST_ITEMS.length*100);
+  const color = ok===CHECKLIST_ITEMS.length ? '#34a853' : pct>=70 ? '#fbbc04' : '#ea4335';
+  el.style.background = color+'18';
+  el.style.color = color;
+  el.innerHTML = `${ok} ✅  ${warn} ⚠️  ${na} ➖  |  ${pct}% complete today — ${fmtDate(today())}`;
+}
 function renderScorecard() {
   if (!_filtered.length) {
     document.getElementById('bsc-quadrants').innerHTML = '<div style="grid-column:1/-1;padding:24px;text-align:center;color:var(--txt3);">Connect your sheet to see the Balanced Scorecard.</div>';
