@@ -234,6 +234,157 @@ body{background:var(--bg);color:var(--txt);font-family:var(--font);font-size:13.
 .sb-hd{font-size:14px;font-weight:600;color:var(--green);margin-bottom:2px;}
 .sb-dd{font-size:12.5px;color:var(--txt2);}
 
+/* ── CATTLE PLANNING ── */
+.cattle-kpi{background:var(--surface);border:1px solid var(--brd);border-radius:8px;padding:16px 20px;box-shadow:var(--sh1);cursor:pointer;transition:all .18s;position:relative;overflow:hidden;}
+.cattle-kpi::before{content:'';position:absolute;top:0;left:0;right:0;height:4px;border-radius:8px 8px 0 0;}
+.ck-blue::before{background:var(--g-blue);}
+.ck-green::before{background:var(--g-green);}
+.ck-yellow::before{background:var(--g-yellow);}
+.ck-red::before{background:var(--g-red);}
+.ck-purple::before{background:#9c27b0;}
+.cattle-kpi:hover{box-shadow:var(--sh2);transform:translateY(-2px);}
+.cattle-kpi.active-filter{box-shadow:0 0 0 2px var(--g-blue),var(--sh2);}
+.ck-lbl{font-size:11.5px;color:var(--txt2);text-transform:uppercase;letter-spacing:.06em;font-weight:500;margin-bottom:6px;}
+.ck-val{font-size:28px;font-weight:300;line-height:1;margin-bottom:4px;letter-spacing:-.02em;}
+.ck-sub{font-size:12px;color:var(--txt3);}
+.ck-blue .ck-val{color:var(--g-blue);}
+.ck-green .ck-val{color:var(--g-green);}
+.ck-yellow .ck-val{color:#ea8600;}
+.ck-red .ck-val{color:var(--g-red);}
+.ck-purple .ck-val{color:#9c27b0;}
+.ck-hint{font-size:10.5px;color:var(--txt3);margin-top:5px;font-style:italic;}
+
+.viability-badge{display:inline-flex;align-items:center;padding:3px 10px;border-radius:100px;font-size:11.5px;font-weight:500;}
+.vb-high{background:#e6f4ea;color:#137333;}
+.vb-medium{background:#e8f0fe;color:#1a56b0;}
+.vb-low{background:#fef7e0;color:#ea8600;}
+.vb-not{background:#fce8e6;color:#c5221f;}
+
+.score-bar{width:100%;background:var(--s2);border-radius:100px;height:5px;overflow:hidden;margin-top:5px;}
+.score-fill{height:100%;border-radius:100px;transition:width .8s cubic-bezier(.4,0,.2,1);}
+
+.village-row{display:flex;align-items:center;gap:10px;padding:9px 14px;border-bottom:1px solid rgba(0,0,0,.05);transition:background .12s;cursor:pointer;}
+.village-row:hover{background:rgba(66,133,244,.04);}
+.village-row:last-child{border-bottom:none;}
+.vr-rank{width:26px;font-size:12px;color:var(--txt3);font-family:var(--mono);flex-shrink:0;text-align:center;}
+.vr-name{flex:1;font-size:13px;font-weight:500;color:var(--txt);}
+.vr-block{font-size:11.5px;color:var(--txt3);width:100px;flex-shrink:0;}
+.vr-animals{font-size:13px;font-family:var(--mono);width:70px;text-align:right;flex-shrink:0;color:var(--g-blue);}
+.vr-potential{font-size:12px;font-family:var(--mono);width:80px;text-align:right;color:var(--g-green);flex-shrink:0;}
+
+.block-stat-card{background:var(--surface);border:1px solid var(--brd);border-radius:8px;padding:14px 16px;box-shadow:var(--sh1);}
+.bsc-head{font-size:13.5px;font-weight:500;color:var(--g-blue);margin-bottom:10px;padding-bottom:8px;border-bottom:1px solid var(--brd);}
+.bsc-row{display:flex;justify-content:space-between;font-size:12.5px;padding:4px 0;border-bottom:1px solid rgba(0,0,0,.04);}
+.bsc-row:last-child{border-bottom:none;}
+.bsc-val{font-weight:500;font-family:var(--mono);}
+
+.society-modal{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:1000;align-items:center;justify-content:center;}
+.society-modal.open{display:flex;}
+.modal-box{background:var(--surface);border-radius:12px;padding:24px;max-width:500px;width:90%;box-shadow:0 8px 32px rgba(0,0,0,.2);max-height:80vh;overflow-y:auto;}
+.modal-title{font-size:16px;font-weight:500;color:var(--txt);margin-bottom:16px;display:flex;justify-content:space-between;align-items:center;}
+.modal-close{background:none;border:none;font-size:20px;cursor:pointer;color:var(--txt3);padding:4px 8px;border-radius:4px;}
+.modal-close:hover{background:var(--s2);}
+.modal-stat{display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--brd);font-size:13.5px;}
+.modal-stat:last-of-type{border-bottom:none;}
+.modal-stat-lbl{color:var(--txt2);}
+.modal-stat-val{font-weight:500;font-family:var(--mono);}
+.modal-rec{background:var(--bg);border-radius:8px;padding:12px 14px;margin-top:14px;font-size:13px;color:var(--txt2);line-height:1.7;border-left:3px solid var(--g-blue);}
+
+/* ── ACTION PLAN ── */
+.ap-card{background:var(--surface);border:1px solid var(--brd);border-radius:8px;padding:14px 16px;margin-bottom:10px;transition:box-shadow .15s;}
+.ap-card:hover{box-shadow:var(--sh2);}
+.ap-header{display:flex;align-items:flex-start;gap:12px;margin-bottom:8px;}
+.ap-ico{font-size:22px;flex-shrink:0;margin-top:2px;}
+.ap-title{font-size:13.5px;font-weight:500;color:var(--txt);margin-bottom:3px;}
+.ap-meta{font-size:11.5px;color:var(--txt3);}
+.ap-body{font-size:13px;color:var(--txt2);line-height:1.7;margin-bottom:10px;}
+.ap-steps{list-style:none;padding:0;margin:0;}
+.ap-steps li{display:flex;gap:8px;font-size:12.5px;color:var(--txt2);padding:5px 0;border-bottom:1px solid rgba(0,0,0,.04);}
+.ap-steps li:last-child{border-bottom:none;}
+.ap-step-num{width:20px;height:20px;border-radius:50%;background:var(--g-blue);color:#fff;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:600;flex-shrink:0;margin-top:1px;}
+.ap-priority-high{border-left:4px solid var(--g-red);}
+.ap-priority-medium{border-left:4px solid var(--g-yellow);}
+.ap-priority-low{border-left:4px solid var(--g-green);}
+.priority-chip{padding:2px 10px;border-radius:100px;font-size:11px;font-weight:600;display:inline-flex;align-items:center;gap:4px;}
+.pc-high{background:#fce8e6;color:#c5221f;}
+.pc-medium{background:#fef7e0;color:#ea8600;}
+.pc-low{background:#e6f4ea;color:#137333;}
+.pc-done{background:#e8f0fe;color:#1a56a6;}
+.ap-progress{background:var(--s2);border-radius:100px;height:4px;overflow:hidden;margin-top:8px;}
+.ap-prog-fill{height:100%;border-radius:100px;background:linear-gradient(90deg,#4285f4,#34a853);}
+/* ── RANK TABLE ── */
+.rank-table{width:100%;border-collapse:collapse;}
+.rank-table th{padding:10px 12px;text-align:left;font-size:11px;font-weight:500;color:var(--txt2);background:var(--bg);border-bottom:1px solid var(--brd);text-transform:uppercase;letter-spacing:.04em;}
+.rank-table td{padding:9px 12px;border-bottom:1px solid rgba(0,0,0,.05);font-size:13px;}
+.rank-table tr:hover td{background:rgba(66,133,244,.03);}
+.rank-medal{font-size:16px;width:28px;text-align:center;}
+.trend-chip{display:inline-flex;align-items:center;gap:3px;padding:2px 8px;border-radius:100px;font-size:11.5px;font-weight:500;}
+.tc-up{background:#e6f4ea;color:#137333;}
+.tc-dn{background:#fce8e6;color:#c5221f;}
+.tc-eq{background:var(--s2);color:var(--txt2);}
+/* ── REPORTS ── */
+.report-type-btn{padding:10px 20px;border-radius:6px;font-family:var(--font);font-size:13.5px;font-weight:500;cursor:pointer;border:2px solid var(--brd);background:var(--surface);color:var(--txt2);transition:all .18s;display:flex;align-items:center;gap:8px;}
+.report-type-btn:hover{border-color:var(--g-blue);color:var(--g-blue);background:#e8f0fe;}
+.report-type-btn.active{border-color:var(--g-blue);background:var(--g-blue);color:#fff;}
+.report-scope-btn{padding:8px 18px;border-radius:100px;font-family:var(--font);font-size:13px;font-weight:500;cursor:pointer;border:1.5px solid var(--brd);background:var(--surface);color:var(--txt2);transition:all .15s;}
+.report-scope-btn:hover{border-color:var(--g-blue);color:var(--g-blue);}
+.report-scope-btn.active{border-color:var(--g-blue);background:#e8f0fe;color:var(--g-blue);}
+.report-preview{background:#f8f9fa;border:1px solid var(--brd);border-radius:8px;padding:20px 24px;font-size:13.5px;line-height:1.9;color:var(--txt);max-height:580px;overflow-y:auto;}
+.rp-h1{font-size:17px;font-weight:600;color:var(--g-blue);margin-bottom:6px;padding-bottom:8px;border-bottom:2px solid var(--g-blue);}
+.rp-h2{font-size:14px;font-weight:600;color:var(--txt);margin:16px 0 6px;}
+.rp-h3{font-size:13px;font-weight:600;color:var(--txt2);margin:12px 0 4px;}
+.rp-kpi{display:inline-block;background:#e8f0fe;color:#1a56a6;padding:3px 10px;border-radius:4px;font-weight:600;margin:2px;}
+.rp-good{color:#137333;font-weight:500;}
+.rp-bad{color:#c5221f;font-weight:500;}
+.rp-warn{color:#ea8600;font-weight:500;}
+.rp-row{display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px solid rgba(0,0,0,.05);font-size:13px;}
+.rp-row:last-child{border-bottom:none;}
+.rp-section{background:var(--surface);border:1px solid var(--brd);border-radius:6px;padding:12px 14px;margin-bottom:10px;}
+.best-practice-card{background:linear-gradient(135deg,#e8f0fe,#e6f4ea);border:1px solid rgba(66,133,244,.2);border-radius:8px;padding:14px 16px;margin-bottom:8px;}
+.bp-title{font-size:13.5px;font-weight:500;color:var(--g-blue);margin-bottom:4px;display:flex;align-items:center;gap:6px;}
+.bp-body{font-size:12.5px;color:var(--txt2);line-height:1.6;}
+/* ── DAILY MANAGEMENT BOARD ── */
+.dm-board{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:16px;}
+.dm-col{background:var(--surface);border:1px solid var(--brd);border-radius:8px;overflow:hidden;}
+.dm-col-head{padding:10px 14px;font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;display:flex;align-items:center;gap:6px;}
+.dm-col-head.todo{background:#fce8e6;color:#c5221f;}
+.dm-col-head.inprogress{background:#fef7e0;color:#ea8600;}
+.dm-col-head.done{background:#e6f4ea;color:#137333;}
+.dm-col-head.monitor{background:#e8f0fe;color:#1a56a6;}
+.dm-task{padding:9px 12px;border-bottom:1px solid rgba(0,0,0,.05);font-size:12.5px;color:var(--txt2);cursor:pointer;transition:background .12s;display:flex;align-items:flex-start;gap:8px;}
+.dm-task:hover{background:rgba(66,133,244,.04);}
+.dm-task:last-child{border-bottom:none;}
+.dm-task-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;margin-top:5px;}
+.dm-society{font-weight:500;color:var(--txt);font-size:12px;}
+.dm-detail{font-size:11.5px;color:var(--txt3);}
+.dm-metric-row{display:flex;align-items:center;justify-content:space-between;padding:8px 14px;border-bottom:1px solid rgba(0,0,0,.04);font-size:13px;}
+.dm-metric-row:last-child{border-bottom:none;}
+.dm-metric-val{font-weight:600;font-family:var(--mono);}
+
+/* ── PARETO ── */
+.pareto-insight{background:linear-gradient(135deg,#e8f0fe,#f8f9fa);border:1px solid rgba(66,133,244,.2);border-radius:8px;padding:14px 18px;margin-bottom:12px;font-size:13.5px;color:var(--txt2);line-height:1.7;}
+.pareto-insight strong{color:var(--g-blue);}
+
+/* ── BALANCED SCORECARD ── */
+.bsc-quadrant{background:var(--surface);border:1px solid var(--brd);border-radius:8px;padding:16px 18px;box-shadow:var(--sh1);}
+.bsc-q-title{font-size:13px;font-weight:600;margin-bottom:12px;padding-bottom:8px;border-bottom:2px solid;display:flex;align-items:center;gap:7px;}
+.bsc-q-fin{border-color:#34a853;color:#137333;}
+.bsc-q-farmer{border-color:#4285f4;color:#1a56a6;}
+.bsc-q-process{border-color:#fbbc04;color:#ea8600;}
+.bsc-q-growth{border-color:#ea4335;color:#c5221f;}
+.bsc-metric{display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid rgba(0,0,0,.05);}
+.bsc-metric:last-child{border-bottom:none;}
+.bsc-m-lbl{font-size:12.5px;color:var(--txt2);}
+.bsc-m-val{font-size:13px;font-weight:500;font-family:var(--mono);}
+.bsc-m-bar{width:80px;height:5px;background:var(--s2);border-radius:100px;overflow:hidden;margin-top:3px;}
+.bsc-m-fill{height:100%;border-radius:100px;}
+.okr-card{background:var(--bg);border:1px solid var(--brd);border-radius:8px;padding:12px 16px;margin-bottom:8px;}
+.okr-objective{font-size:13.5px;font-weight:500;color:var(--txt);margin-bottom:8px;}
+.okr-kr{display:flex;align-items:center;gap:8px;font-size:12.5px;color:var(--txt2);padding:4px 0;}
+.okr-kr-bar{flex:1;height:5px;background:var(--s2);border-radius:100px;overflow:hidden;}
+.okr-kr-fill{height:100%;border-radius:100px;background:var(--g-blue);}
+.okr-pct{font-size:11.5px;font-family:var(--mono);width:36px;text-align:right;flex-shrink:0;}
+
 /* ── DISTRICT FILTER ── */
 .dist-sel{background:var(--bg);border:1.5px solid var(--s2);border-radius:var(--r);padding:5px 10px;font-family:var(--font);font-size:12.5px;color:var(--txt);outline:none;transition:all .15s;min-width:140px;}
 .dist-sel:focus{border-color:var(--green);background:var(--surface);}
@@ -365,6 +516,15 @@ body{background:var(--bg);color:var(--txt);font-family:var(--font);font-size:13.
     <div class="sb-item" onclick="goTab('expansion',this)">
       <div class="sb-ico">🌱</div><div class="sb-lbl">Expansion Plan</div>
     </div>
+    <div class="sb-item" onclick="goTab('actionplan',this)">
+      <div class="sb-ico">📋</div><div class="sb-lbl">Action Plan</div>
+    </div>
+    <div class="sb-item" onclick="goTab('reports',this)">
+      <div class="sb-ico">📄</div><div class="sb-lbl">Reports</div>
+    </div>
+    <div class="sb-item" onclick="goTab('cattle',this)">
+      <div class="sb-ico">🐄</div><div class="sb-lbl">Cattle Planning</div>
+    </div>
     <div class="sb-item" onclick="goTab('insights',this)">
       <div class="sb-ico">✨</div><div class="sb-lbl">AI Insights</div>
     </div>
@@ -378,6 +538,16 @@ body{background:var(--bg);color:var(--txt);font-family:var(--font);font-size:13.
     <div class="sb-item" onclick="goTab('alerts',this)">
       <div class="sb-ico">⚠️</div><div class="sb-lbl">Alerts</div>
       <div class="sb-bdg bdg-r" id="alert-badge">—</div>
+    </div>
+    <div class="sb-grp">Management</div>
+    <div class="sb-item" onclick="goTab('daily_mgmt',this)">
+      <div class="sb-ico">🎯</div><div class="sb-lbl">Daily Management</div>
+    </div>
+    <div class="sb-item" onclick="goTab('pareto',this)">
+      <div class="sb-ico">📐</div><div class="sb-lbl">Pareto Analysis</div>
+    </div>
+    <div class="sb-item" onclick="goTab('scorecard',this)">
+      <div class="sb-ico">🏅</div><div class="sb-lbl">Balanced Scorecard</div>
     </div>
     <div class="sb-grp">System</div>
     <div class="sb-item" onclick="goTab('settings',this)">
@@ -687,6 +857,7 @@ body{background:var(--bg);color:var(--txt);font-family:var(--font);font-size:13.
         </div>
         <div id="trk-empty" class="empty"><div class="empty-ico">📍</div><div class="empty-t">Select a society above</div><div class="empty-s">Set a daily target and monitor performance against it.</div></div>
         <div id="trk-content" style="display:none;">
+          <div style="font-size:12px;color:var(--txt3);font-family:var(--mono);margin-bottom:12px;padding:6px 10px;background:var(--bg);border-radius:6px;" id="trk-date-info"></div>
           <div class="g5" style="margin-bottom:14px;" id="trk-stats"></div>
           <div class="card" style="box-shadow:none;border:1px solid var(--brd);margin-bottom:12px;">
             <div class="card-t"><span class="ico">📈</span> Daily Collection vs Target</div>
@@ -732,6 +903,307 @@ body{background:var(--bg);color:var(--txt);font-family:var(--font);font-size:13.
         </div>
         <div style="font-size:11px;color:var(--txt3);margin-bottom:14px;font-family:var(--mono);" id="ai-ctx">—</div>
         <div id="ai-out"><div class="empty"><div class="empty-ico">✨</div><div class="empty-t">No insights yet</div><div class="empty-s">Click Generate Insights above.</div></div></div>
+      </div>
+    </div>
+
+    <!-- ═══ CATTLE PLANNING ═══ -->
+    <div class="tab-panel" id="tab-cattle">
+      <!-- KPI Row - clickable filters -->
+      <div class="g5" style="margin-bottom:14px;" id="cattle-kpis">
+        <div class="cattle-kpi ck-blue" onclick="filterCattle('all')" id="ck-all">
+          <div class="ck-lbl">Total Villages</div>
+          <div class="ck-val" id="ck-total">—</div>
+          <div class="ck-sub">Mayiladuthurai division</div>
+          <div class="ck-hint">Click to show all</div>
+        </div>
+        <div class="cattle-kpi ck-green" onclick="filterCattle('High')" id="ck-high">
+          <div class="ck-lbl">🚀 High Potential</div>
+          <div class="ck-val" id="ck-high-val">—</div>
+          <div class="ck-sub">≥500 milk animals</div>
+          <div class="ck-hint">Click to filter</div>
+        </div>
+        <div class="cattle-kpi ck-yellow" onclick="filterCattle('Medium')" id="ck-med">
+          <div class="ck-lbl">📈 Medium Potential</div>
+          <div class="ck-val" id="ck-med-val">—</div>
+          <div class="ck-sub">200–499 milk animals</div>
+          <div class="ck-hint">Click to filter</div>
+        </div>
+        <div class="cattle-kpi ck-red" onclick="filterCattle('Low')" id="ck-low">
+          <div class="ck-lbl">⚠️ Low Potential</div>
+          <div class="ck-val" id="ck-low-val">—</div>
+          <div class="ck-sub">100–199 milk animals</div>
+          <div class="ck-hint">Click to filter</div>
+        </div>
+        <div class="cattle-kpi ck-purple" onclick="filterCattle('milk')" id="ck-milk">
+          <div class="ck-lbl">🥛 Est. Daily Milk</div>
+          <div class="ck-val" id="ck-milk-val">—</div>
+          <div class="ck-sub">Litres / day potential</div>
+          <div class="ck-hint">Click for top producers</div>
+        </div>
+      </div>
+
+      <!-- Controls row -->
+      <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:12px;">
+        <select class="dist-sel" id="cattle-block-filter" onchange="renderCattle()" style="min-width:160px;">
+          <option value="">All Blocks</option>
+          <option>Kollidam</option>
+          <option>Kuthalam</option>
+          <option>Mayiladuthurai</option>
+          <option>Sembanarkoil</option>
+          <option>Sirkali</option>
+        </select>
+        <input type="text" class="dr-inp" id="cattle-search" placeholder="Search village…" oninput="renderCattle()" style="min-width:180px;">
+        <select class="dist-sel" id="cattle-sort" onchange="renderCattle()">
+          <option value="milk_potential">Sort: Milk Potential ↓</option>
+          <option value="milk_animals">Sort: Milk Animals ↓</option>
+          <option value="village">Sort: Village A–Z</option>
+          <option value="score">Sort: Viability Score ↓</option>
+        </select>
+        <div style="margin-left:auto;display:flex;gap:8px;">
+          <button class="ai-btn" id="cattle-ai-btn" onclick="generateCattleInsights()">✨ AI Society Plan</button>
+        </div>
+      </div>
+
+      <div class="g2" style="margin-bottom:14px;">
+        <!-- Village table -->
+        <div class="card" style="padding:0;overflow:hidden;">
+          <div style="padding:14px 20px;border-bottom:1px solid var(--brd);display:flex;align-items:center;justify-content:space-between;">
+            <div class="card-t" style="margin:0;"><span class="ico">🏘</span> Village Viability Index</div>
+            <div id="cattle-count" style="font-size:12px;color:var(--txt3);font-family:var(--mono);"></div>
+          </div>
+          <div style="max-height:420px;overflow-y:auto;" id="cattle-table"></div>
+        </div>
+        <!-- Block summary + chart -->
+        <div style="display:flex;flex-direction:column;gap:12px;">
+          <div class="card">
+            <div class="card-t"><span class="ico">📊</span> Block-wise Milk Potential</div>
+            <div class="chart-wrap" style="height:200px;"><canvas id="cattle-chart"></canvas></div>
+          </div>
+          <div class="g2" id="block-stats"></div>
+        </div>
+      </div>
+
+      <!-- AI Society Planning output -->
+      <div class="card" id="cattle-ai-panel" style="display:none;">
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px;">
+          <div class="card-t" style="margin:0;"><span class="ico">🤖</span> AI Society Opening Plan</div>
+          <button onclick="document.getElementById('cattle-ai-panel').style.display='none'" class="btn btn-o" style="margin-left:auto;padding:5px 12px;font-size:12px;">✕ Close</button>
+        </div>
+        <div id="cattle-ai-out"></div>
+      </div>
+    </div>
+
+    <!-- Village detail modal -->
+    <div class="society-modal" id="village-modal">
+      <div class="modal-box">
+        <div class="modal-title">
+          <span id="modal-village-name">Village Detail</span>
+          <button class="modal-close" onclick="closeModal()">✕</button>
+        </div>
+        <div id="modal-body"></div>
+      </div>
+    </div>
+
+    <!-- ═══ ACTION PLAN ═══ -->
+    <div class="tab-panel" id="tab-actionplan">
+      <!-- Top controls -->
+      <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:14px;">
+        <div style="flex:1;">
+          <div style="font-size:14px;font-weight:500;color:var(--txt);margin-bottom:2px;">Society Action Plan</div>
+          <div style="font-size:12px;color:var(--txt3);">AI-generated tasks based on live collection data · Best practices from NDDB guidelines</div>
+        </div>
+        <button class="ai-btn" id="ap-gen-btn" onclick="generateActionPlan()">🤖 Generate AI Action Plan</button>
+        <button class="btn btn-o" onclick="renderBestWorst()">📊 Refresh Rankings</button>
+      </div>
+
+      <div class="g2" style="margin-bottom:14px;">
+        <!-- Best performers -->
+        <div class="card" style="padding:0;overflow:hidden;">
+          <div style="padding:12px 16px;background:linear-gradient(90deg,#e6f4ea,#f8f9fa);border-bottom:1px solid var(--brd);display:flex;align-items:center;gap:8px;">
+            <span style="font-size:16px;">🏆</span>
+            <span style="font-size:13.5px;font-weight:500;color:#137333;">Top Performing Societies</span>
+            <span style="font-size:11.5px;color:var(--txt3);margin-left:auto;" id="best-period-lbl"></span>
+          </div>
+          <div style="overflow-x:auto;">
+            <table class="rank-table"><thead><tr>
+              <th style="width:36px;">#</th><th>Society</th><th>Total (L)</th><th>Avg/Day</th><th>Reporting</th><th>Trend</th>
+            </tr></thead>
+            <tbody id="best-tbody"></tbody></table>
+          </div>
+        </div>
+        <!-- Worst performers -->
+        <div class="card" style="padding:0;overflow:hidden;">
+          <div style="padding:12px 16px;background:linear-gradient(90deg,#fce8e6,#f8f9fa);border-bottom:1px solid var(--brd);display:flex;align-items:center;gap:8px;">
+            <span style="font-size:16px;">⚠️</span>
+            <span style="font-size:13.5px;font-weight:500;color:#c5221f;">Underperforming Societies</span>
+            <span style="font-size:11.5px;color:var(--txt3);margin-left:auto;" id="worst-period-lbl"></span>
+          </div>
+          <div style="overflow-x:auto;">
+            <table class="rank-table"><thead><tr>
+              <th style="width:36px;">#</th><th>Society</th><th>Total (L)</th><th>Missed Days</th><th>Reporting</th><th>Status</th>
+            </tr></thead>
+            <tbody id="worst-tbody"></tbody></table>
+          </div>
+        </div>
+      </div>
+
+      <!-- Best Practices -->
+      <div class="card" style="margin-bottom:14px;">
+        <div class="card-t"><span class="ico">📚</span> NDDB Best Practices for Milk Societies</div>
+        <div class="g3" id="best-practices-grid"></div>
+      </div>
+
+      <!-- AI Action Plan output -->
+      <div class="card" id="ap-output-card">
+        <div class="card-t"><span class="ico">📋</span> AI-Generated Action Plan <span id="ap-subtitle" style="font-size:12px;color:var(--txt3);font-weight:400;margin-left:8px;"></span></div>
+        <div id="ap-output">
+          <div class="empty"><div class="empty-ico">🤖</div><div class="empty-t">No action plan yet</div><div class="empty-s">Click "Generate AI Action Plan" above to get intelligent, data-driven action items for all societies.</div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══ REPORTS ═══ -->
+    <div class="tab-panel" id="tab-reports">
+      <div class="g2" style="margin-bottom:16px;">
+        <!-- Report type selector -->
+        <div class="card">
+          <div class="card-t"><span class="ico">📅</span> Report Period</div>
+          <div style="display:flex;gap:10px;flex-wrap:wrap;">
+            <button class="report-type-btn active" id="rpt-daily-btn" onclick="setReportType('daily')">📅 Daily</button>
+            <button class="report-type-btn" id="rpt-weekly-btn" onclick="setReportType('weekly')">📆 Weekly</button>
+            <button class="report-type-btn" id="rpt-monthly-btn" onclick="setReportType('monthly')">🗓 Monthly</button>
+          </div>
+        </div>
+        <!-- Report scope selector -->
+        <div class="card">
+          <div class="card-t"><span class="ico">🎯</span> Report For</div>
+          <div style="display:flex;gap:10px;flex-wrap:wrap;">
+            <button class="report-scope-btn active" id="rpt-dist-btn" onclick="setReportScope('district')">🏛 Mayiladuthurai District</button>
+            <button class="report-scope-btn" id="rpt-soc-btn" onclick="setReportScope('society')">🏘 Individual Society</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Society selector (shown only for society scope) -->
+      <div id="soc-selector-row" style="display:none;margin-bottom:14px;">
+        <div class="card">
+          <div class="card-t"><span class="ico">🐄</span> Select Society <span style="font-size:12px;color:var(--txt3);font-weight:400;">— ranked by cattle population from census data</span></div>
+          <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
+            <select class="dist-sel" id="report-soc-select" style="min-width:260px;font-size:13.5px;padding:8px 12px;" onchange="onReportSocChange()">
+              <option value="">— Select a Society —</option>
+            </select>
+            <div id="report-soc-info" style="font-size:12.5px;color:var(--txt2);"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Generate button + status -->
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px;flex-wrap:wrap;">
+        <button class="ai-btn" id="rpt-gen-btn" onclick="generateReport()" style="font-size:14px;padding:12px 28px;">
+          ✨ Generate Intelligent Report
+        </button>
+        <div style="font-size:12.5px;color:var(--txt3);" id="rpt-config-summary">Daily report · Mayiladuthurai District</div>
+      </div>
+
+      <!-- Report preview -->
+      <div class="card" id="rpt-preview-card" style="display:none;">
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px;flex-wrap:wrap;">
+          <div class="card-t" style="margin:0;flex:1;" id="rpt-preview-title">Report</div>
+          <button class="btn btn-o" style="font-size:12px;padding:6px 14px;" onclick="copyReport()">📋 Copy</button>
+          <button class="btn btn-p" style="font-size:12px;padding:6px 14px;" onclick="downloadReport()">⬇ Download</button>
+        </div>
+        <div class="report-preview" id="rpt-preview-body"></div>
+      </div>
+    </div>
+
+    <!-- ═══ DAILY MANAGEMENT BOARD ═══ -->
+    <div class="tab-panel" id="tab-daily_mgmt">
+      <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:14px;">
+        <div>
+          <div style="font-size:14px;font-weight:500;color:var(--txt);">Daily Management Board — Lean Visual Management</div>
+          <div style="font-size:12px;color:var(--txt3);">Toyota-inspired daily standup: see today's society status at a glance · refreshes with date filter</div>
+        </div>
+        <button class="btn btn-p" style="margin-left:auto;" onclick="renderDailyMgmt()">🔄 Refresh Board</button>
+      </div>
+
+      <!-- Traffic light summary row -->
+      <div class="g4" style="margin-bottom:14px;" id="dm-summary"></div>
+
+      <!-- Kanban board -->
+      <div class="dm-board" id="dm-board">
+        <div class="dm-col">
+          <div class="dm-col-head todo">🚫 <span id="dm-todo-count">0</span> — Zero / No Data</div>
+          <div id="dm-todo"></div>
+        </div>
+        <div class="dm-col">
+          <div class="dm-col-head inprogress">⚠️ <span id="dm-warn-count">0</span> — Below Target</div>
+          <div id="dm-warn"></div>
+        </div>
+        <div class="dm-col">
+          <div class="dm-col-head done">✅ <span id="dm-ok-count">0</span> — On Target</div>
+          <div id="dm-ok"></div>
+        </div>
+        <div class="dm-col">
+          <div class="dm-col-head monitor">📈 <span id="dm-star-count">0</span> — Exceeding</div>
+          <div id="dm-star"></div>
+        </div>
+      </div>
+
+      <!-- PDCA + Theory of Constraints -->
+      <div class="g2">
+        <div class="card">
+          <div class="card-t"><span class="ico">🔄</span> PDCA Cycle — Today's Interventions</div>
+          <div id="dm-pdca"></div>
+        </div>
+        <div class="card">
+          <div class="card-t"><span class="ico">🔗</span> Theory of Constraints — Bottleneck Societies</div>
+          <div style="font-size:12.5px;color:var(--txt3);margin-bottom:10px;">Societies that constrain district total the most (lowest volume / highest missed rate)</div>
+          <div id="dm-constraints"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══ PARETO ANALYSIS ═══ -->
+    <div class="tab-panel" id="tab-pareto">
+      <div style="margin-bottom:14px;">
+        <div style="font-size:14px;font-weight:500;color:var(--txt);margin-bottom:2px;">Pareto Analysis — 80/20 Rule</div>
+        <div style="font-size:12px;color:var(--txt3);">Identify the vital few societies driving the majority of procurement volume. Focus resources there to maximise gains.</div>
+      </div>
+      <div class="pareto-insight" id="pareto-insight">Connect your sheet to see Pareto analysis.</div>
+      <div class="g2" style="margin-bottom:14px;">
+        <div class="card">
+          <div class="card-t"><span class="ico">📊</span> Cumulative Contribution Chart</div>
+          <div class="chart-wrap" style="height:320px;"><canvas id="pareto-chart"></canvas></div>
+        </div>
+        <div class="card">
+          <div class="card-t"><span class="ico">📋</span> Society Contribution Breakdown</div>
+          <div style="max-height:320px;overflow-y:auto;" id="pareto-table"></div>
+        </div>
+      </div>
+      <div class="g2">
+        <div class="card">
+          <div class="card-t"><span class="ico">💡</span> Focus Zone — Top 20% (Protect &amp; Grow)</div>
+          <div id="pareto-top20"></div>
+        </div>
+        <div class="card">
+          <div class="card-t"><span class="ico">🚑</span> Leverage Zone — Bottom 50% (Urgent Attention)</div>
+          <div id="pareto-bottom50"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══ BALANCED SCORECARD ═══ -->
+    <div class="tab-panel" id="tab-scorecard">
+      <div style="margin-bottom:14px;">
+        <div style="font-size:14px;font-weight:500;color:var(--txt);margin-bottom:2px;">Balanced Scorecard + OKR Framework</div>
+        <div style="font-size:12px;color:var(--txt3);">Kaplan &amp; Norton's four perspectives adapted for Mayiladuthurai DCMPU · Objectives &amp; Key Results for the current period</div>
+      </div>
+      <!-- 4 BSC quadrants -->
+      <div class="g2" style="margin-bottom:14px;" id="bsc-quadrants"></div>
+      <!-- OKRs -->
+      <div class="card">
+        <div class="card-t"><span class="ico">🎯</span> OKRs — Objectives &amp; Key Results</div>
+        <div id="bsc-okrs"></div>
       </div>
     </div>
 
@@ -800,21 +1272,26 @@ function goTab(id, el) {
   document.getElementById('tab-' + id)?.classList.add('act');
   if (el) el.classList.add('act');
   _activeTab = id;
-  const titles = {overview:'Overview', hub:'Management Hub', tracker:'Society Tracker', distcomp:'District Comparison', expansion:'Expansion Plan', insights:'AI Insights', daily:'Daily Log', summary:'Society Summary', alerts:'Alerts', settings:'Settings'};
+  const titles = {overview:'Overview', hub:'Management Hub', tracker:'Society Tracker', distcomp:'District Comparison', expansion:'Expansion Plan', insights:'AI Insights', cattle:'Cattle Planning', actionplan:'Action Plan', reports:'Reports', daily_mgmt:'Daily Management Board', pareto:'Pareto Analysis', scorecard:'Balanced Scorecard', daily:'Daily Log', summary:'Society Summary', alerts:'Alerts', settings:'Settings'};
   document.getElementById('pgtitle').textContent = titles[id] || id;
   renderActiveTab();
   if (window.innerWidth < 768) closeMobSB();
 }
 
 function renderActiveTab() {
-  if (_activeTab === 'overview')  renderOverview();
-  if (_activeTab === 'hub')       renderHub();
-  if (_activeTab === 'tracker')   renderTracker();
-  if (_activeTab === 'distcomp')  renderDistComp();
-  if (_activeTab === 'expansion') renderExpansion();
-  if (_activeTab === 'daily')     renderDailyLog();
-  if (_activeTab === 'summary')   renderSummary();
-  if (_activeTab === 'alerts')    renderAlerts();
+  if (_activeTab === 'overview')    renderOverview();
+  if (_activeTab === 'hub')         renderHub();
+  if (_activeTab === 'tracker')     renderTracker();
+  if (_activeTab === 'distcomp')    renderDistComp();
+  if (_activeTab === 'expansion')   renderExpansion();
+  if (_activeTab === 'cattle')      renderCattle();
+  if (_activeTab === 'actionplan')  renderBestWorst();
+  if (_activeTab === 'daily_mgmt')  renderDailyMgmt();
+  if (_activeTab === 'pareto')      renderPareto();
+  if (_activeTab === 'scorecard')   renderScorecard();
+  if (_activeTab === 'daily')       renderDailyLog();
+  if (_activeTab === 'summary')     renderSummary();
+  if (_activeTab === 'alerts')      renderAlerts();
 }
 
 let _sbCol = false;
@@ -1653,44 +2130,226 @@ function renderHub() {
 // ══════════════════════════════════════════════════════
 function renderTracker() {
   const soc  = document.getElementById('trk-picker')?.value;
-  const goal = parseFloat(document.getElementById('trk-goal')?.value)||0;
+  const goal = parseFloat(document.getElementById('trk-goal')?.value) || 0;
   const emp  = document.getElementById('trk-empty');
   const cnt  = document.getElementById('trk-content');
+
   if (!soc) { emp.style.display=''; cnt.style.display='none'; return; }
+
+  // Use _rows for all-time data, but also check _filtered for date-range data
+  // Prefer _filtered if it has data, fall back to _rows so tracker always shows something
+  let data = _filtered.filter(r => r.society === soc).sort((a,b) => a.date.localeCompare(b.date));
+  const usingFiltered = data.length > 0;
+  if (!usingFiltered) {
+    // Try _rows (all dates, ignore date range filter)
+    data = _rows.filter(r => r.society === soc).sort((a,b) => a.date.localeCompare(b.date));
+  }
+
+  if (!data.length) {
+    emp.innerHTML = '<div class="empty-ico">📭</div><div class="empty-t">No data for '+soc+'</div><div class="empty-s">This society has no collection records. Check your date range or reconnect your sheet.</div>';
+    emp.style.display=''; cnt.style.display='none'; return;
+  }
+
   emp.style.display='none'; cnt.style.display='';
-  const data = _filtered.filter(r=>r.society===soc).sort((a,b)=>a.date.localeCompare(b.date));
-  if (!data.length) { emp.style.display=''; cnt.style.display='none'; return; }
-  const total  = data.reduce((a,r)=>a+r.total,0);
-  const avg    = total/Math.max(data.length,1);
-  const best   = Math.max(...data.map(r=>r.total));
-  const missed = data.filter(r=>r.total===0).length;
-  const half   = Math.floor(data.length/2);
-  const f1     = data.slice(0,half).reduce((a,r)=>a+r.total,0)/Math.max(half,1);
-  const f2     = data.slice(half).reduce((a,r)=>a+r.total,0)/Math.max(data.length-half,1);
-  const tPct   = f1>0?Math.round((f2-f1)/f1*100):0;
-  // Streak
-  let streak=0, bestStreak=0, cur=0;
-  for(const r of data){if(r.total>0){streak++;bestStreak=Math.max(bestStreak,streak);}else streak=0;}
-  for(let i=data.length-1;i>=0;i--){if(data[i].total>0)cur++;else break;}
-  const sCls = cur>=7?'streak-hot':cur>=3?'streak-ok':'streak-cold';
-  const sIco = cur>=7?'🔥':cur>=3?'✅':'❄️';
+
+  // Core stats — correctly using active days for average
+  const total      = data.reduce((a,r) => a+r.total, 0);
+  const activeDays = data.filter(r => r.total > 0).length;
+  const missedDays = data.filter(r => r.total === 0).length;
+  const avg        = activeDays > 0 ? total / activeDays : 0;  // FIX: active days only
+  const allTotals  = data.map(r => r.total);
+  const best       = Math.max(...allTotals);
+  const morningTot = data.reduce((a,r) => a+r.morning, 0);
+  const eveningTot = data.reduce((a,r) => a+r.evening, 0);
+
+  // Trend: compare first half vs second half
+  const half = Math.floor(data.length / 2);
+  const f1   = half > 0 ? data.slice(0,half).reduce((a,r)=>a+r.total,0)/half : 0;
+  const f2   = (data.length-half) > 0 ? data.slice(half).reduce((a,r)=>a+r.total,0)/(data.length-half) : 0;
+  const tPct = f1 > 0 ? Math.round((f2-f1)/f1*100) : 0;
+
+  // Goal achievement
+  const metGoal    = goal > 0 ? data.filter(r => r.total >= goal).length : null;
+  const goalPct    = goal > 0 ? Math.round(metGoal/Math.max(data.length,1)*100) : null;
+
+  // Current active streak (counting backwards from latest date)
+  let curStreak = 0, bestStreak = 0, tempStreak = 0;
+  for (const r of data) {
+    if (r.total > 0) { tempStreak++; bestStreak = Math.max(bestStreak, tempStreak); }
+    else tempStreak = 0;
+  }
+  for (let i = data.length-1; i >= 0; i--) {
+    if (data[i].total > 0) curStreak++;
+    else break;
+  }
+
+  // District average for comparison
+  const distAvg = _filtered.length > 0
+    ? _filtered.filter(r=>r.total>0).reduce((a,r)=>a+r.total,0) / Math.max(_filtered.filter(r=>r.total>0).length,1)
+    : 0;
+  const vsDistrict = distAvg > 0 ? Math.round((avg - distAvg) / distAvg * 100) : 0;
+
+  // Date range label
+  const dateLabel = usingFiltered
+    ? (data[0].date === data[data.length-1].date ? fmtDate(data[0].date) : fmtDate(data[0].date)+' – '+fmtDate(data[data.length-1].date))
+    : '⚠️ Showing all-time data (not in current date filter)';
+
+  // Streak badge
+  const sCls = curStreak>=7?'streak-hot':curStreak>=3?'streak-ok':'streak-cold';
+  const sIco = curStreak>=7?'🔥':curStreak>=3?'✅':'❄️';
+  const trendHtml = tPct > 0
+    ? '<span style="color:#137333;font-weight:500;">▲ '+tPct+'%</span>'
+    : tPct < 0
+    ? '<span style="color:#c5221f;font-weight:500;">▼ '+Math.abs(tPct)+'%</span>'
+    : '<span style="color:var(--txt3);">→ Stable</span>';
+
   document.getElementById('trk-stats').innerHTML = `
-    <div class="ts"><div class="ts-val kv-g">${fmt(avg)} L</div><div class="ts-lbl">Daily Avg</div><div class="ts-sub">${tPct>=0?'▲':'▼'} ${Math.abs(tPct)}% trend</div></div>
-    <div class="ts"><div class="ts-val kv-t">${fmt(total)} L</div><div class="ts-lbl">Total Period</div><div class="ts-sub">${data.length} days</div></div>
-    <div class="ts"><div class="ts-val kv-b">${fmt(best)} L</div><div class="ts-lbl">Best Day</div><div class="ts-sub">peak</div></div>
-    <div class="ts"><div class="ts-val kv-r">${missed}</div><div class="ts-lbl">Missed Days</div><div class="ts-sub">zero collection</div></div>
-    <div class="ts"><div><span class="streak ${sCls}">${sIco} ${cur}-day streak</span></div><div class="ts-lbl" style="margin-top:6px;">Active Streak</div><div class="ts-sub">Best: ${bestStreak} days</div></div>`;
-  if (_trkChart) { _trkChart.destroy(); _trkChart=null; }
+    <div class="ts">
+      <div class="ts-val kv-g">${fmt(avg)} L</div>
+      <div class="ts-lbl">Active Day Avg</div>
+      <div class="ts-sub">${trendHtml} vs prev half</div>
+      <div class="ts-sub" style="margin-top:3px;">${vsDistrict>=0?'▲':'▼'} ${Math.abs(vsDistrict)}% vs district avg</div>
+    </div>
+    <div class="ts">
+      <div class="ts-val kv-t">${fmt(total)} L</div>
+      <div class="ts-lbl">Total Collected</div>
+      <div class="ts-sub">${activeDays} active · ${missedDays} missed</div>
+    </div>
+    <div class="ts">
+      <div class="ts-val kv-b">${fmt(best)} L</div>
+      <div class="ts-lbl">Best Single Day</div>
+      <div class="ts-sub">↑ Morning: ${fmt(morningTot)} L</div>
+    </div>
+    <div class="ts">
+      <div class="ts-val kv-r">${missedDays}</div>
+      <div class="ts-lbl">Missed Days</div>
+      <div class="ts-sub">${Math.round(missedDays/Math.max(data.length,1)*100)}% of period</div>
+    </div>
+    <div class="ts">
+      <div><span class="streak ${sCls}">${sIco} ${curStreak} days</span></div>
+      <div class="ts-lbl" style="margin-top:6px;">Active Streak</div>
+      <div class="ts-sub">Best ever: ${bestStreak} days</div>
+      ${goal>0?`<div class="ts-sub" style="margin-top:2px;">🎯 ${goalPct}% days hit target</div>`:''}
+    </div>`;
+
+  // Date range info bar
+  const infoBar = document.getElementById('trk-date-info');
+  if (infoBar) infoBar.textContent = dateLabel;
+
+  // Chart
+  if (_trkChart) { _trkChart.destroy(); _trkChart = null; }
   const ctx = document.getElementById('trk-chart')?.getContext('2d');
   if (ctx) {
-    const ds = [{label:'Collected (L)',data:data.map(r=>r.total),borderColor:'#4285f4',backgroundColor:'rgba(66,133,244,.1)',fill:true,tension:.3,borderWidth:2,pointRadius:2}];
-    if (goal>0) ds.push({label:`Target (${goal} L)`,data:data.map(()=>goal),borderColor:'#c97a00',borderDash:[5,5],borderWidth:1.5,pointRadius:0,fill:false});
-    _trkChart = new Chart(ctx,{type:'line',data:{labels:data.map(r=>fmtDate(r.date)),datasets:ds},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bottom',labels:{font:{family:'DM Sans',size:11},boxWidth:12}}},scales:{x:{grid:{display:false},ticks:{maxTicksLimit:10,font:{family:'DM Mono',size:10}}},y:{min:0,ticks:{callback:v=>fmt(v)+'L',font:{family:'DM Mono',size:10}},grid:{color:'rgba(10,80,50,.06)'}}}}});
+    const labels   = data.map(r => fmtDate(r.date));
+    const actuals  = data.map(r => r.total);
+    const mornings = data.map(r => r.morning);
+    const evenings = data.map(r => r.evening);
+
+    const datasets = [
+      {
+        label: 'Total (L)',
+        data: actuals,
+        borderColor: '#4285f4',
+        backgroundColor: 'rgba(66,133,244,.08)',
+        fill: true,
+        tension: .35,
+        borderWidth: 2,
+        pointRadius: data.length > 60 ? 0 : 3,
+        pointHoverRadius: 5,
+        yAxisID: 'y'
+      },
+      {
+        label: 'Morning (L)',
+        data: mornings,
+        borderColor: '#34a853',
+        backgroundColor: 'transparent',
+        fill: false,
+        tension: .3,
+        borderWidth: 1.5,
+        pointRadius: 0,
+        borderDash: [3,3],
+        yAxisID: 'y'
+      },
+      {
+        label: 'Evening (L)',
+        data: evenings,
+        borderColor: '#ea4335',
+        backgroundColor: 'transparent',
+        fill: false,
+        tension: .3,
+        borderWidth: 1.5,
+        pointRadius: 0,
+        borderDash: [3,3],
+        yAxisID: 'y'
+      }
+    ];
+    if (goal > 0) {
+      datasets.push({
+        label: 'Target (' + fmt(goal) + ' L)',
+        data: data.map(() => goal),
+        borderColor: '#fbbc04',
+        backgroundColor: 'transparent',
+        fill: false,
+        tension: 0,
+        borderWidth: 2,
+        pointRadius: 0,
+        borderDash: [6, 4],
+        yAxisID: 'y'
+      });
+    }
+    _trkChart = new Chart(ctx, {
+      type: 'line',
+      data: { labels, datasets },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        interaction: { mode: 'index', intersect: false },
+        plugins: {
+          legend: {
+            position: 'bottom',
+            labels: { font: { family: 'Google Sans', size: 11 }, boxWidth: 12, padding: 16 }
+          },
+          tooltip: {
+            callbacks: {
+              label: c => c.dataset.label + ': ' + fmt(c.raw) + ' L'
+            }
+          }
+        },
+        scales: {
+          x: {
+            grid: { display: false },
+            ticks: { maxTicksLimit: 12, font: { family: 'Roboto Mono', size: 10 } }
+          },
+          y: {
+            min: 0,
+            ticks: { callback: v => fmt(v) + 'L', font: { family: 'Roboto Mono', size: 10 } },
+            grid: { color: 'rgba(0,0,0,.06)' }
+          }
+        }
+      }
+    });
   }
-  const sorted = [...data].sort((a,b)=>b.total-a.total);
-  const mkBars = rows => rows.map(r=>`<div class="mini-bar-row"><div class="mini-bar-lbl">${fmtDate(r.date)}</div><div class="mini-bar-track"><div class="mini-bar-fill" style="width:${best>0?Math.round(r.total/best*100):0}%"></div></div><div class="mini-bar-val">${fmt(r.total)} L</div></div>`).join('');
-  document.getElementById('trk-best').innerHTML  = mkBars(sorted.slice(0,5));
-  document.getElementById('trk-worst').innerHTML = mkBars([...sorted].reverse().slice(0,5));
+
+  // Best 5 days (highest collection, exclude zeros)
+  const activeSorted = data.filter(r => r.total > 0).sort((a,b) => b.total - a.total);
+  // Worst 5 days (lowest active days — non-zero but low, then missed)
+  const worstSorted  = [...data].sort((a,b) => a.total - b.total);
+
+  const mkBars = (rows) => {
+    if (!rows.length) return '<div style="padding:12px;color:var(--txt3);font-size:13px;">No data available.</div>';
+    return rows.map(r => {
+      const pct = best > 0 ? Math.round(r.total/best*100) : 0;
+      const barColor = r.total === 0 ? '#ea4335' : r.total >= goal && goal > 0 ? '#34a853' : '#4285f4';
+      return `<div class="mini-bar-row">
+        <div class="mini-bar-lbl">${fmtDate(r.date)}</div>
+        <div class="mini-bar-track"><div class="mini-bar-fill" style="width:${pct}%;background:${barColor};"></div></div>
+        <div class="mini-bar-val" style="color:${r.total===0?'var(--g-red)':'var(--txt2)'};">${r.total===0?'Missed':fmt(r.total)+' L'}</div>
+      </div>`;
+    }).join('');
+  };
+
+  document.getElementById('trk-best').innerHTML  = mkBars(activeSorted.slice(0, 5));
+  document.getElementById('trk-worst').innerHTML = mkBars(worstSorted.slice(0, 5));
 }
 
 // ══════════════════════════════════════════════════════
@@ -1817,6 +2476,1060 @@ async function generateInsights() {
     out.innerHTML=`<div class="alert-card ac-r"><div class="ac-ico">⚠️</div><div><div class="ac-t">Could not generate insights</div><div class="ac-d">${e.message}</div></div></div>`;
   }
   btn.disabled=false; btn.textContent='✨ Regenerate';
+}
+
+// ══════════════════════════════════════════════════════
+//  CATTLE PLANNING DATA & STATE
+// ══════════════════════════════════════════════════════
+const CATTLE_DATA = [{"sno":"1","village":"Agarakkirangudi","block":"Mayiladuthurai","vet":"Mariyur","f_cattle":89,"f_buffalo":0,"f_sheep":0,"f_goat":127,"milk_animals":89,"milk_potential":240,"viability":"Not Viable","score":89},{"sno":"2","village":"Anaimelagaram","block":"Mayiladuthurai","vet":"Kali","f_cattle":133,"f_buffalo":1,"f_sheep":0,"f_goat":238,"milk_animals":134,"milk_potential":363,"viability":"Low","score":26},{"sno":"3","village":"Anathandavapuram","block":"Mayiladuthurai","vet":"Ananthathndavapuram","f_cattle":349,"f_buffalo":0,"f_sheep":0,"f_goat":319,"milk_animals":349,"milk_potential":942,"viability":"Medium","score":34},{"sno":"4","village":"Arulmolithevan","block":"Mayiladuthurai","vet":"Kali","f_cattle":176,"f_buffalo":0,"f_sheep":3,"f_goat":325,"milk_animals":176,"milk_potential":475,"viability":"Low","score":35},{"sno":"5","village":"Aruvappadi","block":"Mayiladuthurai","vet":"Villyanallur","f_cattle":140,"f_buffalo":0,"f_sheep":3,"f_goat":164,"milk_animals":140,"milk_potential":378,"viability":"Low","score":28},{"sno":"6","village":"Attur","block":"Mayiladuthurai","vet":"Kadalangudi","f_cattle":899,"f_buffalo":8,"f_sheep":0,"f_goat":432,"milk_animals":907,"milk_potential":2456,"viability":"High","score":30},{"sno":"7","village":"Budangudi","block":"Mayiladuthurai","vet":"Kadalangudi","f_cattle":170,"f_buffalo":0,"f_sheep":0,"f_goat":77,"milk_animals":170,"milk_potential":459,"viability":"Low","score":34},{"sno":"8","village":"Dharmadanapuram","block":"Mayiladuthurai","vet":"Thalainayaru","f_cattle":435,"f_buffalo":0,"f_sheep":0,"f_goat":771,"milk_animals":435,"milk_potential":1174,"viability":"Medium","score":43},{"sno":"9","village":"Elanthoppu","block":"Mayiladuthurai","vet":"Thalainayaru","f_cattle":915,"f_buffalo":0,"f_sheep":0,"f_goat":1555,"milk_animals":915,"milk_potential":2470,"viability":"High","score":30},{"sno":"10","village":"Ivanallur","block":"Mayiladuthurai","vet":"Kadalangudi","f_cattle":366,"f_buffalo":0,"f_sheep":0,"f_goat":206,"milk_animals":366,"milk_potential":988,"viability":"Medium","score":36},{"sno":"11","village":"Kadalangudi","block":"Mayiladuthurai","vet":"Kadalangudi","f_cattle":1297,"f_buffalo":0,"f_sheep":0,"f_goat":944,"milk_animals":1297,"milk_potential":3502,"viability":"High","score":43},{"sno":"12","village":"Kadambakkam","block":"Mayiladuthurai","vet":"Kadallangudi","f_cattle":620,"f_buffalo":0,"f_sheep":0,"f_goat":139,"milk_animals":620,"milk_potential":1674,"viability":"High","score":20},{"sno":"13","village":"Kaduvangudi","block":"Mayiladuthurai","vet":"Thalainayaru","f_cattle":1059,"f_buffalo":32,"f_sheep":0,"f_goat":964,"milk_animals":1091,"milk_potential":2974,"viability":"High","score":36},{"sno":"14","village":"Kali -I","block":"Mayiladuthurai","vet":"Kali","f_cattle":314,"f_buffalo":2,"f_sheep":8,"f_goat":270,"milk_animals":316,"milk_potential":855,"viability":"Medium","score":31},{"sno":"15","village":"Kali Ii Bit","block":"Mayiladuthurai","vet":"Kali","f_cattle":85,"f_buffalo":0,"f_sheep":4,"f_goat":189,"milk_animals":85,"milk_potential":230,"viability":"Not Viable","score":85},{"sno":"16","village":"Kanganamputhur","block":"Mayiladuthurai","vet":"Villyanallur","f_cattle":129,"f_buffalo":0,"f_sheep":0,"f_goat":160,"milk_animals":129,"milk_potential":348,"viability":"Low","score":25},{"sno":"17","village":"Keelamarudandanallur","block":"Mayiladuthurai","vet":"Thalainayaru","f_cattle":96,"f_buffalo":0,"f_sheep":0,"f_goat":342,"milk_animals":96,"milk_potential":259,"viability":"Not Viable","score":96},{"sno":"18","village":"Kesingan","block":"Mayiladuthurai","vet":"Kadalangudi","f_cattle":1425,"f_buffalo":15,"f_sheep":0,"f_goat":1431,"milk_animals":1440,"milk_potential":3902,"viability":"High","score":48},{"sno":"19","village":"Kiloy","block":"Mayiladuthurai","vet":"Kilay","f_cattle":460,"f_buffalo":2,"f_sheep":2,"f_goat":275,"milk_animals":462,"milk_potential":1249,"viability":"Medium","score":46},{"sno":"20","village":"Kodangudi","block":"Mayiladuthurai","vet":"Mariyur","f_cattle":140,"f_buffalo":0,"f_sheep":0,"f_goat":248,"milk_animals":140,"milk_potential":378,"viability":"Low","score":28},{"sno":"21","village":"Korukkai","block":"Mayiladuthurai","vet":"Kilay","f_cattle":749,"f_buffalo":2,"f_sheep":0,"f_goat":1349,"milk_animals":751,"milk_potential":2030,"viability":"High","score":25},{"sno":"22","village":"Kovangudi","block":"Mayiladuthurai","vet":"Mariyur","f_cattle":132,"f_buffalo":0,"f_sheep":0,"f_goat":240,"milk_animals":132,"milk_potential":356,"viability":"Low","score":26},{"sno":"23","village":"Kulichar","block":"Mayiladuthurai","vet":"Mariyur","f_cattle":100,"f_buffalo":0,"f_sheep":0,"f_goat":79,"milk_animals":100,"milk_potential":270,"viability":"Low","score":20},{"sno":"24","village":"Kurichi","block":"Mayiladuthurai","vet":"Thalainayaru","f_cattle":314,"f_buffalo":0,"f_sheep":0,"f_goat":502,"milk_animals":314,"milk_potential":848,"viability":"Medium","score":31},{"sno":"25","village":"Maharajapuram","block":"Mayiladuthurai","vet":"Kali","f_cattle":214,"f_buffalo":0,"f_sheep":0,"f_goat":278,"milk_animals":214,"milk_potential":578,"viability":"Medium","score":21},{"sno":"26","village":"Manakkudi","block":"Mayiladuthurai","vet":"Villyanallur","f_cattle":483,"f_buffalo":3,"f_sheep":0,"f_goat":595,"milk_animals":486,"milk_potential":1315,"viability":"Medium","score":48},{"sno":"27","village":"Mannampandal","block":"Mayiladuthurai","vet":"Mariyur","f_cattle":220,"f_buffalo":0,"f_sheep":1,"f_goat":203,"milk_animals":220,"milk_potential":594,"viability":"Medium","score":22},{"sno":"28","village":"Maraiyur","block":"Mayiladuthurai","vet":"Mariyur","f_cattle":187,"f_buffalo":3,"f_sheep":0,"f_goat":260,"milk_animals":190,"milk_potential":516,"viability":"Low","score":38},{"sno":"29","village":"Mayiladuthurai","block":"Mayiladuthurai","vet":"Mayiladuthurai","f_cattle":91,"f_buffalo":0,"f_sheep":0,"f_goat":214,"milk_animals":91,"milk_potential":246,"viability":"Not Viable","score":91},{"sno":"30","village":"Melanallur","block":"Mayiladuthurai","vet":"Villyanallur","f_cattle":105,"f_buffalo":0,"f_sheep":0,"f_goat":380,"milk_animals":105,"milk_potential":284,"viability":"Low","score":21},{"sno":"31","village":"Mozhaiyur","block":"Mayiladuthurai","vet":"Villyanallur","f_cattle":200,"f_buffalo":0,"f_sheep":0,"f_goat":252,"milk_animals":200,"milk_potential":540,"viability":"Medium","score":20},{"sno":"32","village":"Mudikandanallur","block":"Mayiladuthurai","vet":"Kadalangudi","f_cattle":848,"f_buffalo":11,"f_sheep":0,"f_goat":1056,"milk_animals":859,"milk_potential":2329,"viability":"High","score":28},{"sno":"33","village":"Murugamangalam","block":"Mayiladuthurai","vet":"Kali","f_cattle":371,"f_buffalo":0,"f_sheep":13,"f_goat":311,"milk_animals":371,"milk_potential":1002,"viability":"Medium","score":37},{"sno":"34","village":"Muvalur","block":"Mayiladuthurai","vet":"Mariyur","f_cattle":180,"f_buffalo":0,"f_sheep":0,"f_goat":315,"milk_animals":180,"milk_potential":486,"viability":"Low","score":36},{"sno":"35","village":"Nallathukudi","block":"Mayiladuthurai","vet":"Mariyur","f_cattle":114,"f_buffalo":0,"f_sheep":1,"f_goat":94,"milk_animals":114,"milk_potential":308,"viability":"Low","score":22},{"sno":"36","village":"Namasivayapuram","block":"Mayiladuthurai","vet":"Kadalangudi","f_cattle":426,"f_buffalo":0,"f_sheep":0,"f_goat":319,"milk_animals":426,"milk_potential":1150,"viability":"Medium","score":42},{"sno":"37","village":"Nidur","block":"Mayiladuthurai","vet":"Villyanallur","f_cattle":153,"f_buffalo":0,"f_sheep":0,"f_goat":274,"milk_animals":153,"milk_potential":413,"viability":"Low","score":30},{"sno":"38","village":"Pandaravadaimappadugai","block":"Mayiladuthurai","vet":"Pandaravadai","f_cattle":690,"f_buffalo":0,"f_sheep":0,"f_goat":854,"milk_animals":690,"milk_potential":1863,"viability":"High","score":23},{"sno":"39","village":"Pandur","block":"Mayiladuthurai","vet":"Kali","f_cattle":555,"f_buffalo":0,"f_sheep":0,"f_goat":418,"milk_animals":555,"milk_potential":1498,"viability":"High","score":18},{"sno":"40","village":"Pattamangalam","block":"Mayiladuthurai","vet":"Mariyur","f_cattle":211,"f_buffalo":0,"f_sheep":0,"f_goat":228,"milk_animals":211,"milk_potential":570,"viability":"Medium","score":21},{"sno":"41","village":"Pattavarthi","block":"Mayiladuthurai","vet":"Thalainayaru","f_cattle":229,"f_buffalo":2,"f_sheep":2,"f_goat":513,"milk_animals":231,"milk_potential":626,"viability":"Medium","score":23},{"sno":"42","village":"Ponmasanallur","block":"Mayiladuthurai","vet":"Thalainayaru","f_cattle":18,"f_buffalo":0,"f_sheep":0,"f_goat":65,"milk_animals":18,"milk_potential":49,"viability":"Not Viable","score":18},{"sno":"43","village":"Ponnur","block":"Mayiladuthurai","vet":"Ponnur","f_cattle":340,"f_buffalo":0,"f_sheep":0,"f_goat":318,"milk_animals":340,"milk_potential":918,"viability":"Medium","score":34},{"sno":"44","village":"Serudiyur","block":"Mayiladuthurai","vet":"Thalainayaru","f_cattle":254,"f_buffalo":0,"f_sheep":0,"f_goat":315,"milk_animals":254,"milk_potential":686,"viability":"Medium","score":25},{"sno":"45","village":"Sethur","block":"Mayiladuthurai","vet":"Thalainayaru","f_cattle":289,"f_buffalo":0,"f_sheep":0,"f_goat":650,"milk_animals":289,"milk_potential":780,"viability":"Medium","score":28},{"sno":"46","village":"Sholampettai","block":"Mayiladuthurai","vet":"Kali","f_cattle":233,"f_buffalo":1,"f_sheep":0,"f_goat":403,"milk_animals":234,"milk_potential":633,"viability":"Medium","score":23},{"sno":"47","village":"Siddamalli","block":"Mayiladuthurai","vet":"Thalainayaru","f_cattle":896,"f_buffalo":4,"f_sheep":0,"f_goat":1199,"milk_animals":900,"milk_potential":2434,"viability":"High","score":30},{"sno":"48","village":"Sitharkadu","block":"Mayiladuthurai","vet":"Mariyur","f_cattle":58,"f_buffalo":0,"f_sheep":0,"f_goat":144,"milk_animals":58,"milk_potential":157,"viability":"Not Viable","score":58},{"sno":"49","village":"Talainayar","block":"Mayiladuthurai","vet":"Thalainayaru","f_cattle":1047,"f_buffalo":0,"f_sheep":0,"f_goat":85,"milk_animals":1047,"milk_potential":2827,"viability":"High","score":34},{"sno":"50","village":"Talainayar Ii Bit","block":"Mayiladuthurai","vet":"Thalainayaru","f_cattle":550,"f_buffalo":0,"f_sheep":0,"f_goat":163,"milk_animals":550,"milk_potential":1485,"viability":"High","score":18},{"sno":"51","village":"Thalancheri","block":"Mayiladuthurai","vet":"Kilay","f_cattle":736,"f_buffalo":0,"f_sheep":0,"f_goat":591,"milk_animals":736,"milk_potential":1987,"viability":"High","score":24},{"sno":"52","village":"Thiruindalur","block":"Mayiladuthurai","vet":"Villyanallur","f_cattle":314,"f_buffalo":6,"f_sheep":0,"f_goat":322,"milk_animals":320,"milk_potential":869,"viability":"Medium","score":32},{"sno":"53","village":"Thirumangalam","block":"Mayiladuthurai","vet":"Kali","f_cattle":244,"f_buffalo":0,"f_sheep":0,"f_goat":213,"milk_animals":244,"milk_potential":659,"viability":"Medium","score":24},{"sno":"54","village":"Thiruvalaputhur","block":"Mayiladuthurai","vet":"Kilay","f_cattle":1196,"f_buffalo":0,"f_sheep":0,"f_goat":1796,"milk_animals":1196,"milk_potential":3229,"viability":"High","score":39},{"sno":"55","village":"Tiruchitrambalam","block":"Mayiladuthurai","vet":"Kadalangudi","f_cattle":431,"f_buffalo":0,"f_sheep":0,"f_goat":20,"milk_animals":431,"milk_potential":1164,"viability":"Medium","score":43},{"sno":"56","village":"Uluthakuppai","block":"Mayiladuthurai","vet":"Villanallur","f_cattle":350,"f_buffalo":23,"f_sheep":11,"f_goat":465,"milk_animals":373,"milk_potential":1028,"viability":"Medium","score":37},{"sno":"57","village":"Varadampattu","block":"Mayiladuthurai","vet":"Kilay","f_cattle":986,"f_buffalo":0,"f_sheep":0,"f_goat":1264,"milk_animals":986,"milk_potential":2662,"viability":"High","score":32},{"sno":"58","village":"Vellalar Agaram","block":"Mayiladuthurai","vet":"Villyanallur","f_cattle":167,"f_buffalo":0,"f_sheep":0,"f_goat":268,"milk_animals":167,"milk_potential":451,"viability":"Low","score":33},{"sno":"59","village":"Villiyanallur","block":"Mayiladuthurai","vet":"Villanallur","f_cattle":284,"f_buffalo":0,"f_sheep":0,"f_goat":484,"milk_animals":284,"milk_potential":767,"viability":"Medium","score":28},{"sno":"60","village":"Alangudi","block":"Kuthalam","vet":"Komal","f_cattle":276,"f_buffalo":0,"f_sheep":0,"f_goat":593,"milk_animals":276,"milk_potential":745,"viability":"Medium","score":27},{"sno":"61","village":"Ananthanallur","block":"Kuthalam","vet":"Komal","f_cattle":239,"f_buffalo":0,"f_sheep":0,"f_goat":373,"milk_animals":239,"milk_potential":645,"viability":"Medium","score":23},{"sno":"62","village":"Ariyalur","block":"Kuthalam","vet":"Komal","f_cattle":0,"f_buffalo":0,"f_sheep":0,"f_goat":0,"milk_animals":0,"milk_potential":0,"viability":"Not Viable","score":0},{"sno":"63","village":"Asikkadu","block":"Kuthalam","vet":"Komal","f_cattle":336,"f_buffalo":0,"f_sheep":0,"f_goat":351,"milk_animals":336,"milk_potential":907,"viability":"Medium","score":33},{"sno":"64","village":"Elumagalur","block":"Kuthalam","vet":"Nakkampadi","f_cattle":123,"f_buffalo":0,"f_sheep":0,"f_goat":367,"milk_animals":123,"milk_potential":332,"viability":"Low","score":24},{"sno":"65","village":"Gangadharapuram","block":"Kuthalam","vet":"Nakkampadi","f_cattle":438,"f_buffalo":0,"f_sheep":0,"f_goat":524,"milk_animals":438,"milk_potential":1183,"viability":"Medium","score":43},{"sno":"66","village":"Inam Senniyanallur","block":"Kuthalam","vet":"Therelanthur","f_cattle":66,"f_buffalo":0,"f_sheep":0,"f_goat":27,"milk_animals":66,"milk_potential":178,"viability":"Not Viable","score":66},{"sno":"67","village":"Inam Tiruvalangadu","block":"Kuthalam","vet":"Kuthalam","f_cattle":88,"f_buffalo":0,"f_sheep":0,"f_goat":34,"milk_animals":88,"milk_potential":238,"viability":"Not Viable","score":88},{"sno":"68","village":"Kadalangudi","block":"Kuthalam","vet":"Kuthalam","f_cattle":813,"f_buffalo":0,"f_sheep":0,"f_goat":913,"milk_animals":813,"milk_potential":2195,"viability":"High","score":27},{"sno":"69","village":"Kanjuvoy","block":"Kuthalam","vet":"Konerirajapuram","f_cattle":46,"f_buffalo":0,"f_sheep":0,"f_goat":3,"milk_animals":46,"milk_potential":124,"viability":"Not Viable","score":46},{"sno":"70","village":"Kappur","block":"Kuthalam","vet":"Komal","f_cattle":334,"f_buffalo":0,"f_sheep":0,"f_goat":623,"milk_animals":334,"milk_potential":902,"viability":"Medium","score":33},{"sno":"71","village":"Karuppur","block":"Kuthalam","vet":"Konerirajapuram","f_cattle":302,"f_buffalo":0,"f_sheep":0,"f_goat":297,"milk_animals":302,"milk_potential":815,"viability":"Medium","score":30},{"sno":"72","village":"Kazhanivasal","block":"Kuthalam","vet":"Pandaravadai","f_cattle":363,"f_buffalo":0,"f_sheep":0,"f_goat":191,"milk_animals":363,"milk_potential":980,"viability":"Medium","score":36},{"sno":"73","village":"Kodimangalam","block":"Kuthalam","vet":"Konerirajapuram","f_cattle":99,"f_buffalo":0,"f_sheep":0,"f_goat":83,"milk_animals":99,"milk_potential":267,"viability":"Not Viable","score":99},{"sno":"74","village":"Kokkur","block":"Kuthalam","vet":"Komal","f_cattle":249,"f_buffalo":0,"f_sheep":0,"f_goat":329,"milk_animals":249,"milk_potential":672,"viability":"Medium","score":24},{"sno":"75","village":"Komal - East","block":"Kuthalam","vet":"Komal","f_cattle":918,"f_buffalo":0,"f_sheep":0,"f_goat":1910,"milk_animals":918,"milk_potential":2479,"viability":"High","score":30},{"sno":"76","village":"Komal - West","block":"Kuthalam","vet":"Komal","f_cattle":466,"f_buffalo":0,"f_sheep":0,"f_goat":787,"milk_animals":466,"milk_potential":1258,"viability":"Medium","score":46},{"sno":"77","village":"Konerirajapuram I Bit","block":"Kuthalam","vet":"Konerirajapuram","f_cattle":159,"f_buffalo":0,"f_sheep":0,"f_goat":79,"milk_animals":159,"milk_potential":429,"viability":"Low","score":31},{"sno":"78","village":"Konerirajapuram Ii Bit","block":"Kuthalam","vet":"Konerirajapuram","f_cattle":321,"f_buffalo":0,"f_sheep":0,"f_goat":252,"milk_animals":321,"milk_potential":867,"viability":"Medium","score":32},{"sno":"79","village":"Kothangudi","block":"Kuthalam","vet":"Nakkampadi","f_cattle":134,"f_buffalo":0,"f_sheep":0,"f_goat":271,"milk_animals":134,"milk_potential":362,"viability":"Low","score":26},{"sno":"80","village":"Kozhaiyur","block":"Kuthalam","vet":"Komal","f_cattle":260,"f_buffalo":0,"f_sheep":0,"f_goat":394,"milk_animals":260,"milk_potential":702,"viability":"Medium","score":26},{"sno":"81","village":"Kshetrapalapuram","block":"Kuthalam","vet":"Therelanthur","f_cattle":455,"f_buffalo":0,"f_sheep":0,"f_goat":645,"milk_animals":455,"milk_potential":1228,"viability":"Medium","score":45},{"sno":"82","village":"Madhirimangalam","block":"Kuthalam","vet":"Kuthalam","f_cattle":258,"f_buffalo":0,"f_sheep":0,"f_goat":110,"milk_animals":258,"milk_potential":697,"viability":"Medium","score":25},{"sno":"83","village":"Mandai","block":"Kuthalam","vet":"Nakkampadi","f_cattle":177,"f_buffalo":0,"f_sheep":0,"f_goat":422,"milk_animals":177,"milk_potential":478,"viability":"Low","score":35},{"sno":"84","village":"Manganallur","block":"Kuthalam","vet":"Pandaravadai","f_cattle":25,"f_buffalo":0,"f_sheep":0,"f_goat":22,"milk_animals":25,"milk_potential":68,"viability":"Not Viable","score":25},{"sno":"85","village":"Maruthur","block":"Kuthalam","vet":"Komal","f_cattle":152,"f_buffalo":2,"f_sheep":0,"f_goat":313,"milk_animals":154,"milk_potential":418,"viability":"Low","score":30},{"sno":"86","village":"Mekkirimangalam","block":"Kuthalam","vet":"Mekkrimangalam","f_cattle":302,"f_buffalo":1,"f_sheep":0,"f_goat":178,"milk_animals":303,"milk_potential":819,"viability":"Medium","score":30},{"sno":"87","village":"Melaiyur","block":"Kuthalam","vet":"Therelanthur","f_cattle":115,"f_buffalo":0,"f_sheep":0,"f_goat":120,"milk_animals":115,"milk_potential":310,"viability":"Low","score":23},{"sno":"88","village":"Thulasenthirapuram","block":"Kuthalam","vet":"Therelanthur","f_cattle":63,"f_buffalo":0,"f_sheep":0,"f_goat":9,"milk_animals":63,"milk_potential":170,"viability":"Not Viable","score":63},{"sno":"89","village":"Melaparuthikudi","block":"Kuthalam","vet":"Konerirajapuram","f_cattle":503,"f_buffalo":0,"f_sheep":0,"f_goat":137,"milk_animals":503,"milk_potential":1358,"viability":"High","score":16},{"sno":"90","village":"Nakkambadi","block":"Kuthalam","vet":"Nakkampadi","f_cattle":199,"f_buffalo":0,"f_sheep":0,"f_goat":502,"milk_animals":199,"milk_potential":537,"viability":"Low","score":39},{"sno":"91","village":"Nallavur","block":"Kuthalam","vet":"Konerirajapuram","f_cattle":267,"f_buffalo":0,"f_sheep":0,"f_goat":139,"milk_animals":267,"milk_potential":721,"viability":"Medium","score":26},{"sno":"92","village":"Palaiyur","block":"Kuthalam","vet":"Nakkampadi","f_cattle":513,"f_buffalo":0,"f_sheep":0,"f_goat":800,"milk_animals":513,"milk_potential":1385,"viability":"High","score":17},{"sno":"93","village":"Palayagudalure","block":"Kuthalam","vet":"Therelanthur","f_cattle":364,"f_buffalo":0,"f_sheep":0,"f_goat":318,"milk_animals":364,"milk_potential":983,"viability":"Medium","score":36},{"sno":"94","village":"Pandaravadai","block":"Kuthalam","vet":"Pandaravadai","f_cattle":144,"f_buffalo":0,"f_sheep":0,"f_goat":139,"milk_animals":144,"milk_potential":389,"viability":"Low","score":28},{"sno":"95","village":"Peravur","block":"Kuthalam","vet":"Konerirajapuram","f_cattle":13,"f_buffalo":0,"f_sheep":0,"f_goat":0,"milk_animals":13,"milk_potential":35,"viability":"Not Viable","score":13},{"sno":"96","village":"Perumalkoil","block":"Kuthalam","vet":"Therelanthur","f_cattle":307,"f_buffalo":0,"f_sheep":0,"f_goat":434,"milk_animals":307,"milk_potential":829,"viability":"Medium","score":30},{"sno":"97","village":"Peruncheri","block":"Kuthalam","vet":"Pandaravadai","f_cattle":0,"f_buffalo":0,"f_sheep":0,"f_goat":0,"milk_animals":0,"milk_potential":0,"viability":"Not Viable","score":0},{"sno":"98","village":"Porumbur","block":"Kuthalam","vet":"Nakkampadi","f_cattle":334,"f_buffalo":0,"f_sheep":0,"f_goat":548,"milk_animals":334,"milk_potential":902,"viability":"Medium","score":33},{"sno":"99","village":"Sengudi","block":"Kuthalam","vet":"Komal","f_cattle":134,"f_buffalo":0,"f_sheep":0,"f_goat":263,"milk_animals":134,"milk_potential":362,"viability":"Low","score":26},{"sno":"100","village":"Senniayanallur","block":"Kuthalam","vet":"Therelanthur","f_cattle":297,"f_buffalo":0,"f_sheep":0,"f_goat":305,"milk_animals":297,"milk_potential":802,"viability":"Medium","score":29},{"sno":"101","village":"Sivanaragaram","block":"Kuthalam","vet":"Konerirajapuram","f_cattle":110,"f_buffalo":0,"f_sheep":0,"f_goat":133,"milk_animals":110,"milk_potential":297,"viability":"Low","score":22},{"sno":"102","village":"Srikantapuram","block":"Kuthalam","vet":"Nakkampadi","f_cattle":147,"f_buffalo":0,"f_sheep":0,"f_goat":253,"milk_animals":147,"milk_potential":397,"viability":"Low","score":29},{"sno":"103","village":"Thathangudi","block":"Kuthalam","vet":"Perambur","f_cattle":120,"f_buffalo":1,"f_sheep":0,"f_goat":90,"milk_animals":121,"milk_potential":328,"viability":"Low","score":24},{"sno":"104","village":"Therizhandur","block":"Kuthalam","vet":"Therelanthur","f_cattle":310,"f_buffalo":0,"f_sheep":0,"f_goat":567,"milk_animals":310,"milk_potential":837,"viability":"Medium","score":31},{"sno":"105","village":"Thirumannancheri","block":"Kuthalam","vet":"Kuthalam","f_cattle":513,"f_buffalo":0,"f_sheep":0,"f_goat":633,"milk_animals":513,"milk_potential":1385,"viability":"High","score":17},{"sno":"106","village":"Thirunelkondacheri","block":"Kuthalam","vet":"Pandaravadai","f_cattle":204,"f_buffalo":0,"f_sheep":0,"f_goat":182,"milk_animals":204,"milk_potential":551,"viability":"Medium","score":20},{"sno":"107","village":"Thiruvalangadu","block":"Kuthalam","vet":"Kuthalam","f_cattle":301,"f_buffalo":0,"f_sheep":0,"f_goat":551,"milk_animals":301,"milk_potential":813,"viability":"Medium","score":30},{"sno":"108","village":"Tholuthalangudi","block":"Kuthalam","vet":"Therelanthur","f_cattle":197,"f_buffalo":0,"f_sheep":0,"f_goat":369,"milk_animals":197,"milk_potential":532,"viability":"Low","score":39},{"sno":"109","village":"Thulasenthirapuram","block":"Kuthalam","vet":"Therelanthur","f_cattle":59,"f_buffalo":0,"f_sheep":0,"f_goat":61,"milk_animals":59,"milk_potential":159,"viability":"Not Viable","score":59},{"sno":"110","village":"Tiruvaduthurai","block":"Kuthalam","vet":"Thiruvaduthurai","f_cattle":976,"f_buffalo":7,"f_sheep":0,"f_goat":1246,"milk_animals":983,"milk_potential":2660,"viability":"High","score":32},{"sno":"111","village":"Valuvur","block":"Kuthalam","vet":"Pandaravadai","f_cattle":507,"f_buffalo":0,"f_sheep":0,"f_goat":616,"milk_animals":507,"milk_potential":1369,"viability":"High","score":16},{"sno":"112","village":"Vanathirajapuram","block":"Kuthalam","vet":"Kuthalam","f_cattle":588,"f_buffalo":0,"f_sheep":0,"f_goat":480,"milk_animals":588,"milk_potential":1588,"viability":"High","score":19},{"sno":"113","village":"Villiyanallur","block":"Kuthalam","vet":"Kuthalam","f_cattle":785,"f_buffalo":23,"f_sheep":0,"f_goat":814,"milk_animals":808,"milk_potential":2202,"viability":"High","score":26},{"sno":"114","village":"Agaradhanur","block":"Sembanarkoil","vet":"Perambur","f_cattle":185,"f_buffalo":0,"f_sheep":0,"f_goat":476,"milk_animals":185,"milk_potential":500,"viability":"Low","score":37},{"sno":"115","village":"Agaravallam","block":"Sembanarkoil","vet":"Pandaravadai","f_cattle":299,"f_buffalo":0,"f_sheep":0,"f_goat":539,"milk_animals":299,"milk_potential":807,"viability":"Medium","score":29},{"sno":"116","village":"Akkurpandaravadai","block":"Sembanarkoil","vet":"Akkur","f_cattle":211,"f_buffalo":0,"f_sheep":0,"f_goat":310,"milk_animals":211,"milk_potential":570,"viability":"Medium","score":21},{"sno":"117","village":"Annavasal","block":"Sembanarkoil","vet":"Nalladai","f_cattle":239,"f_buffalo":0,"f_sheep":0,"f_goat":624,"milk_animals":239,"milk_potential":645,"viability":"Medium","score":23},{"sno":"118","village":"Arasur","block":"Sembanarkoil","vet":"Nalladai","f_cattle":268,"f_buffalo":0,"f_sheep":0,"f_goat":339,"milk_animals":268,"milk_potential":724,"viability":"Medium","score":26},{"sno":"119","village":"Arupathy","block":"Sembanarkoil","vet":"Sembanarkoil","f_cattle":190,"f_buffalo":6,"f_sheep":1,"f_goat":371,"milk_animals":196,"milk_potential":535,"viability":"Low","score":39},{"sno":"120","village":"Athuppakkam","block":"Sembanarkoil","vet":"Thirunandriur","f_cattle":37,"f_buffalo":0,"f_sheep":0,"f_goat":6,"milk_animals":37,"milk_potential":100,"viability":"Not Viable","score":37},{"sno":"121","village":"Chandirappadi","block":"Sembanarkoil","vet":"Poraiyar","f_cattle":278,"f_buffalo":0,"f_sheep":195,"f_goat":315,"milk_animals":278,"milk_potential":751,"viability":"Medium","score":27},{"sno":"122","village":"Eachangudi","block":"Sembanarkoil","vet":"Memathur","f_cattle":75,"f_buffalo":0,"f_sheep":0,"f_goat":329,"milk_animals":75,"milk_potential":202,"viability":"Not Viable","score":75},{"sno":"123","village":"Edakkudi","block":"Sembanarkoil","vet":"Nalladai","f_cattle":220,"f_buffalo":0,"f_sheep":0,"f_goat":176,"milk_animals":220,"milk_potential":594,"viability":"Medium","score":22},{"sno":"124","village":"Eduthukkatti","block":"Sembanarkoil","vet":"Thillaiyadi","f_cattle":2755,"f_buffalo":0,"f_sheep":355,"f_goat":3056,"milk_animals":2755,"milk_potential":7438,"viability":"High","score":91},{"sno":"125","village":"Eravancheri","block":"Sembanarkoil","vet":"Sankaranpandal","f_cattle":87,"f_buffalo":0,"f_sheep":0,"f_goat":406,"milk_animals":87,"milk_potential":235,"viability":"Not Viable","score":87},{"sno":"126","village":"Gudalur","block":"Sembanarkoil","vet":"Sankaranpandal","f_cattle":243,"f_buffalo":2,"f_sheep":25,"f_goat":958,"milk_animals":245,"milk_potential":663,"viability":"Medium","score":24},{"sno":"127","village":"Ilaiyalur","block":"Sembanarkoil","vet":"Sembanarkoil","f_cattle":214,"f_buffalo":0,"f_sheep":0,"f_goat":204,"milk_animals":214,"milk_potential":578,"viability":"Medium","score":21},{"sno":"128","village":"Iluppur","block":"Sembanarkoil","vet":"Nalladai","f_cattle":274,"f_buffalo":0,"f_sheep":0,"f_goat":698,"milk_animals":274,"milk_potential":740,"viability":"Medium","score":27},{"sno":"129","village":"Kadakkam","block":"Sembanarkoil","vet":"Perambur","f_cattle":389,"f_buffalo":5,"f_sheep":0,"f_goat":1075,"milk_animals":394,"milk_potential":1068,"viability":"Medium","score":39},{"sno":"130","village":"Kahiyappanallur","block":"Sembanarkoil","vet":"Poraiyar","f_cattle":408,"f_buffalo":0,"f_sheep":1,"f_goat":1366,"milk_animals":408,"milk_potential":1102,"viability":"Medium","score":40},{"sno":"131","village":"Kalahasthinathapuram","block":"Sembanarkoil","vet":"Akkur","f_cattle":338,"f_buffalo":0,"f_sheep":0,"f_goat":494,"milk_animals":338,"milk_potential":913,"viability":"Medium","score":33},{"sno":"132","village":"Kalamanallur","block":"Sembanarkoil","vet":"Thillaiyadi","f_cattle":1456,"f_buffalo":0,"f_sheep":0,"f_goat":729,"milk_animals":1456,"milk_potential":3931,"viability":"High","score":48},{"sno":"133","village":"Kanjanagaram","block":"Sembanarkoil","vet":"Thirunandriyur","f_cattle":460,"f_buffalo":0,"f_sheep":0,"f_goat":781,"milk_animals":460,"milk_potential":1242,"viability":"Medium","score":46},{"sno":"134","village":"Karuvazhakarai","block":"Sembanarkoil","vet":"Sembanarkoil","f_cattle":38,"f_buffalo":0,"f_sheep":0,"f_goat":78,"milk_animals":38,"milk_potential":103,"viability":"Not Viable","score":38},{"sno":"135","village":"Kattucheri","block":"Sembanarkoil","vet":"Poraiyar","f_cattle":530,"f_buffalo":184,"f_sheep":15,"f_goat":1143,"milk_animals":714,"milk_potential":2093,"viability":"High","score":23},{"sno":"136","village":"Keelamathur","block":"Sembanarkoil","vet":"Akkur","f_cattle":122,"f_buffalo":0,"f_sheep":0,"f_goat":471,"milk_animals":122,"milk_potential":329,"viability":"Low","score":24},{"sno":"137","village":"Kidarankondan","block":"Sembanarkoil","vet":"Thalachankadu","f_cattle":1190,"f_buffalo":0,"f_sheep":0,"f_goat":1448,"milk_animals":1190,"milk_potential":3213,"viability":"High","score":39},{"sno":"138","village":"Kildangal","block":"Sembanarkoil","vet":"Akkur","f_cattle":324,"f_buffalo":5,"f_sheep":0,"f_goat":599,"milk_animals":329,"milk_potential":893,"viability":"Medium","score":32},{"sno":"139","village":"Kilianur","block":"Sembanarkoil","vet":"Pandaravadai","f_cattle":527,"f_buffalo":0,"f_sheep":0,"f_goat":1120,"milk_animals":527,"milk_potential":1423,"viability":"High","score":17},{"sno":"140","village":"Killiyur","block":"Sembanarkoil","vet":"Poraiyar","f_cattle":363,"f_buffalo":0,"f_sheep":0,"f_goat":642,"milk_animals":363,"milk_potential":980,"viability":"Medium","score":36},{"sno":"141","village":"Kizhaiyur","block":"Sembanarkoil","vet":"Thalachankadu","f_cattle":448,"f_buffalo":37,"f_sheep":0,"f_goat":400,"milk_animals":485,"milk_potential":1343,"viability":"Medium","score":48},{"sno":"142","village":"Kizhaperumpallam","block":"Sembanarkoil","vet":"Thalachankadu","f_cattle":914,"f_buffalo":62,"f_sheep":90,"f_goat":1328,"milk_animals":976,"milk_potential":2691,"viability":"High","score":32},{"sno":"143","village":"Kodavilagam","block":"Sembanarkoil","vet":"Perambur","f_cattle":286,"f_buffalo":1,"f_sheep":0,"f_goat":522,"milk_animals":287,"milk_potential":776,"viability":"Medium","score":28},{"sno":"144","village":"Kothangudi","block":"Sembanarkoil","vet":"Nalladai","f_cattle":270,"f_buffalo":7,"f_sheep":0,"f_goat":358,"milk_animals":277,"milk_potential":754,"viability":"Medium","score":27},{"sno":"145","village":"Lakshiminayanapuram I","block":"Sembanarkoil","vet":"Sembanarkoil","f_cattle":53,"f_buffalo":0,"f_sheep":0,"f_goat":70,"milk_animals":53,"milk_potential":143,"viability":"Not Viable","score":53},{"sno":"146","village":"Lakshminayanapuram Ii","block":"Sembanarkoil","vet":"Sembanarkoil","f_cattle":109,"f_buffalo":0,"f_sheep":0,"f_goat":24,"milk_animals":109,"milk_potential":294,"viability":"Low","score":21},{"sno":"147","village":"Madapuram","block":"Sembanarkoil","vet":"Akkur","f_cattle":285,"f_buffalo":0,"f_sheep":0,"f_goat":609,"milk_animals":285,"milk_potential":770,"viability":"Medium","score":28},{"sno":"148","village":"Mamakudi","block":"Sembanarkoil","vet":"Thalachankadu","f_cattle":1091,"f_buffalo":9,"f_sheep":0,"f_goat":1282,"milk_animals":1100,"milk_potential":2978,"viability":"High","score":36},{"sno":"149","village":"Manikkapangu","block":"Sembanarkoil","vet":"Poraiyar","f_cattle":1459,"f_buffalo":0,"f_sheep":0,"f_goat":1436,"milk_animals":1459,"milk_potential":3939,"viability":"High","score":48},{"sno":"150","village":"Marudampallam","block":"Sembanarkoil","vet":"Thillaiyadi","f_cattle":229,"f_buffalo":5,"f_sheep":0,"f_goat":626,"milk_animals":234,"milk_potential":636,"viability":"Medium","score":23},{"sno":"151","village":"Mathur","block":"Sembanarkoil","vet":"Akkur","f_cattle":175,"f_buffalo":0,"f_sheep":3,"f_goat":253,"milk_animals":175,"milk_potential":472,"viability":"Low","score":35},{"sno":"152","village":"Melaiyur","block":"Sembanarkoil","vet":"Thirunandriyur","f_cattle":215,"f_buffalo":0,"f_sheep":0,"f_goat":289,"milk_animals":215,"milk_potential":580,"viability":"Medium","score":21},{"sno":"153","village":"Melaperumpallam","block":"Sembanarkoil","vet":"Thalachankadu","f_cattle":1022,"f_buffalo":30,"f_sheep":0,"f_goat":1072,"milk_animals":1052,"milk_potential":2867,"viability":"High","score":35},{"sno":"154","village":"Memathur","block":"Sembanarkoil","vet":"Sankaranpandal","f_cattle":311,"f_buffalo":0,"f_sheep":0,"f_goat":830,"milk_animals":311,"milk_potential":840,"viability":"Medium","score":31},{"sno":"155","village":"Mudikandanallur","block":"Sembanarkoil","vet":"Sembanarkoil","f_cattle":548,"f_buffalo":0,"f_sheep":0,"f_goat":188,"milk_animals":548,"milk_potential":1480,"viability":"High","score":18},{"sno":"156","village":"Mukkarumbur","block":"Sembanarkoil","vet":"Akkur","f_cattle":198,"f_buffalo":0,"f_sheep":0,"f_goat":402,"milk_animals":198,"milk_potential":535,"viability":"Low","score":39},{"sno":"157","village":"Muthur","block":"Sembanarkoil","vet":"Perambur","f_cattle":416,"f_buffalo":0,"f_sheep":0,"f_goat":732,"milk_animals":416,"milk_potential":1123,"viability":"Medium","score":41},{"sno":"158","village":"Nadukkarai Keelapathi","block":"Sembanarkoil","vet":"Sembanarkoil","f_cattle":396,"f_buffalo":53,"f_sheep":9,"f_goat":194,"milk_animals":449,"milk_potential":1260,"viability":"Medium","score":44},{"sno":"159","village":"Nadukkarai Melpathi","block":"Sembanarkoil","vet":"Sembanarkoil","f_cattle":551,"f_buffalo":0,"f_sheep":0,"f_goat":65,"milk_animals":551,"milk_potential":1488,"viability":"High","score":18},{"sno":"160","village":"Naduvasal","block":"Sembanarkoil","vet":"Sankaranpandal","f_cattle":180,"f_buffalo":0,"f_sheep":0,"f_goat":828,"milk_animals":180,"milk_potential":486,"viability":"Low","score":36},{"sno":"161","village":"Nalladai","block":"Sembanarkoil","vet":"Nalladai","f_cattle":292,"f_buffalo":12,"f_sheep":0,"f_goat":698,"milk_animals":304,"milk_potential":832,"viability":"Medium","score":30},{"sno":"162","village":"Narasinganatham","block":"Sembanarkoil","vet":"Nalladai","f_cattle":188,"f_buffalo":0,"f_sheep":0,"f_goat":490,"milk_animals":188,"milk_potential":508,"viability":"Low","score":37},{"sno":"163","village":"Parasalur","block":"Sembanarkoil","vet":"Sembanarkoil","f_cattle":625,"f_buffalo":0,"f_sheep":0,"f_goat":548,"milk_animals":625,"milk_potential":1688,"viability":"High","score":20},{"sno":"164","village":"Perambur","block":"Sembanarkoil","vet":"Perambur","f_cattle":841,"f_buffalo":0,"f_sheep":0,"f_goat":1450,"milk_animals":841,"milk_potential":2271,"viability":"High","score":28},{"sno":"165","village":"Pillaiperumalnallur","block":"Sembanarkoil","vet":"Poraiyar","f_cattle":1123,"f_buffalo":0,"f_sheep":0,"f_goat":836,"milk_animals":1123,"milk_potential":3032,"viability":"High","score":37},{"sno":"166","village":"Ramachandrankoilpathu","block":"Sembanarkoil","vet":"Akkur","f_cattle":85,"f_buffalo":0,"f_sheep":0,"f_goat":68,"milk_animals":85,"milk_potential":230,"viability":"Not Viable","score":85},{"sno":"167","village":"Sembanarkoil","block":"Sembanarkoil","vet":"Sembanarkoil","f_cattle":563,"f_buffalo":4,"f_sheep":0,"f_goat":343,"milk_animals":567,"milk_potential":1534,"viability":"High","score":18},{"sno":"168","village":"Sethur","block":"Sembanarkoil","vet":"Perambur","f_cattle":334,"f_buffalo":0,"f_sheep":0,"f_goat":550,"milk_animals":334,"milk_potential":902,"viability":"Medium","score":33},{"sno":"169","village":"T.Manalmedu","block":"Sembanarkoil","vet":"Thilaiyadi","f_cattle":258,"f_buffalo":0,"f_sheep":0,"f_goat":515,"milk_animals":258,"milk_potential":697,"viability":"Medium","score":25},{"sno":"170","village":"Thalaiyudaiyarar Koil Pathy","block":"Sembanarkoil","vet":"Thalachankadu","f_cattle":1426,"f_buffalo":52,"f_sheep":0,"f_goat":1184,"milk_animals":1478,"milk_potential":4037,"viability":"High","score":49},{"sno":"171","village":"Thillaiyadi","block":"Sembanarkoil","vet":"Thilaiyadi","f_cattle":290,"f_buffalo":4,"f_sheep":0,"f_goat":713,"milk_animals":294,"milk_potential":797,"viability":"Medium","score":29},{"sno":"172","village":"Thirukkadaiyur","block":"Sembanarkoil","vet":"Thirukadaiyur","f_cattle":28,"f_buffalo":0,"f_sheep":0,"f_goat":24,"milk_animals":28,"milk_potential":76,"viability":"Not Viable","score":28},{"sno":"173","village":"Thirukkalacheri","block":"Sembanarkoil","vet":"Poraiyar","f_cattle":1552,"f_buffalo":164,"f_sheep":1,"f_goat":2750,"milk_animals":1716,"milk_potential":4781,"viability":"High","score":57},{"sno":"174","village":"Thiruvidakazhi","block":"Sembanarkoil","vet":"Thilaiyadi","f_cattle":272,"f_buffalo":0,"f_sheep":50,"f_goat":605,"milk_animals":272,"milk_potential":734,"viability":"Medium","score":27},{"sno":"175","village":"Thiruvillaiyattam","block":"Sembanarkoil","vet":"Nalladai","f_cattle":517,"f_buffalo":16,"f_sheep":1,"f_goat":656,"milk_animals":533,"milk_potential":1454,"viability":"High","score":17},{"sno":"176","village":"Tiruchampalli","block":"Sembanarkoil","vet":"Sembanarkoil","f_cattle":431,"f_buffalo":0,"f_sheep":0,"f_goat":257,"milk_animals":431,"milk_potential":1164,"viability":"Medium","score":43},{"sno":"177","village":"Udayayarkoil Pathy","block":"Sembanarkoil","vet":"Thalachankadu","f_cattle":384,"f_buffalo":0,"f_sheep":0,"f_goat":733,"milk_animals":384,"milk_potential":1037,"viability":"Medium","score":38},{"sno":"178","village":"Uthirangudi","block":"Sembanarkoil","vet":"Sankaranpandal","f_cattle":139,"f_buffalo":0,"f_sheep":0,"f_goat":375,"milk_animals":139,"milk_potential":375,"viability":"Low","score":27},{"sno":"179","village":"Vilagam","block":"Sembanarkoil","vet":"Nalladai","f_cattle":70,"f_buffalo":0,"f_sheep":3,"f_goat":218,"milk_animals":70,"milk_potential":189,"viability":"Not Viable","score":70},{"sno":"180","village":"Visalur","block":"Sembanarkoil","vet":"Sankaranpandal","f_cattle":133,"f_buffalo":0,"f_sheep":0,"f_goat":344,"milk_animals":133,"milk_potential":359,"viability":"Low","score":26},{"sno":"181","village":"Agani","block":"Sirkali","vet":"Kondal","f_cattle":410,"f_buffalo":0,"f_sheep":0,"f_goat":308,"milk_animals":410,"milk_potential":1107,"viability":"Medium","score":41},{"sno":"182","village":"Agaraperunthottam","block":"Sirkali","vet":"Thiruvengadu","f_cattle":89,"f_buffalo":0,"f_sheep":0,"f_goat":118,"milk_animals":89,"milk_potential":240,"viability":"Not Viable","score":89},{"sno":"183","village":"Alaveli","block":"Sirkali","vet":"Thirunandriur","f_cattle":18,"f_buffalo":0,"f_sheep":0,"f_goat":57,"milk_animals":18,"milk_potential":49,"viability":"Not Viable","score":18},{"sno":"184","village":"Athiyur","block":"Sirkali","vet":"Kondal","f_cattle":490,"f_buffalo":0,"f_sheep":0,"f_goat":453,"milk_animals":490,"milk_potential":1323,"viability":"Medium","score":49},{"sno":"185","village":"Edakudivasapathy I","block":"Sirkali","vet":"Vaitheeswarenkovil","f_cattle":435,"f_buffalo":7,"f_sheep":32,"f_goat":581,"milk_animals":442,"milk_potential":1200,"viability":"Medium","score":44},{"sno":"186","village":"Gopalasamuthiram","block":"Sirkali","vet":"Kondal","f_cattle":784,"f_buffalo":6,"f_sheep":0,"f_goat":1185,"milk_animals":790,"milk_potential":2138,"viability":"High","score":26},{"sno":"187","village":"Kanniyakudi","block":"Sirkali","vet":"Thirupungoor","f_cattle":104,"f_buffalo":0,"f_sheep":40,"f_goat":73,"milk_animals":104,"milk_potential":281,"viability":"Low","score":20},{"sno":"188","village":"Karaimedu","block":"Sirkali","vet":"Nangoor","f_cattle":478,"f_buffalo":0,"f_sheep":44,"f_goat":735,"milk_animals":478,"milk_potential":1291,"viability":"Medium","score":47},{"sno":"189","village":"Karkoil","block":"Sirkali","vet":"Thirupungoor","f_cattle":197,"f_buffalo":17,"f_sheep":0,"f_goat":96,"milk_animals":214,"milk_potential":593,"viability":"Medium","score":21},{"sno":"190","village":"Kathiruppu","block":"Sirkali","vet":"Nangoor","f_cattle":280,"f_buffalo":9,"f_sheep":0,"f_goat":466,"milk_animals":289,"milk_potential":788,"viability":"Medium","score":28},{"sno":"191","village":"Keelaiyur","block":"Sirkali","vet":"Poombuhar","f_cattle":638,"f_buffalo":0,"f_sheep":0,"f_goat":722,"milk_animals":638,"milk_potential":1723,"viability":"High","score":21},{"sno":"192","village":"Keelasattanathapuram","block":"Sirkali","vet":"Thiruvengadu","f_cattle":398,"f_buffalo":0,"f_sheep":0,"f_goat":517,"milk_animals":398,"milk_potential":1075,"viability":"Medium","score":39},{"sno":"193","village":"Kondal","block":"Sirkali","vet":"Kondal","f_cattle":494,"f_buffalo":1,"f_sheep":0,"f_goat":397,"milk_animals":495,"milk_potential":1337,"viability":"Medium","score":49},{"sno":"194","village":"Kondathur","block":"Sirkali","vet":"Thirunandriur","f_cattle":325,"f_buffalo":0,"f_sheep":0,"f_goat":577,"milk_animals":325,"milk_potential":878,"viability":"Medium","score":32},{"sno":"195","village":"Mangaimadam","block":"Sirkali","vet":"Thiruvengadu","f_cattle":103,"f_buffalo":0,"f_sheep":0,"f_goat":40,"milk_animals":103,"milk_potential":278,"viability":"Low","score":20},{"sno":"196","village":"Manigramam","block":"Sirkali","vet":"Poombuhar","f_cattle":352,"f_buffalo":0,"f_sheep":19,"f_goat":378,"milk_animals":352,"milk_potential":950,"viability":"Medium","score":35},{"sno":"197","village":"Marudhangudy","block":"Sirkali","vet":"Thirupungoor","f_cattle":388,"f_buffalo":0,"f_sheep":0,"f_goat":1027,"milk_animals":388,"milk_potential":1048,"viability":"Medium","score":38},{"sno":"198","village":"Melaiyur","block":"Sirkali","vet":"Poombuhar","f_cattle":1633,"f_buffalo":108,"f_sheep":23,"f_goat":1214,"milk_animals":1741,"milk_potential":4798,"viability":"High","score":58},{"sno":"199","village":"Nangur","block":"Sirkali","vet":"Nangoor","f_cattle":361,"f_buffalo":7,"f_sheep":0,"f_goat":648,"milk_animals":368,"milk_potential":1000,"viability":"Medium","score":36},{"sno":"200","village":"Natham","block":"Sirkali","vet":"Thirunandriur","f_cattle":230,"f_buffalo":0,"f_sheep":0,"f_goat":129,"milk_animals":230,"milk_potential":621,"viability":"Medium","score":23},{"sno":"201","village":"Nemmeli","block":"Sirkali","vet":"Kondal","f_cattle":511,"f_buffalo":0,"f_sheep":0,"f_goat":702,"milk_animals":511,"milk_potential":1380,"viability":"High","score":17},{"sno":"202","village":"Neppathur","block":"Sirkali","vet":"Thiruvengadu","f_cattle":718,"f_buffalo":33,"f_sheep":0,"f_goat":1412,"milk_animals":751,"milk_potential":2057,"viability":"High","score":25},{"sno":"203","village":"Pagasalai","block":"Sirkali","vet":"Thirunandriur","f_cattle":436,"f_buffalo":4,"f_sheep":0,"f_goat":827,"milk_animals":440,"milk_potential":1192,"viability":"Medium","score":44},{"sno":"204","village":"Perumangalam","block":"Sirkali","vet":"Thirupungoor","f_cattle":59,"f_buffalo":0,"f_sheep":0,"f_goat":46,"milk_animals":59,"milk_potential":159,"viability":"Not Viable","score":59},{"sno":"205","village":"Perunthottam - Ii","block":"Sirkali","vet":"Thiruvengadu","f_cattle":153,"f_buffalo":9,"f_sheep":0,"f_goat":498,"milk_animals":162,"milk_potential":446,"viability":"Low","score":32},{"sno":"206","village":"Perunthottam I","block":"Sirkali","vet":"Thiruvengadu","f_cattle":410,"f_buffalo":0,"f_sheep":0,"f_goat":993,"milk_animals":410,"milk_potential":1107,"viability":"Medium","score":41},{"sno":"207","village":"Puduthurai","block":"Sirkali","vet":"Thirunandriur","f_cattle":189,"f_buffalo":0,"f_sheep":0,"f_goat":378,"milk_animals":189,"milk_potential":510,"viability":"Low","score":37},{"sno":"208","village":"Punganur","block":"Sirkali","vet":"Thirupungoor","f_cattle":145,"f_buffalo":0,"f_sheep":0,"f_goat":173,"milk_animals":145,"milk_potential":392,"viability":"Low","score":29},{"sno":"209","village":"Radhanallur","block":"Sirkali","vet":"Poombuhar","f_cattle":444,"f_buffalo":2,"f_sheep":0,"f_goat":2329,"milk_animals":446,"milk_potential":1206,"viability":"Medium","score":44},{"sno":"210","village":"Sattanathapuram","block":"Sirkali","vet":"Thiruvengadu","f_cattle":163,"f_buffalo":0,"f_sheep":0,"f_goat":207,"milk_animals":163,"milk_potential":440,"viability":"Low","score":32},{"sno":"211","village":"Semangalam","block":"Sirkali","vet":"Thirunandriur","f_cattle":235,"f_buffalo":0,"f_sheep":0,"f_goat":217,"milk_animals":235,"milk_potential":634,"viability":"Medium","score":23},{"sno":"212","village":"Sembathaniruppu","block":"Sirkali","vet":"Nangoor","f_cattle":575,"f_buffalo":0,"f_sheep":10,"f_goat":565,"milk_animals":575,"milk_potential":1552,"viability":"High","score":19},{"sno":"213","village":"Semmangudy","block":"Sirkali","vet":"Vaitheeswarenkovil","f_cattle":280,"f_buffalo":2,"f_sheep":0,"f_goat":232,"milk_animals":282,"milk_potential":763,"viability":"Medium","score":28},{"sno":"214","village":"Thennampattiam","block":"Sirkali","vet":"Thirunagari","f_cattle":109,"f_buffalo":9,"f_sheep":78,"f_goat":229,"milk_animals":118,"milk_potential":327,"viability":"Low","score":23},{"sno":"215","village":"Thillaividangan","block":"Sirkali","vet":"Vaitheeswarenkovil","f_cattle":165,"f_buffalo":4,"f_sheep":0,"f_goat":130,"milk_animals":169,"milk_potential":460,"viability":"Low","score":33},{"sno":"216","village":"Thirunagiri","block":"Sirkali","vet":"Thirunagari","f_cattle":252,"f_buffalo":0,"f_sheep":0,"f_goat":376,"milk_animals":252,"milk_potential":680,"viability":"Medium","score":25},{"sno":"217","village":"Thiruppangur","block":"Sirkali","vet":"Thirupungoor","f_cattle":160,"f_buffalo":0,"f_sheep":0,"f_goat":181,"milk_animals":160,"milk_potential":432,"viability":"Low","score":32},{"sno":"218","village":"Thiruvaly","block":"Sirkali","vet":"Nangoor","f_cattle":325,"f_buffalo":6,"f_sheep":0,"f_goat":323,"milk_animals":331,"milk_potential":899,"viability":"Medium","score":33},{"sno":"219","village":"Thiruvengadu","block":"Sirkali","vet":"Thiruvengadu","f_cattle":703,"f_buffalo":1,"f_sheep":0,"f_goat":1523,"milk_animals":704,"milk_potential":1902,"viability":"High","score":23},{"sno":"220","village":"Thittai","block":"Sirkali","vet":"Vaitheeswarenkovil","f_cattle":282,"f_buffalo":5,"f_sheep":0,"f_goat":297,"milk_animals":287,"milk_potential":779,"viability":"Medium","score":28},{"sno":"221","village":"Vanagiri","block":"Sirkali","vet":"Poombuhar","f_cattle":619,"f_buffalo":0,"f_sheep":0,"f_goat":1362,"milk_animals":619,"milk_potential":1671,"viability":"High","score":20},{"sno":"222","village":"Villandhidasa Samuthiram","block":"Sirkali","vet":"Thirunagari","f_cattle":317,"f_buffalo":4,"f_sheep":20,"f_goat":403,"milk_animals":321,"milk_potential":870,"viability":"Medium","score":32},{"sno":"223","village":"Achalpuram","block":"Kollidam","vet":"Muthalaimedu","f_cattle":319,"f_buffalo":0,"f_sheep":0,"f_goat":249,"milk_animals":319,"milk_potential":861,"viability":"Medium","score":31},{"sno":"224","village":"Agaraelathur","block":"Kollidam","vet":"Kollidam","f_cattle":186,"f_buffalo":31,"f_sheep":0,"f_goat":80,"milk_animals":217,"milk_potential":614,"viability":"Medium","score":21},{"sno":"225","village":"Agaravattaram","block":"Kollidam","vet":"Mathanam","f_cattle":272,"f_buffalo":0,"f_sheep":0,"f_goat":480,"milk_animals":272,"milk_potential":734,"viability":"Medium","score":27},{"sno":"226","village":"Alakkudy","block":"Kollidam","vet":"Muthalaimedu","f_cattle":2320,"f_buffalo":67,"f_sheep":5,"f_goat":1256,"milk_animals":2387,"milk_potential":6505,"viability":"High","score":79},{"sno":"227","village":"Alalasundram","block":"Kollidam","vet":"Muthalaimedu","f_cattle":1278,"f_buffalo":33,"f_sheep":0,"f_goat":504,"milk_animals":1311,"milk_potential":3569,"viability":"High","score":43},{"sno":"228","village":"Alangadu","block":"Kollidam","vet":"Edamanal","f_cattle":397,"f_buffalo":5,"f_sheep":0,"f_goat":327,"milk_animals":402,"milk_potential":1090,"viability":"Medium","score":40},{"sno":"229","village":"Arapallam","block":"Kollidam","vet":"Muthalaimedu","f_cattle":1556,"f_buffalo":65,"f_sheep":6,"f_goat":818,"milk_animals":1621,"milk_potential":4435,"viability":"High","score":54},{"sno":"230","village":"Arasur","block":"Kollidam","vet":"Edamanal","f_cattle":296,"f_buffalo":8,"f_sheep":0,"f_goat":236,"milk_animals":304,"milk_potential":828,"viability":"Medium","score":30},{"sno":"231","village":"Arpakkam","block":"Kollidam","vet":"Mathanam","f_cattle":121,"f_buffalo":0,"f_sheep":0,"f_goat":245,"milk_animals":121,"milk_potential":327,"viability":"Low","score":24},{"sno":"232","village":"Edamanal","block":"Kollidam","vet":"Edamanal","f_cattle":434,"f_buffalo":89,"f_sheep":0,"f_goat":921,"milk_animals":523,"milk_potential":1492,"viability":"High","score":17},{"sno":"233","village":"Erukkur","block":"Kollidam","vet":"Kollidam","f_cattle":545,"f_buffalo":9,"f_sheep":0,"f_goat":1013,"milk_animals":554,"milk_potential":1504,"viability":"High","score":18},{"sno":"234","village":"Kadavasal","block":"Kollidam","vet":"Edamanal","f_cattle":300,"f_buffalo":0,"f_sheep":0,"f_goat":330,"milk_animals":300,"milk_potential":810,"viability":"Medium","score":30},{"sno":"235","village":"Kadhiramangalam","block":"Kollidam","vet":"Kollidam","f_cattle":468,"f_buffalo":4,"f_sheep":95,"f_goat":455,"milk_animals":472,"milk_potential":1278,"viability":"Medium","score":47},{"sno":"236","village":"Kannapiranadi","block":"Kollidam","vet":"Mathanam","f_cattle":27,"f_buffalo":0,"f_sheep":0,"f_goat":16,"milk_animals":27,"milk_potential":73,"viability":"Not Viable","score":27},{"sno":"237","village":"Kattur","block":"Kollidam","vet":"Muthalaimedu","f_cattle":1065,"f_buffalo":52,"f_sheep":0,"f_goat":552,"milk_animals":1117,"milk_potential":3063,"viability":"High","score":37},{"sno":"238","village":"Keelamathur","block":"Kollidam","vet":"Kollidam","f_cattle":910,"f_buffalo":4,"f_sheep":1,"f_goat":1020,"milk_animals":914,"milk_potential":2471,"viability":"High","score":30},{"sno":"239","village":"Koothiyampettai","block":"Kollidam","vet":"Mathanam","f_cattle":3112,"f_buffalo":0,"f_sheep":0,"f_goat":3245,"milk_animals":3112,"milk_potential":8402,"viability":"High","score":100},{"sno":"240","village":"Kunnam","block":"Kollidam","vet":"Kollidam","f_cattle":1091,"f_buffalo":56,"f_sheep":0,"f_goat":905,"milk_animals":1147,"milk_potential":3147,"viability":"High","score":38},{"sno":"241","village":"Madhanam","block":"Kollidam","vet":"Mathanam","f_cattle":973,"f_buffalo":0,"f_sheep":0,"f_goat":629,"milk_animals":973,"milk_potential":2627,"viability":"High","score":32},{"sno":"242","village":"Madiravelur","block":"Kollidam","vet":"Kollidam","f_cattle":214,"f_buffalo":10,"f_sheep":0,"f_goat":10,"milk_animals":224,"milk_potential":614,"viability":"Medium","score":22},{"sno":"243","village":"Maharajapuram","block":"Kollidam","vet":"Edamanal","f_cattle":186,"f_buffalo":0,"f_sheep":0,"f_goat":224,"milk_animals":186,"milk_potential":502,"viability":"Low","score":37},{"sno":"244","village":"Mahendrapalli","block":"Kollidam","vet":"Muthalaimedu","f_cattle":1680,"f_buffalo":0,"f_sheep":0,"f_goat":531,"milk_animals":1680,"milk_potential":4536,"viability":"High","score":56},{"sno":"245","village":"Mudhalaimedu","block":"Kollidam","vet":"Muthalaimedu","f_cattle":1934,"f_buffalo":84,"f_sheep":0,"f_goat":1118,"milk_animals":2018,"milk_potential":5524,"viability":"High","score":67},{"sno":"246","village":"Nallanayakipuram","block":"Kollidam","vet":"Muthalaimedu","f_cattle":160,"f_buffalo":0,"f_sheep":0,"f_goat":107,"milk_animals":160,"milk_potential":432,"viability":"Low","score":32},{"sno":"247","village":"Odhavanthangudy","block":"Kollidam","vet":"Mathanam","f_cattle":646,"f_buffalo":0,"f_sheep":0,"f_goat":1149,"milk_animals":646,"milk_potential":1744,"viability":"High","score":21},{"sno":"248","village":"Olayampudur","block":"Kollidam","vet":"Kollidam","f_cattle":357,"f_buffalo":0,"f_sheep":0,"f_goat":358,"milk_animals":357,"milk_potential":964,"viability":"Medium","score":35},{"sno":"249","village":"Pachaiperumanallur","block":"Kollidam","vet":"Edamanal","f_cattle":452,"f_buffalo":0,"f_sheep":0,"f_goat":415,"milk_animals":452,"milk_potential":1220,"viability":"Medium","score":45},{"sno":"250","village":"Palayapalayam","block":"Kollidam","vet":"Mathanm","f_cattle":1694,"f_buffalo":0,"f_sheep":0,"f_goat":2605,"milk_animals":1694,"milk_potential":4574,"viability":"High","score":56},{"sno":"251","village":"Pannangudy","block":"Kollidam","vet":"Muthalaimedu","f_cattle":301,"f_buffalo":0,"f_sheep":0,"f_goat":362,"milk_animals":301,"milk_potential":813,"viability":"Medium","score":30},{"sno":"252","village":"Pudupattinam","block":"Kollidam","vet":"Muthalaimedu","f_cattle":198,"f_buffalo":26,"f_sheep":0,"f_goat":560,"milk_animals":224,"milk_potential":628,"viability":"Medium","score":22},{"sno":"253","village":"Puliyanthurai","block":"Kollidam","vet":"Muthalaimedu","f_cattle":952,"f_buffalo":9,"f_sheep":0,"f_goat":716,"milk_animals":961,"milk_potential":2603,"viability":"High","score":32},{"sno":"254","village":"Puthur","block":"Kollidam","vet":"Kollidam","f_cattle":527,"f_buffalo":2,"f_sheep":0,"f_goat":670,"milk_animals":529,"milk_potential":1430,"viability":"High","score":17},{"sno":"255","village":"Serugudy","block":"Kollidam","vet":"Edamanal","f_cattle":268,"f_buffalo":0,"f_sheep":0,"f_goat":302,"milk_animals":268,"milk_potential":724,"viability":"Medium","score":26},{"sno":"256","village":"Sothiyakudi","block":"Kollidam","vet":"Kollidam","f_cattle":180,"f_buffalo":55,"f_sheep":0,"f_goat":144,"milk_animals":235,"milk_potential":684,"viability":"Medium","score":23},{"sno":"257","village":"Thandavankulam","block":"Kollidam","vet":"Mathanm","f_cattle":2620,"f_buffalo":0,"f_sheep":0,"f_goat":2369,"milk_animals":2620,"milk_potential":7074,"viability":"High","score":87},{"sno":"258","village":"Thirukkarukavur","block":"Kollidam","vet":"Edamanal","f_cattle":155,"f_buffalo":0,"f_sheep":0,"f_goat":233,"milk_animals":155,"milk_potential":418,"viability":"Low","score":31},{"sno":"259","village":"Thirumailadi","block":"Kollidam","vet":"Kollidam","f_cattle":648,"f_buffalo":5,"f_sheep":0,"f_goat":1102,"milk_animals":653,"milk_potential":1768,"viability":"High","score":21},{"sno":"260","village":"Thirumullaivasal","block":"Kollidam","vet":"Edamanal","f_cattle":2095,"f_buffalo":24,"f_sheep":0,"f_goat":1585,"milk_animals":2119,"milk_potential":5743,"viability":"High","score":70},{"sno":"261","village":"Umayalpathy","block":"Kollidam","vet":"Edamanal","f_cattle":320,"f_buffalo":1,"f_sheep":0,"f_goat":610,"milk_animals":321,"milk_potential":868,"viability":"Medium","score":32},{"sno":"262","village":"Vadarengam","block":"Kollidam","vet":"Kollidam","f_cattle":290,"f_buffalo":55,"f_sheep":0,"f_goat":100,"milk_animals":345,"milk_potential":981,"viability":"Medium","score":34},{"sno":"263","village":"Valluvakudi","block":"Kollidam","vet":"Kollidam","f_cattle":453,"f_buffalo":0,"f_sheep":0,"f_goat":660,"milk_animals":453,"milk_potential":1223,"viability":"Medium","score":45},{"sno":"264","village":"Varisaipathuvadagal","block":"Kollidam","vet":"Edamanal","f_cattle":414,"f_buffalo":2,"f_sheep":0,"f_goat":434,"milk_animals":416,"milk_potential":1125,"viability":"Medium","score":41},{"sno":"265","village":"Vettangudy","block":"Kollidam","vet":"Edamanal","f_cattle":739,"f_buffalo":0,"f_sheep":0,"f_goat":582,"milk_animals":739,"milk_potential":1995,"viability":"High","score":24}];
+
+let _cattleFilter = 'all';
+let _cattleChart  = null;
+
+// ══════════════════════════════════════════════════════
+//  RENDER: CATTLE PLANNING
+// ══════════════════════════════════════════════════════
+function renderCattle() {
+  const block  = document.getElementById('cattle-block-filter')?.value || '';
+  const search = (document.getElementById('cattle-search')?.value || '').toLowerCase();
+  const sortBy = document.getElementById('cattle-sort')?.value || 'milk_potential';
+
+  // Apply filters
+  let data = CATTLE_DATA.filter(r => {
+    if (block  && r.block !== block) return false;
+    if (search && !r.village.toLowerCase().includes(search) && !r.vet.toLowerCase().includes(search)) return false;
+    if (_cattleFilter === 'High'   && r.viability !== 'High')   return false;
+    if (_cattleFilter === 'Medium' && r.viability !== 'Medium') return false;
+    if (_cattleFilter === 'Low'    && r.viability !== 'Low')    return false;
+    if (_cattleFilter === 'Not Viable' && r.viability !== 'Not Viable') return false;
+    return true;
+  });
+
+  // Sort
+  if (sortBy === 'milk_potential') data.sort((a,b) => b.milk_potential - a.milk_potential);
+  else if (sortBy === 'milk_animals') data.sort((a,b) => b.milk_animals - a.milk_animals);
+  else if (sortBy === 'village') data.sort((a,b) => a.village.localeCompare(b.village));
+  else if (sortBy === 'score') data.sort((a,b) => b.score - a.score);
+
+  // KPI counts (always from full unfiltered data)
+  const all    = CATTLE_DATA;
+  const high   = all.filter(r => r.viability === 'High').length;
+  const medium = all.filter(r => r.viability === 'Medium').length;
+  const low    = all.filter(r => r.viability === 'Low').length;
+  const totalMilk = all.reduce((s,r) => s + r.milk_potential, 0);
+
+  sv('ck-total',    all.length);
+  sv('ck-high-val', high);
+  sv('ck-med-val',  medium);
+  sv('ck-low-val',  low);
+  sv('ck-milk-val', (totalMilk/1000).toFixed(0) + 'K L');
+
+  // Highlight active KPI
+  ['ck-all','ck-high','ck-med','ck-low','ck-milk'].forEach(id => {
+    document.getElementById(id)?.classList.remove('active-filter');
+  });
+  const activeMap = {'all':'ck-all','High':'ck-high','Medium':'ck-med','Low':'ck-low','milk':'ck-milk'};
+  if (activeMap[_cattleFilter]) document.getElementById(activeMap[_cattleFilter])?.classList.add('active-filter');
+
+  // Village count
+  const countEl = document.getElementById('cattle-count');
+  if (countEl) countEl.textContent = data.length + ' villages';
+
+  // Village table
+  const vbMap = {High:'vb-high',Medium:'vb-medium',Low:'vb-low','Not Viable':'vb-not'};
+  const scoreColors = {High:'#34a853',Medium:'#4285f4',Low:'#fbbc04','Not Viable':'#ea4335'};
+  const tableEl = document.getElementById('cattle-table');
+  if (tableEl) {
+    if (!data.length) {
+      tableEl.innerHTML = '<div style="padding:32px;text-align:center;color:var(--txt3);">No villages match the current filter.</div>';
+    } else {
+      tableEl.innerHTML = data.map((r,i) => {
+        const pct = Math.min(Math.round(r.milk_animals / 32), 100);
+        return '<div class="village-row" onclick="showVillageDetail('+JSON.stringify(r).replace(/"/g,'&quot;')+')">'
+          + '<div class="vr-rank">' + (i+1) + '</div>'
+          + '<div style="flex:1;min-width:0;">'
+          + '<div class="vr-name">' + r.village + '</div>'
+          + '<div class="score-bar"><div class="score-fill" style="width:'+pct+'%;background:'+scoreColors[r.viability]+';"></div></div>'
+          + '</div>'
+          + '<div class="vr-block">' + r.block + '</div>'
+          + '<div class="vr-animals">' + r.milk_animals.toLocaleString('en-IN') + '</div>'
+          + '<div class="vr-potential">' + r.milk_potential.toLocaleString('en-IN') + ' L</div>'
+          + '<div style="width:75px;text-align:right;flex-shrink:0;"><span class="viability-badge '+vbMap[r.viability]+'">' + r.viability + '</span></div>'
+          + '</div>';
+      }).join('');
+    }
+  }
+
+  // Block-wise chart
+  renderCattleChart();
+
+  // Block stat cards
+  renderBlockStats();
+}
+
+function filterCattle(type) {
+  _cattleFilter = _cattleFilter === type ? 'all' : type;
+  renderCattle();
+}
+
+function renderCattleChart() {
+  if (_cattleChart) { _cattleChart.destroy(); _cattleChart = null; }
+  const ctx = document.getElementById('cattle-chart')?.getContext('2d');
+  if (!ctx) return;
+  const blocks = ['Kollidam','Kuthalam','Mayiladuthurai','Sembanarkoil','Sirkali'];
+  const milkByBlock = blocks.map(b => CATTLE_DATA.filter(r=>r.block===b).reduce((s,r)=>s+r.milk_potential,0));
+  const animalsByBlock = blocks.map(b => CATTLE_DATA.filter(r=>r.block===b).reduce((s,r)=>s+r.milk_animals,0));
+  _cattleChart = new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels: blocks.map(b => b.length > 10 ? b.slice(0,9)+'…' : b),
+      datasets: [
+        { label: 'Milk Potential (L/day)', data: milkByBlock, backgroundColor: '#4285f488', borderRadius: 5, yAxisID: 'y' },
+        { label: 'Milk Animals', data: animalsByBlock, backgroundColor: '#34a85388', borderRadius: 5, yAxisID: 'y2' }
+      ]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { position: 'bottom', labels: { font: { family: 'Roboto', size: 11 }, boxWidth: 12 } } },
+      scales: {
+        x: { grid: { display: false }, ticks: { font: { family: 'Roboto Mono', size: 10 } } },
+        y: { position: 'left', ticks: { callback: v => (v/1000).toFixed(0)+'K L', font: { family: 'Roboto Mono', size: 9 } }, grid: { color: 'rgba(0,0,0,.06)' } },
+        y2: { position: 'right', ticks: { callback: v => v.toLocaleString('en-IN'), font: { family: 'Roboto Mono', size: 9 } }, grid: { display: false } }
+      }
+    }
+  });
+}
+
+function renderBlockStats() {
+  const blocks = ['Kollidam','Kuthalam','Mayiladuthurai','Sembanarkoil','Sirkali'];
+  const grid = document.getElementById('block-stats');
+  if (!grid) return;
+  grid.innerHTML = blocks.map(b => {
+    const rows = CATTLE_DATA.filter(r => r.block === b);
+    const milk = rows.reduce((s,r) => s + r.milk_potential, 0);
+    const animals = rows.reduce((s,r) => s + r.milk_animals, 0);
+    const high = rows.filter(r => r.viability === 'High').length;
+    const isMyl = b === 'Mayiladuthurai';
+    return '<div class="bsc-head" style="border-left:3px solid '+(isMyl?'#4285f4':'#34a853')+';padding-left:8px;display:flex;justify-content:space-between;align-items:center;">'
+      + b + (isMyl ? ' ⭐' : '') + '</div>'
+      + '<div class="bsc-row"><span>Villages</span><span class="bsc-val">'+rows.length+'</span></div>'
+      + '<div class="bsc-row"><span>Milk Animals</span><span class="bsc-val">'+animals.toLocaleString('en-IN')+'</span></div>'
+      + '<div class="bsc-row"><span>Milk Potential</span><span class="bsc-val">'+Math.round(milk/1000)+'K L/day</span></div>'
+      + '<div class="bsc-row"><span>High Viability</span><span class="bsc-val" style="color:#34a853;">'+high+' villages</span></div>';
+  }).map((html,i) => '<div class="block-stat-card">'+html+'</div>').join('');
+}
+
+function showVillageDetail(r) {
+  const modal = document.getElementById('village-modal');
+  const nameEl = document.getElementById('modal-village-name');
+  const bodyEl = document.getElementById('modal-body');
+  if (!modal || !nameEl || !bodyEl) return;
+
+  nameEl.textContent = r.village + ' — ' + r.block;
+
+  const vbMap = {High:'vb-high',Medium:'vb-medium',Low:'vb-low','Not Viable':'vb-not'};
+  const societyRec = r.viability === 'High'
+    ? 'Strongly recommended for new milk society. Target initial procurement of ' + Math.round(r.milk_potential * 0.4).toLocaleString('en-IN') + ' L/day (40% mobilisation).'
+    : r.viability === 'Medium'
+    ? 'Viable for society formation with active farmer mobilisation. Expect ' + Math.round(r.milk_potential * 0.3).toLocaleString('en-IN') + ' L/day initial procurement.'
+    : r.viability === 'Low'
+    ? 'Merge with neighbouring village or operate as a collection point under an existing society. Cattle improvement programme recommended first.'
+    : 'Not sufficient for standalone society. Consider grouping with 2–3 adjacent villages to cross the 200-animal threshold.';
+
+  const cattleRatio = r.milk_animals > 0 ? Math.round(r.f_cattle / r.milk_animals * 100) : 0;
+  const dailyPotential = r.milk_potential;
+  const monthlyPotential = dailyPotential * 30;
+
+  bodyEl.innerHTML =
+    '<div style="margin-bottom:12px;"><span class="viability-badge '+vbMap[r.viability]+'" style="font-size:13px;padding:5px 14px;">'
+    + r.viability + ' Viability</span></div>'
+    + '<div class="modal-stat"><span class="modal-stat-lbl">Block</span><span class="modal-stat-val">'+r.block+'</span></div>'
+    + '<div class="modal-stat"><span class="modal-stat-lbl">Veterinary Dispensary</span><span class="modal-stat-val">'+r.vet+'</span></div>'
+    + '<div class="modal-stat"><span class="modal-stat-lbl">Female Cattle</span><span class="modal-stat-val">'+r.f_cattle.toLocaleString('en-IN')+'</span></div>'
+    + '<div class="modal-stat"><span class="modal-stat-lbl">Female Buffalo</span><span class="modal-stat-val">'+r.f_buffalo.toLocaleString('en-IN')+'</span></div>'
+    + '<div class="modal-stat"><span class="modal-stat-lbl">Total Milk Animals</span><span class="modal-stat-val" style="color:#4285f4;font-size:15px;">'+r.milk_animals.toLocaleString('en-IN')+'</span></div>'
+    + '<div class="modal-stat"><span class="modal-stat-lbl">Cattle Composition</span><span class="modal-stat-val">'+cattleRatio+'% cattle, '+(100-cattleRatio)+'% buffalo</span></div>'
+    + '<div class="modal-stat"><span class="modal-stat-lbl">Est. Daily Milk Potential</span><span class="modal-stat-val" style="color:#34a853;">'+dailyPotential.toLocaleString('en-IN')+' L/day</span></div>'
+    + '<div class="modal-stat"><span class="modal-stat-lbl">Est. Monthly Potential</span><span class="modal-stat-val">'+monthlyPotential.toLocaleString('en-IN')+' L/month</span></div>'
+    + '<div class="modal-stat"><span class="modal-stat-lbl">Viability Score</span><span class="modal-stat-val">'+r.score+' / 100</span></div>'
+    + '<div class="modal-rec"><strong>MYL Recommendation:</strong><br>'+societyRec+'</div>';
+
+  modal.classList.add('open');
+}
+
+function closeModal() {
+  document.getElementById('village-modal')?.classList.remove('open');
+}
+
+// Close modal on backdrop click
+document.addEventListener('click', function(e) {
+  const modal = document.getElementById('village-modal');
+  if (e.target === modal) closeModal();
+});
+
+// ══════════════════════════════════════════════════════
+//  AI CATTLE SOCIETY PLANNING
+// ══════════════════════════════════════════════════════
+async function generateCattleInsights() {
+  const panel  = document.getElementById('cattle-ai-panel');
+  const out    = document.getElementById('cattle-ai-out');
+  const btn    = document.getElementById('cattle-ai-btn');
+  panel.style.display = 'block';
+  panel.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  btn.disabled = true; btn.textContent = '⏳ Planning…';
+  out.innerHTML = '<div class="ai-thinking"><div class="ai-dot"></div><div class="ai-dot"></div><div class="ai-dot"></div><span>Generating AI society opening plan…</span></div>';
+
+  const block   = document.getElementById('cattle-block-filter')?.value || 'All Blocks';
+  const high    = CATTLE_DATA.filter(r => r.viability === 'High' && (!block || block === 'All Blocks' || r.block === block));
+  const medium  = CATTLE_DATA.filter(r => r.viability === 'Medium' && (!block || block === 'All Blocks' || r.block === block));
+  const totalAnimals = CATTLE_DATA.reduce((s,r) => s + r.milk_animals, 0);
+  const totalMilk    = CATTLE_DATA.reduce((s,r) => s + r.milk_potential, 0);
+
+  const top10 = high.sort((a,b) => b.milk_potential - a.milk_potential).slice(0,10);
+  const top10str = top10.map((r,i) => (i+1)+'. '+r.village+' ('+r.block+'): '+r.milk_animals+' animals, '+r.milk_potential+' L/day potential').join('\n');
+  const blockSummary = ['Kollidam','Kuthalam','Mayiladuthurai','Sembanarkoil','Sirkali'].map(b => {
+    const rows = CATTLE_DATA.filter(r => r.block === b);
+    return b+': '+rows.length+' villages, '+rows.reduce((s,r)=>s+r.milk_animals,0)+' animals, '+rows.filter(r=>r.viability==='High').length+' high-viability';
+  }).join('\n');
+
+  const prompt = 'You are a senior dairy development planner for Mayiladuthurai District Cooperative Milk Producers Union (MYL-DCMPU), Tamil Nadu.'
+    + '\n\nCATTLE CENSUS DATA (20th Livestock Census, Nagapattinam District — Mayiladuthurai Division):'
+    + '\n- Total villages surveyed: ' + CATTLE_DATA.length
+    + '\n- Total female milk animals (cattle+buffalo): ' + totalAnimals.toLocaleString('en-IN')
+    + '\n- Total estimated daily milk potential: ' + Math.round(totalMilk/1000) + 'K litres/day'
+    + '\n- High-viability villages (≥500 animals): ' + high.length
+    + '\n- Medium-viability villages (200-499): ' + medium.length
+    + '\n- Current filter: ' + block
+    + '\n\nBLOCK-WISE SUMMARY:\n' + blockSummary
+    + '\n\nTOP 10 HIGH-PRIORITY VILLAGES FOR NEW SOCIETY OPENING:\n' + top10str
+    + '\n\nProvide a detailed society opening plan as a JSON array of EXACTLY 6 recommendations. Each object:'
+    + '\n{"type":"action"|"warning"|"insight","title":"short headline","body":"2-3 sentences with specific village names, animal counts, and L/day estimates","priority":"High"|"Medium","villages":["village1","village2"]}'
+    + '\nFocus on: (1) which villages to open societies first, (2) which to cluster together, (3) infrastructure needs, (4) expected procurement volumes, (5) risk factors, (6) phased timeline.'
+    + '\nReturn ONLY the JSON array, no markdown.';
+
+  try {
+    const res = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 1500,
+        messages: [{ role: 'user', content: prompt }]
+      })
+    });
+    const d   = await res.json();
+    const raw = d.content?.map(c => c.text || '').join('').replace(/```json|```/g, '').trim();
+    const recs = JSON.parse(raw);
+    const tmap = { action: 'ins-card', insight: 'ins-card', warning: 'ins-card warn' };
+    const pmap = { High: '🔴 High Priority', Medium: '🟡 Medium Priority' };
+    out.innerHTML = recs.map(r =>
+      '<div class="' + (tmap[r.type] || 'ins-card') + '" style="margin-bottom:10px;">'
+      + '<div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">'
+      + '<div class="ins-title" style="flex:1;">' + r.title + '</div>'
+      + (r.priority ? '<span style="font-size:11px;color:var(--txt3);">' + (pmap[r.priority]||r.priority) + '</span>' : '')
+      + '</div>'
+      + '<div class="ins-body">' + r.body + '</div>'
+      + (r.villages && r.villages.length ? '<div style="margin-top:8px;">' + r.villages.map(v => '<span style="display:inline-block;padding:2px 9px;background:#e8f0fe;color:#1a73e8;border-radius:100px;font-size:11px;margin:2px;">📍 '+v+'</span>').join('') + '</div>' : '')
+      + '</div>'
+    ).join('');
+  } catch(e) {
+    out.innerHTML = '<div class="ins-card crit"><div class="ins-title">Could not generate plan</div><div class="ins-body">' + e.message + '</div></div>';
+  }
+  btn.disabled = false; btn.textContent = '✨ AI Society Plan';
+}
+
+// ══════════════════════════════════════════════════════
+//  BEST PRACTICES DATA
+// ══════════════════════════════════════════════════════
+const BEST_PRACTICES = [
+  {ico:'🌅', title:'Twice-daily Collection', body:'Morning (6–8 AM) and evening (4–6 PM) collection windows maximise fresh milk yield. Societies missing evening rounds lose 30–40% of daily potential.'},
+  {ico:'🌡️', title:'Cold Chain within 2 Hours', body:'Milk must reach bulk cooler within 2 hours of collection. Every 10°C rise doubles bacterial count. Target <10°C at BMC within 90 minutes.'},
+  {ico:'📋', title:'Fat & SNF Testing Daily', body:'Test every lot with Lacto-scan or Gerber method. Minimum 3.5% fat, 8.5% SNF for cow milk. Reject adulterated lots immediately and log the event.'},
+  {ico:'💉', title:'Vaccination Programme', body:'FMD vaccination every 6 months (Jan & July). BQ and HS before monsoon. Brucellosis in heifers 4–8 months. Coordinate with Vet Dispensary in each village.'},
+  {ico:'🌿', title:'Green Fodder Availability', body:'Each society should maintain a fodder bank. Target 25 kg green fodder + 2 kg concentrate per animal/day. Napier or sorghum cultivation in common land.'},
+  {ico:'💰', title:'Prompt Payment within 10 Days', body:'NDDB standard: payment by 10th of following month. Delayed payment is the #1 reason farmers defect to private dairies. Use digital NEFT directly to farmer accounts.'},
+  {ico:'🐄', title:'AI Coverage ≥80%', body:'Artificial insemination of all breedable females using sexed semen or HF/Jersey crossbreeds. Target 1.5x milk yield over 3 generations. Coordinate with Livestock Department.'},
+  {ico:'📊', title:'Monthly Farmer Meeting', body:'Hold monthly gram sabha-style meetings. Share individual production statements, announce bonuses, address grievances. Attendance correlates with 15–20% higher loyalty.'},
+  {ico:'🧹', title:'Shed Hygiene Standards', body:'Clean cow shed twice daily. Lime wash quarterly. Proper drainage mandatory. Mastitis incidence drops 60% with clean shed hygiene. Society committee spot-checks weekly.'},
+];
+
+// ══════════════════════════════════════════════════════
+//  RENDER: BEST PRACTICES
+// ══════════════════════════════════════════════════════
+function renderBestPractices() {
+  const grid = document.getElementById('best-practices-grid');
+  if (!grid) return;
+  grid.innerHTML = BEST_PRACTICES.map(bp => `
+    <div class="best-practice-card">
+      <div class="bp-title">${bp.ico} ${bp.title}</div>
+      <div class="bp-body">${bp.body}</div>
+    </div>`).join('');
+}
+
+// ══════════════════════════════════════════════════════
+//  RENDER: BEST & WORST SOCIETIES
+// ══════════════════════════════════════════════════════
+function renderBestWorst() {
+  renderBestPractices();
+  if (!_filtered.length) {
+    document.getElementById('best-tbody').innerHTML = '<tr><td colspan="6" style="text-align:center;padding:20px;color:var(--txt3);">Connect your Google Sheet to see society rankings.</td></tr>';
+    document.getElementById('worst-tbody').innerHTML = '<tr><td colspan="6" style="text-align:center;padding:20px;color:var(--txt3);">Connect your Google Sheet to see society rankings.</td></tr>';
+    return;
+  }
+
+  const dates = [...new Set(_filtered.map(r => r.date))].sort();
+  const socs  = [...new Set(_filtered.map(r => r.society))];
+  const totalDays = dates.length;
+  const lbl = `${dates[0]?fmtDate(dates[0]):''} – ${dates[dates.length-1]?fmtDate(dates[dates.length-1]):''}`;
+  const el1 = document.getElementById('best-period-lbl');
+  const el2 = document.getElementById('worst-period-lbl');
+  if (el1) el1.textContent = lbl;
+  if (el2) el2.textContent = lbl;
+
+  const stats = socs.map(s => {
+    const rows = _filtered.filter(r => r.society === s);
+    const total = rows.reduce((a,r) => a+r.total, 0);
+    const active = rows.filter(r => r.total > 0).length;
+    const missed = rows.filter(r => r.total === 0).length;
+    const avg = active > 0 ? total / active : 0;
+    const rep = Math.round(active / Math.max(totalDays, 1) * 100);
+    const half = Math.floor(rows.length / 2);
+    const f1 = rows.slice(0,half).reduce((a,r)=>a+r.total,0)/Math.max(half,1);
+    const f2 = rows.slice(half).reduce((a,r)=>a+r.total,0)/Math.max(rows.length-half,1);
+    const tPct = f1 > 0 ? Math.round((f2-f1)/f1*100) : 0;
+    return {name:s, total, avg, missed, rep, tPct};
+  });
+
+  const best  = [...stats].sort((a,b) => b.total - a.total).slice(0, 10);
+  const worst = [...stats].sort((a,b) => a.rep - b.rep || b.missed - a.missed).slice(0, 10);
+
+  const medals = ['🥇','🥈','🥉'];
+  document.getElementById('best-tbody').innerHTML = best.map((s,i) => {
+    const tChip = s.tPct > 5 ? `<span class="trend-chip tc-up">▲${s.tPct}%</span>` :
+                  s.tPct < -5 ? `<span class="trend-chip tc-dn">▼${Math.abs(s.tPct)}%</span>` :
+                  `<span class="trend-chip tc-eq">→</span>`;
+    return `<tr>
+      <td><span class="rank-medal">${medals[i]||'#'+(i+1)}</span></td>
+      <td style="font-weight:500;">${s.name}</td>
+      <td style="font-family:var(--mono);color:var(--g-green);font-weight:600;">${fmt(s.total)} L</td>
+      <td style="font-family:var(--mono);">${fmt(s.avg)} L</td>
+      <td><span style="font-family:var(--mono);">${s.rep}%</span>
+        <div class="ap-progress" style="width:60px;display:inline-block;vertical-align:middle;margin-left:6px;">
+          <div class="ap-prog-fill" style="width:${s.rep}%;"></div></div></td>
+      <td>${tChip}</td>
+    </tr>`;
+  }).join('');
+
+  document.getElementById('worst-tbody').innerHTML = worst.map((s,i) => {
+    const statusCls = s.rep < 30 ? 'pc-high' : s.rep < 60 ? 'pc-medium' : 'pc-low';
+    const statusLbl = s.rep < 30 ? 'Critical' : s.rep < 60 ? 'At Risk' : 'Low';
+    return `<tr>
+      <td style="font-family:var(--mono);color:var(--txt3);">${i+1}</td>
+      <td style="font-weight:500;">${s.name}</td>
+      <td style="font-family:var(--mono);">${fmt(s.total)} L</td>
+      <td style="font-family:var(--mono);color:var(--g-red);">${s.missed}</td>
+      <td><span style="font-family:var(--mono);">${s.rep}%</span>
+        <div class="ap-progress" style="width:60px;display:inline-block;vertical-align:middle;margin-left:6px;">
+          <div class="ap-prog-fill" style="width:${s.rep}%;background:${s.rep<40?'#ea4335':'#fbbc04'};"></div></div></td>
+      <td><span class="priority-chip ${statusCls}">${statusLbl}</span></td>
+    </tr>`;
+  }).join('');
+}
+
+// ══════════════════════════════════════════════════════
+//  GENERATE AI ACTION PLAN
+// ══════════════════════════════════════════════════════
+async function generateActionPlan() {
+  if (!_filtered.length) { toast('No data loaded — connect your sheet first.', true); return; }
+  const btn = document.getElementById('ap-gen-btn');
+  const out = document.getElementById('ap-output');
+  const sub = document.getElementById('ap-subtitle');
+  btn.disabled = true; btn.textContent = '⏳ Generating…';
+  out.innerHTML = '<div class="ai-thinking"><div class="ai-dot"></div><div class="ai-dot"></div><div class="ai-dot"></div><span>Analysing all societies and generating action plan…</span></div>';
+
+  const dates   = [...new Set(_filtered.map(r=>r.date))].sort();
+  const socs    = [...new Set(_filtered.map(r=>r.society))];
+  const totalL  = _filtered.reduce((a,r)=>a+r.total,0);
+  const dailyAvg= totalL/Math.max(dates.length,1);
+  const missed  = _filtered.filter(r=>r.total===0);
+  const totalDays = dates.length;
+
+  const stats = socs.map(s => {
+    const rows = _filtered.filter(r=>r.society===s);
+    const total = rows.reduce((a,r)=>a+r.total,0);
+    const active= rows.filter(r=>r.total>0).length;
+    const missed= rows.filter(r=>r.total===0).length;
+    const avg   = active>0 ? total/active : 0;
+    const rep   = Math.round(active/Math.max(totalDays,1)*100);
+    const half  = Math.floor(rows.length/2);
+    const f1    = rows.slice(0,half).reduce((a,r)=>a+r.total,0)/Math.max(half,1);
+    const f2    = rows.slice(half).reduce((a,r)=>a+r.total,0)/Math.max(rows.length-half,1);
+    const tPct  = f1>0 ? Math.round((f2-f1)/f1*100) : 0;
+    return {name:s, total, avg:Math.round(avg), missed, rep, tPct};
+  });
+
+  const critical = stats.filter(s=>s.rep<30||s.missed>totalDays*0.4).sort((a,b)=>a.rep-b.rep).slice(0,5);
+  const growing  = stats.filter(s=>s.tPct>=15&&s.rep>70).sort((a,b)=>b.tPct-a.tPct).slice(0,5);
+  const top3     = [...stats].sort((a,b)=>b.total-a.total).slice(0,3);
+
+  const prompt = 'You are a Dairy Development Officer for Mayiladuthurai DCMPU, Tamil Nadu. Generate a comprehensive, actionable society-level action plan.\n\n'
+    + 'COLLECTION DATA SUMMARY:\n'
+    + '- Period: '+dates[0]+' to '+dates[dates.length-1]+' ('+dates.length+' days)\n'
+    + '- Societies: '+socs.length+', Total collected: '+Math.round(totalL).toLocaleString()+' L\n'
+    + '- Daily average: '+Math.round(dailyAvg)+' L, Missed days: '+missed.length+'\n\n'
+    + 'TOP PERFORMERS:\n'+top3.map(s=>s.name+': avg '+s.avg+' L/day, reporting '+s.rep+'%').join('\n')+'\n\n'
+    + 'CRITICAL SOCIETIES (need urgent action):\n'+critical.map(s=>s.name+': reporting '+s.rep+'%, missed '+s.missed+' days, avg '+s.avg+' L/day').join('\n')+'\n\n'
+    + 'HIGH-GROWTH SOCIETIES:\n'+growing.map(s=>s.name+': +'+s.tPct+'% trend, avg '+s.avg+' L/day').join('\n')+'\n\n'
+    + 'NDDB BEST PRACTICES TO REFERENCE: twice-daily collection, cold chain <2hrs, AI coverage, prompt payment, fodder bank, monthly farmer meetings, vaccination programme.\n\n'
+    + 'Generate 8 specific action items as a JSON array. Each object:\n'
+    + '{"priority":"High"|"Medium"|"Low","category":"Collection"|"Veterinary"|"Farmer Engagement"|"Infrastructure"|"Quality"|"Expansion","title":"brief action","body":"2-3 sentences with specific society names and numbers","steps":["step1","step2","step3"],"timeline":"Immediate"|"This Week"|"This Month","societies":["name1"]}\n'
+    + 'Return ONLY the JSON array.';
+
+  try {
+    const res  = await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:2000,messages:[{role:'user',content:prompt}]})});
+    const d    = await res.json();
+    const raw  = d.content?.map(c=>c.text||'').join('').replace(/```json|```/g,'').trim();
+    const items= JSON.parse(raw);
+    if (sub) sub.textContent = '— '+items.length+' items · '+new Date().toLocaleString('en-IN',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'});
+    const priCls  = {High:'ap-priority-high',Medium:'ap-priority-medium',Low:'ap-priority-low'};
+    const priChip = {High:'pc-high',Medium:'pc-medium',Low:'pc-low'};
+    const catIco  = {Collection:'🥛',Veterinary:'💉','Farmer Engagement':'🤝',Infrastructure:'🏗️',Quality:'🧪',Expansion:'🌱'};
+    out.innerHTML = items.map(item => `
+      <div class="ap-card ${priCls[item.priority]||''}">
+        <div class="ap-header">
+          <div class="ap-ico">${catIco[item.category]||'📋'}</div>
+          <div style="flex:1;">
+            <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+              <div class="ap-title">${item.title}</div>
+              <span class="priority-chip ${priChip[item.priority]||'pc-low'}">${item.priority}</span>
+              <span style="padding:2px 9px;border-radius:100px;font-size:11px;background:#e8f0fe;color:#1a56a6;">${item.category}</span>
+              <span style="padding:2px 9px;border-radius:100px;font-size:11px;background:var(--s2);color:var(--txt2);">⏱ ${item.timeline}</span>
+            </div>
+            ${item.societies&&item.societies.length?'<div style="margin-top:5px;">'+item.societies.map(v=>'<span style="display:inline-block;padding:2px 8px;background:#fef7e0;color:#ea8600;border-radius:100px;font-size:11px;margin:2px;">🏘 '+v+'</span>').join('')+'</div>':''}
+          </div>
+        </div>
+        <div class="ap-body">${item.body}</div>
+        ${item.steps&&item.steps.length?'<ul class="ap-steps">'+item.steps.map((s,i)=>'<li><div class="ap-step-num">'+(i+1)+'</div><span>'+s+'</span></li>').join('')+'</ul>':''}
+      </div>`).join('');
+  } catch(e) {
+    out.innerHTML = '<div class="ins-card crit"><div class="ins-title">Could not generate action plan</div><div class="ins-body">'+e.message+'</div></div>';
+  }
+  btn.disabled=false; btn.textContent='🤖 Generate AI Action Plan';
+}
+
+// ══════════════════════════════════════════════════════
+//  REPORTS STATE & HELPERS
+// ══════════════════════════════════════════════════════
+let _reportType  = 'daily';
+let _reportScope = 'district';
+let _reportText  = '';
+
+function setReportType(t) {
+  _reportType = t;
+  ['daily','weekly','monthly'].forEach(x => {
+    const el = document.getElementById('rpt-'+x+'-btn');
+    if (el) el.classList.toggle('active', x===t);
+  });
+  updateReportConfigSummary();
+}
+function setReportScope(s) {
+  _reportScope = s;
+  ['dist','soc'].forEach(x => {
+    const el = document.getElementById('rpt-'+x+'-btn');
+    if (el) el.classList.toggle('active', (x==='dist'&&s==='district')||(x==='soc'&&s==='society'));
+  });
+  const row = document.getElementById('soc-selector-row');
+  if (row) row.style.display = s==='society' ? 'block' : 'none';
+  updateReportConfigSummary();
+  if (s==='society') populateReportSocieties();
+}
+function updateReportConfigSummary() {
+  const el = document.getElementById('rpt-config-summary');
+  if (!el) return;
+  const scope = _reportScope==='district' ? 'Mayiladuthurai District' :
+    (document.getElementById('report-soc-select')?.options[document.getElementById('report-soc-select').selectedIndex]?.text||'— select society');
+  el.textContent = _reportType.charAt(0).toUpperCase()+_reportType.slice(1)+' report · '+scope;
+}
+function populateReportSocieties() {
+  const sel = document.getElementById('report-soc-select');
+  if (!sel) return;
+  // Sort societies by cattle population from CATTLE_DATA
+  const cattleMap = {};
+  CATTLE_DATA.forEach(r => {
+    if (!cattleMap[r.village]) cattleMap[r.village] = 0;
+    cattleMap[r.village] += r.milk_animals;
+  });
+  const socs = [...new Set(_rows.map(r=>r.society))].sort((a,b) => {
+    const ca = cattleMap[a]||0, cb = cattleMap[b]||0;
+    return cb - ca;
+  });
+  sel.innerHTML = '<option value="">— Select a Society —</option>' +
+    socs.map(s => {
+      const animals = cattleMap[s] || 0;
+      return '<option value="'+s+'">'+s+(animals?' ('+animals.toLocaleString('en-IN')+' animals)':'')+'</option>';
+    }).join('');
+}
+function onReportSocChange() {
+  updateReportConfigSummary();
+  const sel = document.getElementById('report-soc-select');
+  const info = document.getElementById('report-soc-info');
+  if (!sel||!info) return;
+  const soc = sel.value;
+  if (!soc) { info.textContent=''; return; }
+  const rows = _filtered.filter(r=>r.society===soc);
+  const total = rows.reduce((a,r)=>a+r.total,0);
+  const missed = rows.filter(r=>r.total===0).length;
+  const cattle = CATTLE_DATA.filter(r=>r.village===soc);
+  const animals = cattle.reduce((a,r)=>a+r.milk_animals,0);
+  info.innerHTML = '<span style="margin-right:12px;">🥛 '+fmt(total)+' L collected</span>'
+    + '<span style="margin-right:12px;">⚠️ '+missed+' missed days</span>'
+    + (animals?'<span>🐄 '+animals.toLocaleString('en-IN')+' milk animals</span>':'');
+}
+
+// ══════════════════════════════════════════════════════
+//  GENERATE INTELLIGENT REPORT
+// ══════════════════════════════════════════════════════
+async function generateReport() {
+  if (!_filtered.length) { toast('No collection data loaded.', true); return; }
+  const btn = document.getElementById('rpt-gen-btn');
+  const previewCard = document.getElementById('rpt-preview-card');
+  const body = document.getElementById('rpt-preview-body');
+  const title = document.getElementById('rpt-preview-title');
+  btn.disabled=true; btn.textContent='⏳ Generating…';
+  previewCard.style.display='block';
+  body.innerHTML = '<div class="ai-thinking"><div class="ai-dot"></div><div class="ai-dot"></div><div class="ai-dot"></div><span>Generating intelligent report…</span></div>';
+
+  const dates    = [...new Set(_filtered.map(r=>r.date))].sort();
+  const socs     = [...new Set(_filtered.map(r=>r.society))];
+  const totalL   = _filtered.reduce((a,r)=>a+r.total,0);
+  const dailyAvg = totalL/Math.max(dates.length,1);
+  const missed   = _filtered.filter(r=>r.total===0);
+  const totalDays= dates.length;
+
+  const stats = socs.map(s => {
+    const rows  = _filtered.filter(r=>r.society===s);
+    const total = rows.reduce((a,r)=>a+r.total,0);
+    const active= rows.filter(r=>r.total>0).length;
+    const ms    = rows.filter(r=>r.total===0).length;
+    const avg   = active>0?total/active:0;
+    const rep   = Math.round(active/Math.max(totalDays,1)*100);
+    const half  = Math.floor(rows.length/2);
+    const f1    = rows.slice(0,half).reduce((a,r)=>a+r.total,0)/Math.max(half,1);
+    const f2    = rows.slice(half).reduce((a,r)=>a+r.total,0)/Math.max(rows.length-half,1);
+    const tPct  = f1>0?Math.round((f2-f1)/f1*100):0;
+    return {name:s,total,avg:Math.round(avg),ms,rep,tPct};
+  }).sort((a,b)=>b.total-a.total);
+
+  // Period-specific data slice
+  const isDaily  = _reportType==='daily';
+  const isWeekly = _reportType==='weekly';
+  const today    = dates[dates.length-1];
+  const periodDates = isDaily  ? [today] :
+                      isWeekly ? dates.slice(-7) : dates;
+  const periodData   = _filtered.filter(r=>periodDates.includes(r.date));
+  const periodTotal  = periodData.reduce((a,r)=>a+r.total,0);
+  const periodMissed = periodData.filter(r=>r.total===0).length;
+
+  let prompt = '';
+  let reportTitle = '';
+
+  if (_reportScope === 'district') {
+    reportTitle = (_reportType.charAt(0).toUpperCase()+_reportType.slice(1))+' Report — Mayiladuthurai District DCMPU';
+    if (title) title.textContent = '📄 '+reportTitle;
+    prompt = 'You are the District Manager of Mayiladuthurai DCMPU, Tamil Nadu. Generate a formal, detailed '+_reportType+' intelligence report for senior management and government stakeholders.\n\n'
+      + 'PERIOD: '+periodDates[0]+' to '+periodDates[periodDates.length-1]+' ('+periodDates.length+' day(s))\n'
+      + 'DISTRICT: Nagapattinam / Mayiladuthurai Division\n'
+      + 'TOTAL COLLECTION (PERIOD): '+periodTotal.toLocaleString('en-IN')+' L\n'
+      + 'TOTAL COLLECTION (FULL RANGE): '+Math.round(totalL).toLocaleString('en-IN')+' L over '+dates.length+' days\n'
+      + 'DAILY AVERAGE: '+Math.round(dailyAvg)+' L\n'
+      + 'ACTIVE SOCIETIES: '+socs.length+'\n'
+      + 'MISSED COLLECTION EVENTS (PERIOD): '+periodMissed+'\n\n'
+      + 'TOP 5 SOCIETIES:\n'+stats.slice(0,5).map(s=>s.name+': '+s.total.toLocaleString('en-IN')+' L, avg '+s.avg+' L/day, reporting '+s.rep+'%').join('\n')+'\n\n'
+      + 'BOTTOM 5 SOCIETIES:\n'+stats.slice(-5).map(s=>s.name+': '+s.total.toLocaleString('en-IN')+' L, reporting '+s.rep+'%, missed '+s.ms+' days').join('\n')+'\n\n'
+      + 'CATTLE CENSUS (20th Livestock Census): '+CATTLE_DATA.length+' villages surveyed, '+CATTLE_DATA.reduce((a,r)=>a+r.milk_animals,0).toLocaleString('en-IN')+' female milk animals, '+Math.round(CATTLE_DATA.reduce((a,r)=>a+r.milk_potential,0)/1000)+'K L/day potential\n\n'
+      + 'Generate a professional '+_reportType+' report in the following JSON format:\n'
+      + '{"title":"string","date":"string","period":"string","summary":"2-3 sentence executive summary","kpis":[{"label":"string","value":"string","status":"good|warn|bad"}],'
+      + '"sections":[{"heading":"string","content":"detailed paragraph","highlights":["bullet1","bullet2"]}],'
+      + '"recommendations":["rec1","rec2","rec3"],"risks":["risk1","risk2"]}\n'
+      + 'Include sections: Executive Summary, Collection Performance, Society-wise Analysis, Cattle Base Utilisation, Alerts & Concerns, Recommendations.\n'
+      + 'Use actual numbers throughout. Return ONLY the JSON object.';
+  } else {
+    const soc = document.getElementById('report-soc-select')?.value;
+    if (!soc) { toast('Please select a society.', true); btn.disabled=false; btn.textContent='✨ Generate Intelligent Report'; return; }
+    const socRows  = _filtered.filter(r=>r.society===soc);
+    const socTotal = socRows.reduce((a,r)=>a+r.total,0);
+    const socMissed= socRows.filter(r=>r.total===0).length;
+    const socAvg   = socTotal/Math.max(socRows.filter(r=>r.total>0).length,1);
+    const socRep   = Math.round(socRows.filter(r=>r.total>0).length/Math.max(totalDays,1)*100);
+    const cattle   = CATTLE_DATA.filter(r=>r.village===soc);
+    const animals  = cattle.reduce((a,r)=>a+r.milk_animals,0);
+    const milkPot  = cattle.reduce((a,r)=>a+r.milk_potential,0);
+    const distRank = stats.findIndex(s=>s.name===soc)+1;
+    const half     = Math.floor(socRows.length/2);
+    const f1       = socRows.slice(0,half).reduce((a,r)=>a+r.total,0)/Math.max(half,1);
+    const f2       = socRows.slice(half).reduce((a,r)=>a+r.total,0)/Math.max(socRows.length-half,1);
+    const tPct     = f1>0?Math.round((f2-f1)/f1*100):0;
+    const utilPct  = milkPot>0?Math.round(socAvg/milkPot*100):0;
+
+    reportTitle = (_reportType.charAt(0).toUpperCase()+_reportType.slice(1))+' Report — '+soc;
+    if (title) title.textContent = '📄 '+reportTitle;
+
+    prompt = 'You are a Dairy Extension Officer visiting '+soc+' society under Mayiladuthurai DCMPU. Generate a '+_reportType+' intelligence report for this society tailored for the society secretary and farmer members.\n\n'
+      + 'SOCIETY: '+soc+'\n'
+      + 'PERIOD: '+periodDates[0]+' to '+periodDates[periodDates.length-1]+'\n'
+      + 'TOTAL COLLECTION: '+socTotal.toLocaleString('en-IN')+' L\n'
+      + 'DAILY AVERAGE: '+Math.round(socAvg)+' L/day\n'
+      + 'MISSED DAYS: '+socMissed+' ('+Math.round(socMissed/Math.max(totalDays,1)*100)+'%)\n'
+      + 'REPORTING RATE: '+socRep+'%\n'
+      + 'TREND: '+(tPct>=0?'+':'')+tPct+'% vs previous period\n'
+      + 'DISTRICT RANK: #'+distRank+' of '+socs.length+' societies\n\n'
+      + 'CATTLE DATA (20th Livestock Census):\n'
+      + '- Female milk animals: '+animals.toLocaleString('en-IN')+' (cattle+buffalo)\n'
+      + '- Estimated milk potential: '+milkPot.toLocaleString('en-IN')+' L/day\n'
+      + '- Current utilisation: '+utilPct+'% of potential\n'
+      + '- Viability: '+(animals>=500?'High':animals>=200?'Medium':animals>=100?'Low':'Below threshold')+'\n\n'
+      + 'Generate a practical '+_reportType+' society report in JSON:\n'
+      + '{"title":"string","date":"string","society":"string","summary":"2-3 sentences for farmers","kpis":[{"label":"string","value":"string","status":"good|warn|bad"}],'
+      + '"sections":[{"heading":"string","content":"paragraph in simple language","highlights":["point1","point2"]}],'
+      + '"recommendations":["practical rec1","practical rec2","practical rec3"],"risks":["risk1"]}\n'
+      + 'Include: Performance Summary, Cattle Utilisation Gap, Missed Collection Analysis, Quality & Practices, Action Items for Next Period.\n'
+      + 'Write in clear language that a society secretary can understand and act on. Return ONLY the JSON object.';
+  }
+
+  try {
+    const res  = await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:2000,messages:[{role:'user',content:prompt}]})});
+    const d    = await res.json();
+    const raw  = d.content?.map(c=>c.text||'').join('').replace(/```json|```/g,'').trim();
+    const rpt  = JSON.parse(raw);
+    _reportText = formatReportText(rpt, _reportScope);
+
+    // Render rich HTML preview
+    const statusColor = s => s==='good'?'#137333':s==='bad'?'#c5221f':'#ea8600';
+    const statusIco   = s => s==='good'?'✅':s==='bad'?'❌':'⚠️';
+    let html = '<div style="margin-bottom:16px;">'
+      + '<div class="rp-h1">'+rpt.title+'</div>'
+      + '<div style="font-size:12px;color:var(--txt3);margin-top:4px;">'+rpt.date+' · '+rpt.period+'</div>'
+      + '</div>'
+      + '<div style="background:#e8f0fe;border-radius:8px;padding:14px 16px;margin-bottom:14px;font-size:13.5px;color:#1a56a6;line-height:1.7;">'+rpt.summary+'</div>';
+
+    if (rpt.kpis && rpt.kpis.length) {
+      html += '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:10px;margin-bottom:16px;">'
+        + rpt.kpis.map(k=>'<div style="background:var(--surface);border:1px solid var(--brd);border-radius:6px;padding:10px 12px;border-top:3px solid '+statusColor(k.status)+';">'
+          +'<div style="font-size:11px;color:var(--txt3);text-transform:uppercase;letter-spacing:.05em;margin-bottom:4px;">'+k.label+'</div>'
+          +'<div style="font-size:18px;font-weight:300;color:'+statusColor(k.status)+';">'+k.value+'</div>'
+          +'</div>').join('')+'</div>';
+    }
+
+    if (rpt.sections) {
+      rpt.sections.forEach(s => {
+        html += '<div class="rp-section"><div class="rp-h2">'+s.heading+'</div>'
+          + '<div style="font-size:13px;color:var(--txt2);line-height:1.7;margin-bottom:10px;">'+s.content+'</div>';
+        if (s.highlights && s.highlights.length) {
+          html += s.highlights.map(h=>'<div style="display:flex;gap:8px;padding:4px 0;font-size:12.5px;color:var(--txt2);"><span style="color:var(--g-blue);flex-shrink:0;">→</span><span>'+h+'</span></div>').join('');
+        }
+        html += '</div>';
+      });
+    }
+
+    if (rpt.recommendations && rpt.recommendations.length) {
+      html += '<div class="rp-section" style="background:#e6f4ea;border-color:rgba(52,168,83,.3);">'
+        + '<div class="rp-h2" style="color:#137333;">✅ Recommendations</div>'
+        + rpt.recommendations.map((r,i)=>'<div style="display:flex;gap:8px;padding:5px 0;font-size:13px;"><div style="width:22px;height:22px;border-radius:50%;background:#34a853;color:#fff;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:600;flex-shrink:0;">'+(i+1)+'</div><span>'+r+'</span></div>').join('')
+        + '</div>';
+    }
+
+    if (rpt.risks && rpt.risks.length) {
+      html += '<div class="rp-section" style="background:#fce8e6;border-color:rgba(217,48,37,.2);">'
+        + '<div class="rp-h2" style="color:#c5221f;">⚠️ Risk Factors</div>'
+        + rpt.risks.map(r=>'<div style="font-size:13px;color:#c5221f;padding:3px 0;">• '+r+'</div>').join('')
+        + '</div>';
+    }
+
+    body.innerHTML = html;
+  } catch(e) {
+    body.innerHTML = '<div class="ins-card crit"><div class="ins-title">Report generation failed</div><div class="ins-body">'+e.message+'</div></div>';
+  }
+  btn.disabled=false; btn.textContent='✨ Generate Intelligent Report';
+}
+
+function formatReportText(rpt, scope) {
+  let txt = rpt.title+'\n'+'='.repeat(rpt.title.length)+'\n'+rpt.date+' | '+rpt.period+'\n\n';
+  txt += 'EXECUTIVE SUMMARY\n'+rpt.summary+'\n\n';
+  if (rpt.kpis) {
+    txt += 'KEY PERFORMANCE INDICATORS\n';
+    rpt.kpis.forEach(k => txt += '  '+k.label+': '+k.value+'\n');
+    txt += '\n';
+  }
+  if (rpt.sections) rpt.sections.forEach(s => {
+    txt += s.heading.toUpperCase()+'\n'+s.content+'\n';
+    if (s.highlights) s.highlights.forEach(h => txt += '  → '+h+'\n');
+    txt += '\n';
+  });
+  if (rpt.recommendations) {
+    txt += 'RECOMMENDATIONS\n';
+    rpt.recommendations.forEach((r,i) => txt += (i+1)+'. '+r+'\n');
+    txt += '\n';
+  }
+  if (rpt.risks) {
+    txt += 'RISK FACTORS\n';
+    rpt.risks.forEach(r => txt += '• '+r+'\n');
+  }
+  return txt;
+}
+
+function copyReport() {
+  if (!_reportText) return;
+  navigator.clipboard.writeText(_reportText).then(()=>toast('Report copied to clipboard ✓')).catch(()=>toast('Copy failed',true));
+}
+
+function downloadReport() {
+  if (!_reportText) return;
+  const blob = new Blob([_reportText], {type:'text/plain'});
+  const url  = URL.createObjectURL(blob);
+  const a    = document.createElement('a');
+  const fname= (_reportType+'_report_'+new Date().toISOString().slice(0,10)+'.txt').toLowerCase().replace(/ /g,'_');
+  a.href=url; a.download=fname; a.click();
+  URL.revokeObjectURL(url);
+  toast('Report downloaded ✓');
+}
+
+// ══════════════════════════════════════════════════════
+//  DAILY MANAGEMENT BOARD (Lean / Visual Management)
+// ══════════════════════════════════════════════════════
+let _paretoChart = null;
+
+function renderDailyMgmt() {
+  if (!_filtered.length) {
+    ['dm-todo','dm-warn','dm-ok','dm-star','dm-summary','dm-pdca','dm-constraints'].forEach(id => {
+      const el = document.getElementById(id);
+      if (el) el.innerHTML = '<div style="padding:12px;color:var(--txt3);font-size:12.5px;">Connect your sheet to see the board.</div>';
+    });
+    return;
+  }
+
+  // Get the most recent date in filtered data
+  const dates   = [...new Set(_filtered.map(r => r.date))].sort();
+  const lastDate = dates[dates.length - 1];
+  const socs    = [...new Set(_filtered.map(r => r.society))];
+  const totalDays = dates.length;
+
+  // Compute per-society avg (active days only)
+  const socStats = socs.map(s => {
+    const rows   = _filtered.filter(r => r.society === s);
+    const active = rows.filter(r => r.total > 0);
+    const total  = rows.reduce((a,r) => a+r.total, 0);
+    const avg    = active.length > 0 ? total / active.length : 0;
+    const lastRow = rows.find(r => r.date === lastDate);
+    const lastVal = lastRow ? lastRow.total : null;
+    const missed  = rows.filter(r => r.total === 0).length;
+    const rep     = Math.round(active.length / Math.max(totalDays,1) * 100);
+    // Recent trend (last 7 vs previous 7)
+    const recent  = rows.filter(r => dates.slice(-7).includes(r.date));
+    const prev    = rows.filter(r => dates.slice(-14,-7).includes(r.date));
+    const rAvg    = recent.length ? recent.reduce((a,r)=>a+r.total,0)/recent.length : 0;
+    const pAvg    = prev.length   ? prev.reduce((a,r)=>a+r.total,0)/prev.length : 0;
+    const tPct    = pAvg > 0 ? Math.round((rAvg-pAvg)/pAvg*100) : 0;
+    return { name:s, avg, lastVal, missed, rep, tPct, total, active:active.length };
+  });
+
+  // Classify into 4 kanban columns
+  const distAvg = socStats.reduce((a,s) => a+s.avg, 0) / Math.max(socStats.length, 1);
+  const todo    = socStats.filter(s => s.lastVal === 0 || s.lastVal === null);
+  const warn    = socStats.filter(s => s.lastVal > 0 && s.lastVal < s.avg * 0.8);
+  const ok      = socStats.filter(s => s.lastVal >= s.avg * 0.8 && s.lastVal < s.avg * 1.15);
+  const star    = socStats.filter(s => s.lastVal >= s.avg * 1.15);
+
+  // Update counts
+  ['todo','warn','ok','star'].forEach((col, i) => {
+    const el = document.getElementById('dm-'+col+'-count');
+    if (el) el.textContent = [todo,warn,ok,star][i].length;
+  });
+
+  const taskCard = (s, color) =>
+    '<div class="dm-task">'
+    + '<div class="dm-task-dot" style="background:'+color+';"></div>'
+    + '<div><div class="dm-society">'+s.name+'</div>'
+    + '<div class="dm-detail">Last: '+(s.lastVal===null?'No data':s.lastVal===0?'Missed':fmt(s.lastVal)+' L')
+    + ' · Avg: '+fmt(s.avg)+' L · Rep: '+s.rep+'%</div></div>'
+    + '</div>';
+
+  document.getElementById('dm-todo').innerHTML  = todo.map(s => taskCard(s,'#ea4335')).join('') || '<div style="padding:12px;color:var(--txt3);font-size:12px;">None — great!</div>';
+  document.getElementById('dm-warn').innerHTML  = warn.map(s => taskCard(s,'#fbbc04')).join('') || '<div style="padding:12px;color:var(--txt3);font-size:12px;">None</div>';
+  document.getElementById('dm-ok').innerHTML    = ok.map(s   => taskCard(s,'#34a853')).join('') || '<div style="padding:12px;color:var(--txt3);font-size:12px;">None</div>';
+  document.getElementById('dm-star').innerHTML  = star.map(s => taskCard(s,'#4285f4')).join('') || '<div style="padding:12px;color:var(--txt3);font-size:12px;">None</div>';
+
+  // Summary KPIs
+  const totalL  = socStats.reduce((a,s) => a + s.total, 0);
+  const missed  = socStats.filter(s => s.lastVal === 0 || s.lastVal === null).length;
+  const onTrack = ok.length + star.length;
+  const trendUp = socStats.filter(s => s.tPct > 0).length;
+  document.getElementById('dm-summary').innerHTML = `
+    <div class="hcard hc-b"><div class="hc-lbl">Total Societies</div><div class="hc-val kv-b">${socStats.length}</div><div class="hc-sub">${onTrack} on/above target today</div></div>
+    <div class="hcard hc-g"><div class="hc-lbl">Collection (Period)</div><div class="hc-val kv-g">${fmt(totalL)} L</div><div class="hc-sub">Avg: ${fmt(distAvg)} L/society/day</div></div>
+    <div class="hcard hc-r"><div class="hc-lbl">Missed Today</div><div class="hc-val kv-r">${missed}</div><div class="hc-sub">Needs immediate follow-up</div></div>
+    <div class="hcard hc-a"><div class="hc-lbl">Trending Up</div><div class="hc-val kv-a">${trendUp}</div><div class="hc-sub">vs previous 7 days</div></div>`;
+
+  // PDCA interventions
+  const pdcaItems = [
+    { phase:'Plan',  ico:'📝', color:'#4285f4', text: todo.length > 0
+        ? 'Schedule field visits for '+todo.slice(0,3).map(s=>s.name).join(', ')+(todo.length>3?' and '+(todo.length-3)+' more':'')+'.'
+        : 'All societies collected today. Plan incentive distribution for top performers.' },
+    { phase:'Do',    ico:'🚗', color:'#34a853', text: warn.length > 0
+        ? 'Extension officers to visit '+warn.slice(0,2).map(s=>s.name).join(' and ')+'. Investigate low collection cause (animal health, fodder, payment issue).'
+        : 'Maintain current collection schedule. Confirm evening routes are running.' },
+    { phase:'Check', ico:'📊', color:'#fbbc04', text: 'Review morning vs evening split. '+(trendUp>0?trendUp+' societies are improving — document what they are doing right.':'No upward trend societies yet — investigate scheduling issues.') },
+    { phase:'Act',   ico:'⚡', color:'#ea4335', text: star.length > 0
+        ? 'Recognise '+star.slice(0,2).map(s=>s.name).join(', ')+' for exceeding target. Share their practices with underperforming societies (Kaizen transfer).'
+        : 'Escalate missed societies to district supervisor. Activate backup collection route if available.' }
+  ];
+  document.getElementById('dm-pdca').innerHTML = pdcaItems.map(p =>
+    '<div style="display:flex;gap:10px;padding:9px 0;border-bottom:1px solid rgba(0,0,0,.05);">'
+    + '<div style="width:52px;flex-shrink:0;padding:3px 0;text-align:center;"><div style="font-size:10px;font-weight:700;color:'+p.color+';letter-spacing:.06em;">'+p.phase+'</div><div style="font-size:18px;">'+p.ico+'</div></div>'
+    + '<div style="font-size:12.5px;color:var(--txt2);line-height:1.6;">'+p.text+'</div>'
+    + '</div>').join('');
+
+  // Theory of Constraints — bottlenecks
+  const bottlenecks = [...socStats].sort((a,b) => (a.rep - b.rep) || (a.total - b.total)).slice(0, 6);
+  const maxPotential = socStats.reduce((a,s) => a + s.avg * totalDays, 0);
+  document.getElementById('dm-constraints').innerHTML = bottlenecks.map(s => {
+    const lost = Math.round((s.avg * totalDays) - s.total);
+    const pct  = Math.round(s.total / Math.max(s.avg * totalDays, 1) * 100);
+    return '<div class="dm-metric-row">'
+      + '<div><div style="font-size:12.5px;font-weight:500;color:var(--txt);">'+s.name+'</div>'
+      + '<div style="font-size:11.5px;color:var(--txt3);">Rep: '+s.rep+'% · Lost est. '+fmt(lost)+' L</div></div>'
+      + '<div><div class="bsc-m-bar"><div class="bsc-m-fill" style="width:'+pct+'%;background:'+(pct<50?'#ea4335':pct<80?'#fbbc04':'#34a853')+';"></div></div></div>'
+      + '</div>';
+  }).join('');
+}
+
+// ══════════════════════════════════════════════════════
+//  PARETO ANALYSIS (80/20 Rule)
+// ══════════════════════════════════════════════════════
+function renderPareto() {
+  if (!_filtered.length) {
+    document.getElementById('pareto-insight').innerHTML = 'Connect your sheet to see Pareto analysis.';
+    return;
+  }
+
+  const socs     = [...new Set(_filtered.map(r => r.society))];
+  const totalDays= [...new Set(_filtered.map(r => r.date))].length;
+  const stats = socs.map(s => {
+    const rows  = _filtered.filter(r => r.society === s);
+    const total = rows.reduce((a,r) => a+r.total, 0);
+    const active= rows.filter(r=>r.total>0).length;
+    const avg   = active>0?total/active:0;
+    const rep   = Math.round(active/Math.max(totalDays,1)*100);
+    return { name:s, total, avg, rep };
+  }).sort((a,b) => b.total - a.total);
+
+  const grandTotal = stats.reduce((a,s) => a+s.total, 0);
+  let cumPct = 0, p80idx = -1, p20count = Math.ceil(stats.length * 0.2);
+  const withCum = stats.map((s,i) => {
+    cumPct += s.total;
+    const cum = Math.round(cumPct/grandTotal*100);
+    if (p80idx < 0 && cum >= 80) p80idx = i;
+    return { ...s, cum, share: Math.round(s.total/grandTotal*100) };
+  });
+
+  // Pareto insight text
+  const top20 = withCum.slice(0, p20count);
+  const top20vol = top20.reduce((a,s)=>a+s.total,0);
+  const top20pct = Math.round(top20vol/grandTotal*100);
+  document.getElementById('pareto-insight').innerHTML =
+    '<strong>Pareto finding:</strong> The top '+p20count+' societies ('+Math.round(p20count/stats.length*100)+'% of '+stats.length+') contribute '
+    + '<strong>'+top20pct+'%</strong> of total procurement ('
+    + fmt(top20vol)+' of '+fmt(grandTotal)+' L). '
+    + 'Protecting and growing these <strong>'+top20.slice(0,3).map(s=>s.name).join(', ')+(top20.length>3?' and '+(top20.length-3)+' others':'')+'</strong> should be the district\'s primary focus. '
+    + 'The remaining '+stats.slice(p20count).length+' societies contribute only '+(100-top20pct)+'% — intervention here has lower ROI but prevents further decline.';
+
+  // Chart
+  if (_paretoChart) { _paretoChart.destroy(); _paretoChart=null; }
+  const ctx = document.getElementById('pareto-chart')?.getContext('2d');
+  if (ctx) {
+    _paretoChart = new Chart(ctx, {
+      type: 'bar',
+      data: {
+        labels: withCum.map(s => s.name.length>12?s.name.slice(0,11)+'…':s.name),
+        datasets: [
+          {
+            type: 'bar',
+            label: 'Volume (L)',
+            data: withCum.map(s => s.total),
+            backgroundColor: withCum.map((s,i) => i < p20count ? '#4285f4cc' : i <= p80idx ? '#34a85399' : '#ea435366'),
+            borderRadius: 4,
+            yAxisID: 'y'
+          },
+          {
+            type: 'line',
+            label: 'Cumulative %',
+            data: withCum.map(s => s.cum),
+            borderColor: '#ea4335',
+            backgroundColor: 'transparent',
+            borderWidth: 2,
+            pointRadius: 0,
+            tension: .4,
+            yAxisID: 'y2'
+          }
+        ]
+      },
+      options: {
+        responsive: true, maintainAspectRatio: false,
+        plugins: {
+          legend: { position:'bottom', labels: { font:{family:'Google Sans',size:11}, boxWidth:12 } },
+          annotation: {},
+          tooltip: { callbacks: { label: c => c.dataset.label+': '+(c.datasetIndex===0?fmt(c.raw)+' L':c.raw+'%') } }
+        },
+        scales: {
+          x: { grid:{display:false}, ticks:{font:{family:'Roboto Mono',size:9}, maxRotation:45} },
+          y:  { position:'left',  ticks:{callback:v=>fmt(v)+'L',font:{family:'Roboto Mono',size:9}}, grid:{color:'rgba(0,0,0,.05)'} },
+          y2: { position:'right', min:0, max:100, ticks:{callback:v=>v+'%',font:{family:'Roboto Mono',size:9}}, grid:{display:false} }
+        }
+      }
+    });
+  }
+
+  // Table
+  document.getElementById('pareto-table').innerHTML = withCum.map((s,i) =>
+    '<div class="mini-bar-row" style="padding:7px 8px;">'
+    + '<div style="width:24px;text-align:center;font-size:11px;color:var(--txt3);flex-shrink:0;">'+(i+1)+'</div>'
+    + '<div class="mini-bar-lbl" style="width:120px;">'+s.name+'</div>'
+    + '<div class="mini-bar-track"><div class="mini-bar-fill" style="width:'+s.share+'%;background:'+(i<p20count?'#4285f4':i<=p80idx?'#34a853':'#9aa0a6')+';"></div></div>'
+    + '<div class="mini-bar-val">'+fmt(s.total)+'L</div>'
+    + '<div style="width:42px;text-align:right;font-size:11px;color:var(--txt3);flex-shrink:0;">'+s.cum+'%</div>'
+    + '</div>'
+  ).join('');
+
+  // Top 20% focus zone
+  document.getElementById('pareto-top20').innerHTML = withCum.slice(0,p20count).map(s =>
+    '<div class="dm-metric-row"><div><div style="font-size:13px;font-weight:500;color:var(--txt);">'+s.name+'</div>'
+    + '<div style="font-size:11.5px;color:var(--txt3);">'+fmt(s.total)+' L · '+s.share+'% of district · Rep '+s.rep+'%</div></div>'
+    + '<div style="font-size:12px;font-weight:600;color:#4285f4;">'+fmt(s.avg)+' L/day</div></div>'
+  ).join('');
+
+  // Bottom 50% leverage zone
+  document.getElementById('pareto-bottom50').innerHTML = withCum.slice(-Math.ceil(stats.length*0.5)).slice(0,8).map(s =>
+    '<div class="dm-metric-row"><div><div style="font-size:13px;font-weight:500;color:var(--txt);">'+s.name+'</div>'
+    + '<div style="font-size:11.5px;color:var(--txt3);">'+fmt(s.total)+' L · Rep '+s.rep+'%</div></div>'
+    + '<span class="priority-chip '+(s.rep<30?'pc-high':s.rep<60?'pc-medium':'pc-low')+'">'+(s.rep<30?'Critical':s.rep<60?'At Risk':'Low')+'</span>'
+    + '</div>'
+  ).join('');
+}
+
+// ══════════════════════════════════════════════════════
+//  BALANCED SCORECARD + OKR
+// ══════════════════════════════════════════════════════
+function renderScorecard() {
+  if (!_filtered.length) {
+    document.getElementById('bsc-quadrants').innerHTML = '<div style="grid-column:1/-1;padding:24px;text-align:center;color:var(--txt3);">Connect your sheet to see the Balanced Scorecard.</div>';
+    return;
+  }
+
+  const dates     = [...new Set(_filtered.map(r=>r.date))].sort();
+  const socs      = [...new Set(_filtered.map(r=>r.society))];
+  const totalDays = dates.length;
+  const totalL    = _filtered.reduce((a,r)=>a+r.total,0);
+  const dailyAvg  = totalL/Math.max(totalDays,1);
+  const missed    = _filtered.filter(r=>r.total===0).length;
+  const totalEvents= _filtered.length;
+  const repRate   = Math.round((totalEvents-missed)/totalEvents*100);
+
+  // Half-period trend
+  const half   = Math.floor(dates.length/2);
+  const prevDates = dates.slice(0,half), currDates = dates.slice(half);
+  const prevL  = _filtered.filter(r=>prevDates.includes(r.date)).reduce((a,r)=>a+r.total,0)/Math.max(half,1);
+  const currL  = _filtered.filter(r=>currDates.includes(r.date)).reduce((a,r)=>a+r.total,0)/Math.max(dates.length-half,1);
+  const growthPct = prevL>0?Math.round((currL-prevL)/prevL*100):0;
+
+  // Society-level stats
+  const socStats = socs.map(s => {
+    const rows   = _filtered.filter(r=>r.society===s);
+    const active = rows.filter(r=>r.total>0).length;
+    const total  = rows.reduce((a,r)=>a+r.total,0);
+    return { name:s, total, rep:Math.round(active/Math.max(totalDays,1)*100), avg:active>0?total/active:0 };
+  });
+  const highRep  = socStats.filter(s=>s.rep>=80).length;
+  const critSocs = socStats.filter(s=>s.rep<40).length;
+  const milkPot  = CATTLE_DATA.reduce((a,r)=>a+r.milk_potential,0);
+  const utilPct  = milkPot>0?Math.round(dailyAvg/milkPot*100):0;
+
+  const metric = (lbl, val, pct, color, fmt_val) =>
+    '<div class="bsc-metric"><div><div class="bsc-m-lbl">'+lbl+'</div>'
+    + '<div class="bsc-m-bar"><div class="bsc-m-fill" style="width:'+Math.min(pct,100)+'%;background:'+color+';"></div></div></div>'
+    + '<div class="bsc-m-val" style="color:'+color+';">'+val+'</div></div>';
+
+  document.getElementById('bsc-quadrants').innerHTML = `
+    <div class="bsc-quadrant">
+      <div class="bsc-q-title bsc-q-fin">💰 Financial Perspective</div>
+      ${metric('Total Procurement', fmt(totalL)+' L', Math.min(totalL/5000,100), '#34a853')}
+      ${metric('Daily Average', fmt(dailyAvg)+' L/day', Math.min(dailyAvg/200,100), '#34a853')}
+      ${metric('Growth vs Prev Period', (growthPct>=0?'+':'')+growthPct+'%', Math.min(50+growthPct,100), growthPct>=0?'#34a853':'#ea4335')}
+      ${metric('Cattle Base Utilisation', utilPct+'%', utilPct, utilPct>=60?'#34a853':utilPct>=30?'#fbbc04':'#ea4335')}
+    </div>
+    <div class="bsc-quadrant">
+      <div class="bsc-q-title bsc-q-farmer">🧑‍🌾 Farmer Perspective</div>
+      ${metric('Active Societies', socs.length+' of '+socs.length, 100, '#4285f4')}
+      ${metric('Reporting Rate', repRate+'%', repRate, repRate>=80?'#34a853':repRate>=60?'#fbbc04':'#ea4335')}
+      ${metric('High-Reporting (≥80%)', highRep+' societies', Math.round(highRep/socs.length*100), '#4285f4')}
+      ${metric('Critical Societies (<40%)', critSocs+' societies', 100-Math.round(critSocs/socs.length*100), critSocs===0?'#34a853':critSocs<3?'#fbbc04':'#ea4335')}
+    </div>
+    <div class="bsc-quadrant">
+      <div class="bsc-q-title bsc-q-process">⚙️ Internal Process</div>
+      ${metric('Collection Consistency', (100-Math.round(missed/totalEvents*100))+'%', 100-Math.round(missed/totalEvents*100), '#fbbc04')}
+      ${metric('Missed Events', missed+' days', Math.max(0,100-Math.round(missed/totalEvents*50)), missed===0?'#34a853':missed<10?'#fbbc04':'#ea4335')}
+      ${metric('Villages Covered', CATTLE_DATA.filter(r=>r.viability==='High').length+' high-viability', 60, '#fbbc04')}
+      ${metric('PDCA Cycle Adherence', 'Manual Review', 50, '#fbbc04')}
+    </div>
+    <div class="bsc-quadrant">
+      <div class="bsc-q-title bsc-q-growth">🌱 Learning &amp; Growth</div>
+      ${metric('New Societies Potential', CATTLE_DATA.filter(r=>r.viability==='High').length+' villages ready', 70, '#ea4335')}
+      ${metric('Cattle Utilisation Gap', (100-utilPct)+'% untapped', 100-utilPct, '#ea4335')}
+      ${metric('Trend Direction', (growthPct>=0?'Positive':'Needs Attention'), growthPct>=0?75:30, growthPct>=0?'#34a853':'#ea4335')}
+      ${metric('AI Insights Active', 'Available', 80, '#4285f4')}
+    </div>`;
+
+  // OKRs
+  const targetDaily  = Math.max(dailyAvg * 1.15, 200);
+  const targetRep    = Math.min(repRate + 10, 95);
+  const targetHigh   = Math.min(highRep + Math.ceil(socs.length*0.1), socs.length);
+
+  const okrData = [
+    {
+      objective: '🎯 Increase total district milk procurement by 15% over baseline',
+      krs: [
+        { label: 'Daily avg from '+fmt(dailyAvg)+' → '+fmt(targetDaily)+' L/day', pct: Math.min(Math.round(dailyAvg/targetDaily*100),100) },
+        { label: 'Zero missed-collection societies in any 7-day window', pct: Math.max(0,100-Math.round(missed/totalEvents*200)) },
+        { label: 'Achieve '+Math.round(targetRep)+'% district reporting rate (current: '+repRate+'%)', pct: Math.round(repRate/targetRep*100) }
+      ]
+    },
+    {
+      objective: '🐄 Maximise cattle base utilisation across Mayiladuthurai division',
+      krs: [
+        { label: 'Open societies in '+Math.min(5,CATTLE_DATA.filter(r=>r.viability==='High').length)+' new high-viability villages', pct: 10 },
+        { label: 'Raise utilisation from '+utilPct+'% → '+(utilPct+15)+'% of cattle potential', pct: utilPct },
+        { label: 'Cover all '+CATTLE_DATA.filter(r=>r.viability==='Medium').length+' medium-viability villages with extension visits', pct: 20 }
+      ]
+    },
+    {
+      objective: '📈 Strengthen society performance through daily management',
+      krs: [
+        { label: 'Bring '+critSocs+' critical societies to ≥60% reporting rate', pct: critSocs===0?100:30 },
+        { label: 'Increase high-performing societies from '+highRep+' → '+targetHigh, pct: Math.round(highRep/targetHigh*100) },
+        { label: 'Run PDCA review every working day for 30 consecutive days', pct: 15 }
+      ]
+    }
+  ];
+
+  document.getElementById('bsc-okrs').innerHTML = okrData.map(o =>
+    '<div class="okr-card">'
+    + '<div class="okr-objective">'+o.objective+'</div>'
+    + o.krs.map(kr =>
+        '<div class="okr-kr">'
+        + '<div style="flex:1;font-size:12.5px;color:var(--txt2);">'+kr.label+'</div>'
+        + '<div class="okr-kr-bar"><div class="okr-kr-fill" style="width:'+kr.pct+'%;background:'+(kr.pct>=70?'#34a853':kr.pct>=40?'#fbbc04':'#ea4335')+';"></div></div>'
+        + '<div class="okr-pct">'+kr.pct+'%</div>'
+        + '</div>').join('')
+    + '</div>'
+  ).join('');
 }
 </script>
 </body>
