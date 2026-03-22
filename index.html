@@ -783,9 +783,9 @@ async function gsFetch(rawUrl) {
     if (r.ok) { addLog('Fetched via direct CSV ✓','ok'); return r; }
   } catch(e){}
 
-  // Strategy 3: thingproxy
+  // Strategy 3: corsproxy.io
   try {
-    const r = await fetch('https://thingproxy.freeboard.io/fetch/'+csvUrl,{cache:'no-store'});
+    const r = await fetch('https://corsproxy.io/?'+encodeURIComponent(csvUrl),{cache:'no-store'});
     if (r.ok) { addLog('Fetched via proxy ✓','ok'); return r; }
   } catch(e){}
 
