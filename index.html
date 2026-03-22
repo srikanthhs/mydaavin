@@ -5142,22 +5142,28 @@ function renderTrackerAll() {
   const toppers = socStats.filter(s => s.ach >= 100).length;
   const laggards = socStats.filter(s => s.rep < 60).length;
   const grandAvg = totalL / Math.max(totalDays, 1);
+  const bestSoc = [...socStats].sort((a, b) => b.total - a.total)[0];
+  const strong60 = socStats.filter(s => s.rep >= 80).length;
+  const mid60    = socStats.filter(s => s.rep >= 60 && s.rep < 80).length;
+  const weak60   = socStats.filter(s => s.rep < 60).length;
+  const avgPerSoc = fmt(totalL / Math.max(socStats.length, 1));
+
   if (kpiEl) kpiEl.innerHTML = `
     <div class="kcard kc-b" style="cursor:pointer;" onclick="document.getElementById('ta-filter').value='';renderTrackerAll();"
-      onmouseenter="showTip(this,'${socStats.length} societies active in selected period\\nDistrict total: ${fmt(totalL)} L\\nDaily avg: ${fmt(grandAvg)} L/day')" onmouseleave="hideTip()">
+      onmouseenter="showTip(this,'${socStats.length} societies active\\nTotal: ${fmt(totalL)} L\\nDaily avg: ${fmt(grandAvg)} L/day')" onmouseleave="hideTip()">
       <div class="kc-lbl">Total Societies</div><div class="kc-val kv-b">${socStats.length}</div><div class="kc-sub">active in period</div></div>
     <div class="kcard kc-g" style="cursor:pointer;"
-      onmouseenter="showTip(this,'District total in period\\nAvg per society: ${fmt(totalL/Math.max(socStats.length,1))} L\\nBest society: ${socStats.sort((a,b)=>b.total-a.total)[0]?.name||\"—\"}')" onmouseleave="hideTip()">
+      onmouseenter="showTip(this,'District total in period\\nAvg per society: ${avgPerSoc} L\\nBest society: ${bestSoc ? bestSoc.name : '-'}')" onmouseleave="hideTip()">
       <div class="kc-lbl">District Total</div><div class="kc-val kv-g">${fmt(totalL)} L</div><div class="kc-sub">selected period · ${fmt(grandAvg)} L/day</div></div>
     <div class="kcard kc-a" style="cursor:pointer;"
-      onmouseenter="showTip(this,'${avgRep}% avg reporting rate\\n${socStats.filter(s=>s.rep>=80).length} societies ≥80% (strong)\\n${socStats.filter(s=>s.rep>=60&&s.rep<80).length} societies 60–80% (moderate)\\n${socStats.filter(s=>s.rep<60).length} societies <60% (weak)')" onmouseleave="hideTip()">
+      onmouseenter="showTip(this,'${avgRep}% avg reporting rate\\n${strong60} societies &gt;=80% (strong)\\n${mid60} societies 60-80% (moderate)\\n${weak60} societies &lt;60% (weak)')" onmouseleave="hideTip()">
       <div class="kc-lbl">Avg Reporting Rate</div><div class="kc-val kv-a">${avgRep}%</div>
       <div style="height:4px;background:var(--s2);border-radius:100px;overflow:hidden;margin-top:6px;"><div style="height:100%;background:${avgRep>=80?'#34a853':avgRep>=60?'#fbbc04':'#ea4335'};width:${avgRep}%;border-radius:100px;"></div></div></div>
     <div class="kcard kc-g" style="cursor:pointer;" onclick="document.getElementById('ta-filter').value='topper';renderTrackerAll();"
-      onmouseenter="showTip(this,'${toppers} societies achieved ≥100% of target\\nClick to filter view')" onmouseleave="hideTip()">
-      <div class="kc-lbl">On/Above Target</div><div class="kc-val kv-g">${toppers}</div><div class="kc-sub">≥100% achievement · click to filter</div></div>
+      onmouseenter="showTip(this,'${toppers} societies at 100%+ of target\\nClick to filter')" onmouseleave="hideTip()">
+      <div class="kc-lbl">On/Above Target</div><div class="kc-val kv-g">${toppers}</div><div class="kc-sub">>=100% achievement · click to filter</div></div>
     <div class="kcard kc-r" style="cursor:pointer;" onclick="document.getElementById('ta-filter').value='laggard';renderTrackerAll();"
-      onmouseenter="showTip(this,'${laggards} societies with <60% reporting rate\\nThese need immediate field intervention\\nClick to filter view')" onmouseleave="hideTip()">
+      onmouseenter="showTip(this,'${laggards} societies with &lt;60% reporting\\nNeed immediate field intervention\\nClick to filter')" onmouseleave="hideTip()">
       <div class="kc-lbl">Laggards</div><div class="kc-val kv-r">${laggards}</div><div class="kc-sub">&lt;60% reporting · click to filter</div></div>`;
 
   const byTotal = [...socStats].sort((a, b) => b.total - a.total);
@@ -5538,13 +5544,16 @@ function renderDailyMgmt() {
   const prevDate = dates.length > 1 ? dates[dates.length - 2] : '';
   const prevTotal = prevDate ? data.filter(r => r.date === prevDate).reduce((a,r)=>a+r.total,0) : 0;
   const vsPrev = prevTotal > 0 ? Math.round((todayTotal - prevTotal) / prevTotal * 100) : 0;
+  const vsAvgArr  = vsAvg  >= 0 ? 'up' : 'dn';
+  const vsPrevArr = vsPrev >= 0 ? 'up' : 'dn';
+  const todayTip  = `Today total: ${fmt(todayTotal)} L\\nvs period avg: ${vsAvg>=0?'+':''}${vsAvg}%\\nvs previous day: ${vsPrev>=0?'+':''}${vsPrev}%`;
 
   if (dmSummary) dmSummary.innerHTML = `
     <div class="kcard kc-b" onmouseenter="showTip(this,'Showing data for: ${fmtDate(latestDate)}\\n${todayRows.length} of ${socs.length} societies reported\\nPrevious day: ${fmtDate(prevDate)}')" onmouseleave="hideTip()">
       <div class="kc-lbl">📅 Latest Date</div>
       <div class="kc-val kv-b" style="font-size:16px;font-weight:500;">${fmtDate(latestDate)}</div>
       <div class="kc-sub">${todayRows.length} / ${socs.length} societies reported</div></div>
-    <div class="kcard kc-g" onmouseenter="showTip(this,'Today total: ${fmt(todayTotal)} L\\nvs period avg: ${vsAvg>=0?\"▲\":\"▼\"}${Math.abs(vsAvg)}%\\nvs previous day: ${vsPrev>=0?\"▲\":\"▼\"}${Math.abs(vsPrev)}%')" onmouseleave="hideTip()">
+    <div class="kcard kc-g" onmouseenter="showTip(this,'${todayTip}')" onmouseleave="hideTip()">
       <div class="kc-lbl">Today's Total</div>
       <div class="kc-val kv-g">${fmt(todayTotal)} L</div>
       <div class="kc-sub">${vsAvg>=0?'▲':'▼'}${Math.abs(vsAvg)}% vs avg · ${vsPrev>=0?'▲':'▼'}${Math.abs(vsPrev)}% vs yesterday</div></div>
@@ -5553,7 +5562,7 @@ function renderDailyMgmt() {
       <div class="kc-lbl">🚫 Zero / No Data</div>
       <div class="kc-val kv-a">${todo.length}</div>
       <div class="kc-sub">immediate attention needed</div></div>
-    <div class="kcard kc-r" onmouseenter="showTip(this,'${warn.length} societies below 80% of their daily avg\\n${ok.length} societies on target\\n${star.length} societies exceeding target')" onmouseleave="hideTip()">
+    <div class="kcard kc-r" onmouseenter="showTip(this,'${warn.length} societies below 80% of daily avg\\n${ok.length} on target · ${star.length} exceeding')" onmouseleave="hideTip()">
       <div class="kc-lbl">⚠️ Below Target</div>
       <div class="kc-val kv-r">${warn.length}</div>
       <div class="kc-sub">${ok.length} on target · ${star.length} exceeding</div></div>`;
