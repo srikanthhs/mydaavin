@@ -795,7 +795,8 @@ async function gsFetch(rawUrl) {
 function csvParse(text) {
   const lines = text.trim().split('\n');
   if (lines.length < 2) return [];
-  // Simple CSV parser (handles quoted fields)
+
+  // CSV line parser (handles quoted fields)
   function parseLine(line) {
     const out=[]; let cur='', inQ=false;
     for (let i=0;i<line.length;i++) {
@@ -807,7 +808,76 @@ function csvParse(text) {
     out.push(cur);
     return out;
   }
-  const headers = parseLine(lines[0]);
+
+  // Pre-parse all rows once
+  const allRows = lines.map(l => parseLine(l));
+
+  // ── WIDE FORMAT DETECTION ──────────────────────────────
+  // Detect rows where multiple dd.mm.yyyy date headers appear (e.g. Procurement sheet)
+  let dateRowIdx = -1;
+  for (let i = 0; i < Math.min(6, allRows.length); i++) {
+    const dateCount = allRows[i].filter(c => /^\d{2}\.\d{2}\.\d{4}$/.test((c||'').toString().trim())).length;
+    if (dateCount >= 3) { dateRowIdx = i; break; }
+  }
+
+  if (dateRowIdx >= 0) {
+    // ── WIDE FORMAT: dates as columns, societies as rows ──
+    addLog('Wide format detected (pivot sheet) — converting…', 'info');
+
+    const dateRow     = allRows[dateRowIdx];
+    const dataStart   = dateRowIdx + 2; // skip date row + Mor/Eve/Total sub-header row
+
+    // Find the society name column (look in the date row itself)
+    let socColIdx = 1; // default: col B
+    for (let c = 0; c < Math.min(10, dateRow.length); c++) {
+      const v = (dateRow[c]||'').toString().toLowerCase();
+      if (v.includes('society') || v.includes('bmc') || v.includes('name')) { socColIdx = c; break; }
+    }
+
+    // Collect all date columns: col index → ISO date string
+    const dateCols = [];
+    for (let c = 0; c < dateRow.length; c++) {
+      const v = (dateRow[c]||'').toString().trim();
+      if (/^\d{2}\.\d{2}\.\d{4}$/.test(v)) {
+        const iso = parseDate(v);
+        if (iso) dateCols.push({ col: c, dateStr: iso });
+      }
+    }
+
+    if (!dateCols.length) throw new Error('Wide format detected but no date columns could be parsed.');
+
+    const result = [];
+    for (let r = dataStart; r < allRows.length; r++) {
+      const row = allRows[r];
+      if (!row || row.length < 2) continue;
+      const soc = (row[socColIdx]||'').toString().trim().toUpperCase();
+      if (!soc) continue;
+      // Skip summary/total rows
+      if (/^(total|grand total|average|avg|sum|சுருக்கம்)$/i.test(soc)) continue;
+
+      for (const { col, dateStr } of dateCols) {
+        const mor    = parseFloat(row[col])     || 0;
+        const eve    = parseFloat(row[col + 1]) || 0;
+        const rawTot = parseFloat(row[col + 2]);
+        const tot    = isNaN(rawTot) ? (mor + eve) : rawTot;
+        // Only include rows where at least something was recorded OR it's an explicit zero
+        result.push({
+          date:    dateStr,
+          society: soc,
+          morning: mor,
+          evening: eve,
+          total:   tot,
+          notes:   ''
+        });
+      }
+    }
+
+    if (!result.length) throw new Error('Wide format: no data rows found after header rows.');
+    return result;
+  }
+
+  // ── FLAT FORMAT (original logic) ──────────────────────
+  const headers = allRows[0];
   const di=detectCol(headers,'date'), si=detectCol(headers,'society');
   const mi=detectCol(headers,'morning'), ei=detectCol(headers,'evening');
   const ti=detectCol(headers,'total'), ni=detectCol(headers,'notes');
@@ -817,7 +887,7 @@ function csvParse(text) {
   const rows=[];
   for (let l=1;l<lines.length;l++) {
     if (!lines[l].trim()) continue;
-    const cols = parseLine(lines[l]);
+    const cols = allRows[l];
     const dateStr = parseDate(cols[di]);
     const soc = (cols[si]||'').toString().trim().toUpperCase();
     if (!dateStr||!soc) continue;
