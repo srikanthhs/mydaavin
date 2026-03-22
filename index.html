@@ -1019,9 +1019,10 @@ body{background:var(--bg);color:var(--txt);font-family:var(--font);font-size:13.
       <div class="g2" style="margin-bottom:14px;">
         <!-- Best performers -->
         <div class="card" style="padding:0;overflow:hidden;">
-          <div style="padding:12px 16px;background:linear-gradient(90deg,#e6f4ea,#f8f9fa);border-bottom:1px solid var(--brd);display:flex;align-items:center;gap:8px;">
+          <div style="padding:12px 16px;background:linear-gradient(90deg,#e6f4ea,#f8f9fa);border-bottom:1px solid var(--brd);display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
             <span style="font-size:16px;">🏆</span>
             <span style="font-size:13.5px;font-weight:500;color:#137333;">Top Performing Societies</span>
+            <input type="text" class="dr-inp" id="best-search" placeholder="Search…" oninput="renderBestWorst()" style="width:140px;font-size:12px;padding:4px 8px;">
             <span style="font-size:11.5px;color:var(--txt3);margin-left:auto;" id="best-period-lbl"></span>
           </div>
           <div style="overflow-x:auto;">
@@ -1033,9 +1034,10 @@ body{background:var(--bg);color:var(--txt);font-family:var(--font);font-size:13.
         </div>
         <!-- Worst performers -->
         <div class="card" style="padding:0;overflow:hidden;">
-          <div style="padding:12px 16px;background:linear-gradient(90deg,#fce8e6,#f8f9fa);border-bottom:1px solid var(--brd);display:flex;align-items:center;gap:8px;">
+          <div style="padding:12px 16px;background:linear-gradient(90deg,#fce8e6,#f8f9fa);border-bottom:1px solid var(--brd);display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
             <span style="font-size:16px;">⚠️</span>
             <span style="font-size:13.5px;font-weight:500;color:#c5221f;">Underperforming Societies</span>
+            <input type="text" class="dr-inp" id="worst-search" placeholder="Search…" oninput="renderBestWorst()" style="width:140px;font-size:12px;padding:4px 8px;">
             <span style="font-size:11.5px;color:var(--txt3);margin-left:auto;" id="worst-period-lbl"></span>
           </div>
           <div style="overflow-x:auto;">
@@ -1356,10 +1358,18 @@ function renderAll() {
   renderSummary();
   renderAlerts();
   updateAlertBadge();
-  if (_activeTab === 'hub')       renderHub();
-  if (_activeTab === 'tracker')   renderTracker();
-  if (_activeTab === 'distcomp')  renderDistComp();
-  if (_activeTab === 'expansion') renderExpansion();
+  populateReportSocieties();
+  // Re-render whichever tab is active
+  const active = _activeTab;
+  if (active === 'hub')        renderHub();
+  if (active === 'tracker')    renderTracker();
+  if (active === 'distcomp')   renderDistComp();
+  if (active === 'expansion')  renderExpansion();
+  if (active === 'cattle')     renderCattle();
+  if (active === 'actionplan') renderBestWorst();
+  if (active === 'daily_mgmt') renderDailyMgmt();
+  if (active === 'pareto')     renderPareto();
+  if (active === 'scorecard')  renderScorecard();
 }
 
 // ══════════════════════════════════════════════════════
@@ -1643,7 +1653,7 @@ function renderOverview() {
 
   // Top societies
   const socTotals = socs.map(s=>({name:s, total:data.filter(r=>r.society===s).reduce((a,r)=>a+r.total,0)}))
-    .sort((a,b)=>b.total-a.total).slice(0,8);
+    .sort((a,b)=>b.total-a.total);
   renderSocBar(socTotals);
 
   // Morning vs Evening split
@@ -1842,6 +1852,12 @@ function dlNext() {
 // ══════════════════════════════════════════════════════
 //  RENDER: SOCIETY SUMMARY
 // ══════════════════════════════════════════════════════
+function setSsSort(srt) {
+  const el = document.getElementById('ss-sort');
+  if (el && srt !== '#') el.value = srt;
+  renderSummary();
+}
+
 function renderSummary() {
   const q   = (document.getElementById('ss-search')?.value||'').toUpperCase();
   const srt = document.getElementById('ss-sort')?.value||'total_desc';
@@ -2108,7 +2124,7 @@ function renderHub() {
   // Top performers
   const socTot = socs.map(s=>({name:s,total:data.filter(r=>r.society===s).reduce((a,r)=>a+r.total,0)})).sort((a,b)=>b.total-a.total);
   const maxT = socTot[0]?.total||1;
-  document.getElementById('hub-top').innerHTML = socTot.slice(0,6).map((s,i)=>`<div class="mini-bar-row"><div class="mini-bar-lbl">${i+1}. ${s.name}</div><div class="mini-bar-track"><div class="mini-bar-fill" style="width:${Math.round(s.total/maxT*100)}%"></div></div><div class="mini-bar-val">${fmt(s.total)} L</div></div>`).join('');
+  document.getElementById('hub-top').innerHTML = socTot.map((s,i)=>`<div class="mini-bar-row"><div class="mini-bar-lbl">${i+1}. ${s.name}</div><div class="mini-bar-track"><div class="mini-bar-fill" style="width:${Math.round(s.total/maxT*100)}%"></div></div><div class="mini-bar-val">${fmt(s.total)} L</div></div>`).join('');
   // Action items
   const missedSocs = [...new Set(missed.map(r=>r.society))];
   const lowSocs    = [...new Set(low.map(r=>r.society))].filter(s=>!missedSocs.includes(s)).slice(0,3);
@@ -2348,8 +2364,8 @@ function renderTracker() {
     }).join('');
   };
 
-  document.getElementById('trk-best').innerHTML  = mkBars(activeSorted.slice(0, 5));
-  document.getElementById('trk-worst').innerHTML = mkBars(worstSorted.slice(0, 5));
+  document.getElementById('trk-best').innerHTML  = mkBars(activeSorted);
+  document.getElementById('trk-worst').innerHTML = mkBars(worstSorted);
 }
 
 // ══════════════════════════════════════════════════════
@@ -2407,9 +2423,9 @@ function renderExpansion() {
     const tP    = f1>0?Math.round((f2-f1)/f1*100):0;
     return {name:s,total,avg,missed,missP,tP};
   });
-  const grow = stats.filter(s=>s.tP>=15&&s.missP<20).sort((a,b)=>b.tP-a.tP).slice(0,5);
-  const dead = stats.filter(s=>s.missP>=50).sort((a,b)=>b.missP-a.missP).slice(0,5);
-  const risk = stats.filter(s=>s.missP>=20&&s.missP<50&&s.tP<0).sort((a,b)=>a.tP-b.tP).slice(0,5);
+  const grow = stats.filter(s=>s.tP>=15&&s.missP<20).sort((a,b)=>b.tP-a.tP);
+  const dead = stats.filter(s=>s.missP>=50).sort((a,b)=>b.missP-a.missP);
+  const risk = stats.filter(s=>s.missP>=20&&s.missP<50&&s.tP<0).sort((a,b)=>a.tP-b.tP);
   document.getElementById('exp-kpis').innerHTML=`
     <div class="hcard hc-g"><div class="hc-lbl">High Growth</div><div class="hc-val kv-g">${grow.length}</div><div class="hc-sub">≥15% upward trend</div></div>
     <div class="hcard hc-r"><div class="hc-lbl">Needs Reactivation</div><div class="hc-val kv-r">${dead.length}</div><div class="hc-sub">≥50% missed days</div></div>
@@ -2466,7 +2482,7 @@ async function generateInsights() {
   try {
     const res  = await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:1000,messages:[{role:'user',content:prompt}]})});
     const d    = await res.json();
-    const raw  = d.content?.map(c=>c.text||'').join('').replace(/`+json|`+/g,'').trim();
+    const raw  = d.content?.map(c=>c.text||'').join('').replace('```json','').replace('```','').trim();
     const ins  = JSON.parse(raw);
     const tmap = {positive:'ins-card',warning:'ins-card warn',critical:'ins-card crit'};
     out.innerHTML = ins.map(i=>`<div class="${tmap[i.type]||'ins-card'}"><div class="ins-title">${i.title}</div><div class="ins-body">${i.body}</div></div>`).join('');
@@ -2718,7 +2734,7 @@ async function generateCattleInsights() {
       })
     });
     const d   = await res.json();
-    const raw = d.content?.map(c => c.text || '').join('').replace(/```json|```/g, '').trim();
+    const raw = d.content?.map(c => c.text || '').join('').replace('```json','').replace('```','').trim();
     const recs = JSON.parse(raw);
     const tmap = { action: 'ins-card', insight: 'ins-card', warning: 'ins-card warn' };
     const pmap = { High: '🔴 High Priority', Medium: '🟡 Medium Priority' };
@@ -2800,8 +2816,10 @@ function renderBestWorst() {
     return {name:s, total, avg, missed, rep, tPct};
   });
 
-  const best  = [...stats].sort((a,b) => b.total - a.total).slice(0, 10);
-  const worst = [...stats].sort((a,b) => a.rep - b.rep || b.missed - a.missed).slice(0, 10);
+  const bestQ  = (document.getElementById('best-search')?.value||'').toUpperCase();
+  const worstQ = (document.getElementById('worst-search')?.value||'').toUpperCase();
+  const best  = [...stats].sort((a,b) => b.total - a.total).filter(s => !bestQ || s.name.includes(bestQ));
+  const worst = [...stats].sort((a,b) => a.rep - b.rep || b.missed - a.missed).filter(s => !worstQ || s.name.includes(worstQ));
 
   const medals = ['🥇','🥈','🥉'];
   document.getElementById('best-tbody').innerHTML = best.map((s,i) => {
@@ -2888,7 +2906,7 @@ async function generateActionPlan() {
   try {
     const res  = await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:2000,messages:[{role:'user',content:prompt}]})});
     const d    = await res.json();
-    const raw  = d.content?.map(c=>c.text||'').join('').replace(/```json|```/g,'').trim();
+    const raw  = d.content?.map(c=>c.text||'').join('').replace('```json','').replace('```','').trim();
     const items= JSON.parse(raw);
     if (sub) sub.textContent = '— '+items.length+' items · '+new Date().toLocaleString('en-IN',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'});
     const priCls  = {High:'ap-priority-high',Medium:'ap-priority-medium',Low:'ap-priority-low'};
@@ -3099,7 +3117,7 @@ async function generateReport() {
   try {
     const res  = await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:2000,messages:[{role:'user',content:prompt}]})});
     const d    = await res.json();
-    const raw  = d.content?.map(c=>c.text||'').join('').replace(/```json|```/g,'').trim();
+    const raw  = d.content?.map(c=>c.text||'').join('').replace('```json','').replace('```','').trim();
     const rpt  = JSON.parse(raw);
     _reportText = formatReportText(rpt, _reportScope);
 
@@ -3407,7 +3425,7 @@ function renderPareto() {
   ).join('');
 
   // Bottom 50% leverage zone
-  document.getElementById('pareto-bottom50').innerHTML = withCum.slice(-Math.ceil(stats.length*0.5)).slice(0,8).map(s =>
+  document.getElementById('pareto-bottom50').innerHTML = withCum.slice(-Math.ceil(stats.length*0.5)).map(s =>
     '<div class="dm-metric-row"><div><div style="font-size:13px;font-weight:500;color:var(--txt);">'+s.name+'</div>'
     + '<div style="font-size:11.5px;color:var(--txt3);">'+fmt(s.total)+' L · Rep '+s.rep+'%</div></div>'
     + '<span class="priority-chip '+(s.rep<30?'pc-high':s.rep<60?'pc-medium':'pc-low')+'">'+(s.rep<30?'Critical':s.rep<60?'At Risk':'Low')+'</span>'
