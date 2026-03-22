@@ -761,6 +761,21 @@ body{background:var(--bg);color:var(--txt);font-family:var(--font);font-size:13.
     <div class="tab-panel" id="tab-settings">
 
       <div class="set-card">
+        <div class="set-title">🔑 Anthropic API Key</div>
+        <div class="set-sub">
+          Required for AI Insights, Action Plan, Reports, and Cattle Planning AI features. Your key is stored only in this browser (localStorage) and sent directly to Anthropic's API — never to any other server.
+          Get your key at <a href="https://console.anthropic.com/settings/keys" target="_blank">console.anthropic.com →</a>
+        </div>
+        <label class="set-label">API Key</label>
+        <div style="display:flex;gap:8px;margin-bottom:6px;align-items:center;">
+          <input type="password" class="ctrl" id="api-key-inp" placeholder="sk-ant-api03-…" style="flex:1;font-family:var(--mono);font-size:12.5px;" oninput="saveSettings()">
+          <button class="btn btn-o" onclick="toggleApiKeyVis()" id="api-key-vis-btn" style="padding:6px 12px;">👁</button>
+          <button class="btn btn-p" onclick="testApiKey()">Test</button>
+        </div>
+        <div id="api-key-status" style="font-size:11.5px;color:var(--txt3);margin-top:4px;"></div>
+      </div>
+
+      <div class="set-card">
         <div class="set-title">🔗 Google Sheets Connection</div>
         <div class="set-sub">
           Publish your sheet as a CSV (File → Share → Publish to web → CSV), then paste the URL below.
@@ -1221,7 +1236,7 @@ body{background:var(--bg);color:var(--txt);font-family:var(--font);font-size:13.
 const LS_KEY = 'myl_v1';
 let _rows  = [];          // [{date,society,district,morning,evening,total,notes}]
 let _filtered = [];       // filtered by date range + district
-let _cfg   = {url:'', interval:0};
+let _cfg   = {url:'', interval:0, apiKey:''};
 let _timer = null;
 let _syncLogs = [];
 let _dlPage = 0;
@@ -1986,12 +2001,16 @@ function loadSettings() {
     const d = JSON.parse(localStorage.getItem(LS_KEY)||'{}');
     _cfg.url      = d.url      || '';
     _cfg.interval = d.interval || 0;
+    _cfg.apiKey   = d.apiKey   || '';
     _syncLogs     = d.logs     || [];
     if (d.url) {
       const el = document.getElementById('gs-url'); if(el) el.value=d.url;
     }
     if (d.interval) {
       const el = document.getElementById('gs-interval'); if(el) el.value=d.interval;
+    }
+    if (d.apiKey) {
+      const el = document.getElementById('api-key-inp'); if(el) el.value=d.apiKey;
     }
     renderSyncLog();
     if (_cfg.url && _cfg.interval>0) startTimer();
@@ -2002,8 +2021,9 @@ function saveSettings() {
   try {
     const url = document.getElementById('gs-url')?.value?.trim()||_cfg.url;
     const interval = parseInt(document.getElementById('gs-interval')?.value||'0')||0;
-    _cfg.url=url; _cfg.interval=interval;
-    localStorage.setItem(LS_KEY, JSON.stringify({url,interval,logs:_syncLogs.slice(-30)}));
+    const apiKey = document.getElementById('api-key-inp')?.value?.trim()||_cfg.apiKey;
+    _cfg.url=url; _cfg.interval=interval; _cfg.apiKey=apiKey;
+    localStorage.setItem(LS_KEY, JSON.stringify({url,interval,apiKey,logs:_syncLogs.slice(-30)}));
     if (interval>0) startTimer(); else if(_timer) { clearInterval(_timer); _timer=null; }
   } catch(e){}
 }
@@ -2088,6 +2108,41 @@ function fmtDate(d){
   const months=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
   return `${+day} ${months[+m-1]} ${y}`;
 }
+function getApiKey() {
+  const key = (document.getElementById('api-key-inp')?.value?.trim()) || _cfg.apiKey || '';
+  if (!key) throw new Error('No API key set. Go to Settings → Anthropic API Key and enter your key.');
+  return key;
+}
+
+function toggleApiKeyVis() {
+  const inp = document.getElementById('api-key-inp');
+  if (!inp) return;
+  inp.type = inp.type === 'password' ? 'text' : 'password';
+}
+
+async function testApiKey() {
+  const statusEl = document.getElementById('api-key-status');
+  const key = document.getElementById('api-key-inp')?.value?.trim();
+  if (!key) { if (statusEl) { statusEl.textContent = '⚠️ Enter a key first'; statusEl.style.color='#ea8600'; } return; }
+  if (statusEl) { statusEl.textContent = '⏳ Testing…'; statusEl.style.color='var(--txt3)'; }
+  try {
+    const res = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'x-api-key': key, 'anthropic-version': '2023-06-01', 'anthropic-dangerous-direct-browser-access': 'true' },
+      body: JSON.stringify({ model: 'claude-sonnet-4-6', max_tokens: 10, messages: [{ role: 'user', content: 'Hi' }] })
+    });
+    const d = await res.json();
+    if (res.ok) {
+      if (statusEl) { statusEl.textContent = '✅ API key valid — AI features ready'; statusEl.style.color='#137333'; }
+      _cfg.apiKey = key; saveSettings();
+    } else {
+      if (statusEl) { statusEl.textContent = '❌ ' + (d.error?.message || 'Invalid key'); statusEl.style.color='#c5221f'; }
+    }
+  } catch(e) {
+    if (statusEl) { statusEl.textContent = '❌ ' + e.message; statusEl.style.color='#c5221f'; }
+  }
+}
+
 // Robustly extract first JSON array or object from a string
 // Handles ```json fences, trailing text, and nested structures
 function extractJSON(raw) {
@@ -2502,7 +2557,7 @@ async function generateInsights() {
     + 'TOP 8:\n'+top8+'\n\nBOTTOM 5:\n'+bot5+'\n\n'
     + 'Return EXACTLY 5 insights as a JSON array. Each: {"type":"positive"|"warning"|"critical","title":"max 8 words","body":"2-3 sentences, specific numbers, actionable advice to boost collection"}.\nReturn ONLY the JSON array, no markdown.';
   try {
-    const res  = await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({model:'claude-sonnet-4-6',max_tokens:1000,messages:[{role:'user',content:prompt}]})});
+    const res  = await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json','x-api-key':getApiKey(),'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},body:JSON.stringify({model:'claude-sonnet-4-6',max_tokens:1000,messages:[{role:'user',content:prompt}]})});
     const d    = await res.json();
     if (!res.ok) throw new Error((d.error?.message)||`API error ${res.status}`);
     const raw  = extractJSON(d.content?.map(c=>c.text||'').join(''));
@@ -2749,7 +2804,7 @@ async function generateCattleInsights() {
   try {
     const res = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'application/json', 'x-api-key': getApiKey(), 'anthropic-version': '2023-06-01', 'anthropic-dangerous-direct-browser-access': 'true' },
       body: JSON.stringify({
         model: 'claude-sonnet-4-6',
         max_tokens: 1500,
@@ -2928,7 +2983,7 @@ async function generateActionPlan() {
     + 'Return ONLY the JSON array.';
 
   try {
-    const res  = await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({model:'claude-sonnet-4-6',max_tokens:2000,messages:[{role:'user',content:prompt}]})});
+    const res  = await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json','x-api-key':getApiKey(),'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},body:JSON.stringify({model:'claude-sonnet-4-6',max_tokens:2000,messages:[{role:'user',content:prompt}]})});
     const d    = await res.json();
     if (!res.ok) throw new Error((d.error?.message)||`API error ${res.status}`);
     const raw  = extractJSON(d.content?.map(c=>c.text||'').join(''));
@@ -3140,7 +3195,7 @@ async function generateReport() {
   }
 
   try {
-    const res  = await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({model:'claude-sonnet-4-6',max_tokens:2000,messages:[{role:'user',content:prompt}]})});
+    const res  = await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json','x-api-key':getApiKey(),'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},body:JSON.stringify({model:'claude-sonnet-4-6',max_tokens:2000,messages:[{role:'user',content:prompt}]})});
     const d    = await res.json();
     if (!res.ok) throw new Error((d.error?.message)||`API error ${res.status}`);
     const raw  = extractJSON(d.content?.map(c=>c.text||'').join(''));
