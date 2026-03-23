@@ -2225,7 +2225,7 @@ setTimeout(() => {
 // ══════════════════════════════════════════════════════
 const LS_KEY = 'myl_v1';
 // ── HARDCODED DEFAULTS ──────────────────────────────────
-const HARDCODED_URL    = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQoidPzsC2uuXAckFPgBBtwmz0y8Wqz4D9NaI2ay3vl28X7P28z2W4vBYj_l-W9_w/pub?output=csv';
+const HARDCODED_URL    = 'https://script.google.com/macros/s/AKfycbwYAjAwH9E0f67J9DP36EZZy3-aOauTq3x5QGD3mlq_dsJRVqd5oxmzV0ittajSPDSa/exec';
 const HARDCODED_APIKEY = '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';
 const HARDCODED_PROVIDER = 'groq';
 // ────────────────────────────────────────────────────────
@@ -2587,188 +2587,59 @@ function isFileOrigin() {
   return window.location.protocol === 'file:';
 }
 
-// ── JSONP / Script-tag fetch — bypasses CORS entirely ──
-// Works on ALL browsers including mobile, because <script> tags are not subject to CORS.
-// Google Sheets gviz/tq endpoint supports ?tqx=out:csv with callback for JSONP.
-// We use the JSON variant and parse it ourselves.
-function fetchViaScriptTag(sheetKey, gid, isPub, timeoutMs) {
-  return new Promise((resolve, reject) => {
-    const cbName = '_myl_cb_' + Date.now();
-    const url = isPub
-      ? `https://docs.google.com/spreadsheets/d/e/${sheetKey}/gviz/tq?tqx=out:json&callback=${cbName}&gid=${gid}`
-      : `https://docs.google.com/spreadsheets/d/${sheetKey}/gviz/tq?tqx=out:json&callback=${cbName}&gid=${gid}`;
-
-    const timer = setTimeout(() => {
-      delete window[cbName];
-      if (s.parentNode) s.parentNode.removeChild(s);
-      reject(new Error('Script-tag fetch timeout'));
-    }, timeoutMs);
-
-    window[cbName] = function(data) {
-      clearTimeout(timer);
-      delete window[cbName];
-      if (s.parentNode) s.parentNode.removeChild(s);
-      try {
-        // Convert gviz JSON table → CSV text
-        const cols = data.table.cols.map(c => c.label || c.id);
-        const rows = data.table.rows.map(r =>
-          r.c.map(cell => {
-            if (!cell || cell.v === null || cell.v === undefined) return '';
-            // Dates come as "Date(yyyy,m,d)" — convert to YYYY-MM-DD
-            if (typeof cell.v === 'string' && cell.v.startsWith('Date(')) {
-              const parts = cell.v.slice(5, -1).split(',').map(Number);
-              const d = new Date(parts[0], parts[1], parts[2]);
-              return d.toISOString().slice(0, 10);
-            }
-            const v = String(cell.f !== undefined && cell.f !== null ? cell.f : cell.v);
-            return v.includes(',') || v.includes('"') || v.includes('\n')
-              ? '"' + v.replace(/"/g, '""') + '"' : v;
-          }).join(',')
-        );
-        const csv = [cols.join(','), ...rows].join('\n');
-        if (!looksLikeCSV(csv)) throw new Error('Empty table');
-        resolve(csv);
-      } catch (e) { reject(e); }
-    };
-
-    const s = document.createElement('script');
-    s.src = url;
-    s.onerror = () => { clearTimeout(timer); delete window[cbName]; reject(new Error('Script load error')); };
-    document.head.appendChild(s);
-  });
-}
-
 function looksLikeCSV(text) {
   if (!text || text.trim().length < 10) return false;
   const t = text.trim();
   if (t.startsWith('<!DOCTYPE') || t.startsWith('<html') || t.startsWith('<HTML')) return false;
-  if (t.startsWith('{') || t.startsWith('[')) return false;
   return true;
 }
 
-// Fetch a single URL with timeout — NO custom headers to avoid CORS preflight
-async function tryFetch(url, timeoutMs = 15000) {
+async function gsFetch(rawUrl) {
+  // Apps Script URL — fetch directly, no CORS proxy needed.
+  // Google Apps Script always returns CORS headers so this works on all devices.
+  const isAppsScript = rawUrl.includes('script.google.com');
+
+  if (isAppsScript) {
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), 20000);
+    try {
+      const r = await fetch(rawUrl, { cache: 'no-store', signal: controller.signal });
+      clearTimeout(timer);
+      if (!r.ok) throw new Error('HTTP ' + r.status);
+      const text = await r.text();
+      if (!looksLikeCSV(text)) throw new Error('Response is not CSV — check Apps Script deployment');
+      addLog('✓ Data loaded via Apps Script', 'ok');
+      return { ok: true, text: () => Promise.resolve(text), status: 200 };
+    } catch (e) {
+      clearTimeout(timer);
+      throw new Error('Apps Script fetch failed: ' + e.message + '. Make sure deployment is set to "Anyone" access.');
+    }
+  }
+
+  // Fallback for non-Apps-Script URLs (legacy Google Sheets pub URLs)
   const controller = new AbortController();
-  const timer = setTimeout(() => controller.abort(), timeoutMs);
+  const timer = setTimeout(() => controller.abort(), 20000);
   try {
-    // IMPORTANT: No custom headers — prevents browser from sending OPTIONS preflight
-    // which many proxy servers reject, causing CORS failures on mobile.
-    const r = await fetch(url, { cache: 'no-store', signal: controller.signal });
+    const r = await fetch(rawUrl, { cache: 'no-store', signal: controller.signal });
     clearTimeout(timer);
     if (!r.ok) throw new Error('HTTP ' + r.status);
     const text = await r.text();
-    if (!looksLikeCSV(text)) throw new Error('Not CSV (got HTML/JSON error page)');
-    return text;
+    if (!looksLikeCSV(text)) throw new Error('Not CSV');
+    return { ok: true, text: () => Promise.resolve(text), status: 200 };
   } catch (e) {
     clearTimeout(timer);
-    throw e;
-  }
-}
-
-// Race all fetch strategies — first valid CSV wins, others are abandoned
-async function raceFetches(strategies) {
-  return new Promise((resolve, reject) => {
-    if (!strategies.length) { reject(new Error('No strategies')); return; }
-    let settled = false;
-    let failCount = 0;
-    const total = strategies.length;
-
-    strategies.forEach(({ label, fn }) => {
-      fn()
-        .then(text => {
-          if (settled) return;
-          if (!looksLikeCSV(text)) throw new Error('Invalid CSV');
-          settled = true;
-          addLog(`✓ ${label}`, 'ok');
-          resolve({ text, label });
-        })
-        .catch(e => {
-          if (settled) return;
-          addLog(`✗ ${label}: ${(e.message || '').slice(0, 60)}`, 'err');
-          if (++failCount === total) {
-            settled = true;
-            reject(new Error('All ' + total + ' fetch methods failed'));
-          }
-        });
-    });
-  });
-}
-
-async function gsFetch(rawUrl) {
-  // Non-Google URL — fetch directly
-  const isGoogle = /docs\.google\.com|drive\.google\.com/i.test(rawUrl);
-  if (!isGoogle) {
-    const text = await tryFetch(rawUrl, 15000);
-    return { ok: true, text: () => Promise.resolve(text), status: 200 };
-  }
-
-  const info   = extractSheetKey(rawUrl);
-  const gid    = extractGid(rawUrl);
-  const isFile = isFileOrigin();
-
-  // ── Build canonical Google Sheet URLs ──
-  const csvUrl = info
-    ? (info.type === 'pub'
-        ? `https://docs.google.com/spreadsheets/d/e/${info.key}/pub?output=csv&gid=${gid}&single=true`
-        : `https://docs.google.com/spreadsheets/d/${info.key}/export?format=csv&gid=${gid}`)
-    : rawUrl;
-
-  const gvizUrl = info
-    ? (info.type === 'pub'
-        ? `https://docs.google.com/spreadsheets/d/e/${info.key}/gviz/tq?tqx=out:csv&gid=${gid}`
-        : `https://docs.google.com/spreadsheets/d/${info.key}/gviz/tq?tqx=out:csv&gid=${gid}`)
-    : null;
-
-  // ── Proxy list — no custom headers, no preflight ──
-  const makeProxyUrls = (target) => [
-    `https://api.allorigins.win/raw?url=${encodeURIComponent(target)}`,
-    `https://corsproxy.io/?${encodeURIComponent(target)}`,
-    `https://api.allorigins.win/raw?url=${encodeURIComponent(target)}&_=${Date.now()}`,
-    `https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(target)}`,
-    `https://thingproxy.freeboard.io/fetch/${target}`,
-  ];
-
-  // ── Build all strategies ──
-  const strategies = [];
-
-  // 1. JSONP via script tag — CORS-free, works on all mobile browsers
-  if (info) {
-    strategies.push({
-      label: 'jsonp-scripttag',
-      fn: () => fetchViaScriptTag(info.key, gid, info.type === 'pub', 15000)
-    });
-  }
-
-  // 2. Direct fetches (work on desktop/hosted; Google blocks on mobile CORS)
-  if (!isFile) {
-    strategies.push({ label: 'direct-csv',  fn: () => tryFetch(csvUrl,  12000) });
-    if (gvizUrl)
-      strategies.push({ label: 'direct-gviz', fn: () => tryFetch(gvizUrl, 12000) });
-  }
-
-  // 3. Proxy fetches for csvUrl — essential for mobile
-  makeProxyUrls(csvUrl).forEach((u, i) => {
-    strategies.push({ label: `proxy${i+1}-csv`, fn: () => tryFetch(u, 18000) });
-  });
-
-  // 4. Proxy fetches for gvizUrl — backup endpoint
-  if (gvizUrl) {
-    makeProxyUrls(gvizUrl).forEach((u, i) => {
-      strategies.push({ label: `proxy${i+1}-gviz`, fn: () => tryFetch(u, 18000) });
-    });
-  }
-
-  addLog(`Racing ${strategies.length} methods (incl. JSONP) in parallel…`, 'info');
-
-  try {
-    const { text, label } = await raceFetches(strategies);
-    addLog(`✓ Data loaded via ${label}`, 'ok');
-    return { ok: true, text: () => Promise.resolve(text), status: 200 };
-  } catch (e) {
-    const hint = isFile
-      ? 'Running from local file — serve via: python3 -m http.server 8080'
-      : 'Could not fetch data. ① Make sure the sheet is published: File → Share → Publish to web → CSV. ② Check internet connection. ③ Tap ↻ to retry.';
-    throw new Error(hint);
+    // Try allorigins proxy as single fallback
+    try {
+      addLog('Direct failed — trying proxy…', 'info');
+      const proxy = `https://api.allorigins.win/raw?url=${encodeURIComponent(rawUrl)}`;
+      const r2 = await fetch(proxy, { cache: 'no-store' });
+      const text = await r2.text();
+      if (!looksLikeCSV(text)) throw new Error('Not CSV');
+      addLog('✓ Loaded via proxy', 'ok');
+      return { ok: true, text: () => Promise.resolve(text), status: 200 };
+    } catch (e2) {
+      throw new Error('Fetch failed. Use an Apps Script URL for reliable mobile access.');
+    }
   }
 }
 
