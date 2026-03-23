@@ -2266,7 +2266,7 @@ function splitCell(val, hasSplit, color) {
 window.addEventListener('DOMContentLoaded', async () => {
   loadSettings();
   initProviderUI();
-  setLd('Loading settings…');
+  setLd('Connecting…');
 
   // ── Detect file:// origin and show warning ──
   if (isFileOrigin()) {
@@ -2283,33 +2283,42 @@ window.addEventListener('DOMContentLoaded', async () => {
     document.getElementById('main').style.marginTop = '46px';
   }
 
-  // ── Wait for Firebase ready (max 3 s) then fetch ──
-  await new Promise(resolve => {
-    if (window._fbReady) { resolve(); return; }
-    const t = setTimeout(resolve, 3000); // don't block forever
-    window.addEventListener('firebase-ready', () => { clearTimeout(t); resolve(); }, { once: true });
-  });
+  // ── Show UI immediately — don't wait for Firebase ──
+  setLd('Loading…');
+  document.getElementById('loader').classList.add('hide');
+  setTimeout(() => document.getElementById('loader').style.display='none', 500);
 
-  // ── Pull settings from Firebase (fills apiKey, url, groqModel cross-device) ──
-  await fbLoadSettings();
+  if (window.innerWidth < 768) {
+    document.getElementById('mob-ham').style.display = 'flex';
+  }
 
-  setTimeout(() => {
-    setLd('Ready');
-    document.getElementById('loader').classList.add('hide');
-    setTimeout(() => document.getElementById('loader').style.display='none', 500);
+  setDefaultDateRange();
+  document.getElementById('setup-banner')?.classList.add('hide');
 
-    if (window.innerWidth < 768) {
-      document.getElementById('mob-ham').style.display = 'flex';
+  // ── Fetch sheet data IMMEDIATELY on load ──
+  // Key fix: previously waited up to 3s for Firebase before fetching.
+  // Now we fetch right away with the hardcoded/localStorage URL.
+  fetchNow();
+
+  // ── Firebase sync runs in background, non-blocking ──
+  // If Firebase has a different sheet URL saved, re-fetch with it.
+  (async () => {
+    try {
+      await new Promise(resolve => {
+        if (window._fbReady) { resolve(); return; }
+        const t = setTimeout(resolve, 5000);
+        window.addEventListener('firebase-ready', () => { clearTimeout(t); resolve(); }, { once: true });
+      });
+      const urlBefore = _cfg.url;
+      await fbLoadSettings();
+      if (_cfg.url && _cfg.url !== urlBefore) {
+        addLog('Firebase has updated URL — re-fetching…', 'info');
+        fetchNow();
+      }
+    } catch(e) {
+      addLog('Firebase background sync: ' + e.message, 'err');
     }
-
-    setDefaultDateRange();
-
-    // Always hide setup banner — sheet URL is hardcoded
-    document.getElementById('setup-banner')?.classList.add('hide');
-
-    // Always auto-fetch with the now-fully-loaded settings
-    fetchNow();
-  }, 200);
+  })();
 });
 
 function setLd(msg) {
@@ -2578,7 +2587,15 @@ function isFileOrigin() {
   return window.location.protocol === 'file:';
 }
 
-async function tryFetch(url, timeoutMs=15000) {
+function looksLikeCSV(text) {
+  if (!text || text.trim().length < 10) return false;
+  const t = text.trim();
+  if (t.startsWith('<!DOCTYPE') || t.startsWith('<html') || t.startsWith('<HTML')) return false;
+  if (t.startsWith('{') || t.startsWith('[')) return false;
+  return true;
+}
+
+async function tryFetch(url, timeoutMs=14000) {
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), timeoutMs);
   try {
@@ -2589,9 +2606,7 @@ async function tryFetch(url, timeoutMs=15000) {
     clearTimeout(timer);
     if (!r.ok) throw new Error('HTTP '+r.status);
     const text = await r.text();
-    if (!text || text.trim().length < 10) throw new Error('Empty response');
-    if (text.trim().startsWith('<!DOCTYPE') || text.trim().startsWith('<html'))
-      throw new Error('Got HTML page instead of CSV — sheet may not be published publicly');
+    if (!looksLikeCSV(text)) throw new Error('Response is not CSV');
     return text;
   } catch(e) {
     clearTimeout(timer);
@@ -2599,81 +2614,79 @@ async function tryFetch(url, timeoutMs=15000) {
   }
 }
 
+// Race a group of fetch functions — first valid CSV wins
+async function raceFetches(fns) {
+  return new Promise((resolve, reject) => {
+    let failed = 0;
+    const total = fns.length;
+    if (!total) { reject(new Error('No fetch strategies')); return; }
+    fns.forEach(({ label, fn }) => {
+      fn().then(text => {
+        if (!looksLikeCSV(text)) throw new Error('Not CSV');
+        addLog(`✓ ${label}`, 'ok');
+        resolve({ text, label });
+      }).catch(e => {
+        addLog(`✗ ${label}: ${(e.message||'').slice(0,60)}`, 'err');
+        if (++failed === total) reject(new Error('All methods failed'));
+      });
+    });
+  });
+}
+
 async function gsFetch(rawUrl) {
   const isGoogle = /docs\.google\.com|drive\.google\.com/i.test(rawUrl);
   if (!isGoogle) {
-    try { const r = await fetch(rawUrl, {cache:'no-store'}); return r; }
-    catch(e) { throw e; }
+    const r = await fetch(rawUrl, { cache: 'no-store' });
+    const text = await r.text();
+    if (!looksLikeCSV(text)) throw new Error('Response is not CSV');
+    return { ok: true, text: () => Promise.resolve(text), status: 200 };
   }
 
-  const info   = extractSheetKey(rawUrl);
-  const gid    = extractGid(rawUrl);
+  const info = extractSheetKey(rawUrl);
+  const gid  = extractGid(rawUrl);
   const isFile = isFileOrigin();
 
-  // Primary URL: published CSV (most reliable across platforms)
   const csvUrl = info
     ? (info.type === 'pub'
         ? `https://docs.google.com/spreadsheets/d/e/${info.key}/pub?output=csv&gid=${gid}&single=true`
         : `https://docs.google.com/spreadsheets/d/${info.key}/export?format=csv&gid=${gid}`)
     : rawUrl;
 
-  // Alternative: gviz endpoint
   const gvizUrl = info
     ? (info.type === 'pub'
         ? `https://docs.google.com/spreadsheets/d/e/${info.key}/gviz/tq?tqx=out:csv&gid=${gid}`
         : `https://docs.google.com/spreadsheets/d/${info.key}/gviz/tq?tqx=out:csv&gid=${gid}`)
     : null;
 
-  // Proxy builder functions — allorigins is most mobile-friendly
-  const proxyFns = [
+  const proxies = [
     u => `https://api.allorigins.win/raw?url=${encodeURIComponent(u)}`,
     u => `https://corsproxy.io/?${encodeURIComponent(u)}`,
     u => `https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(u)}`,
+    u => `https://api.allorigins.win/raw?url=${encodeURIComponent(u)}&_=${Date.now()}`,
     u => `https://thingproxy.freeboard.io/fetch/${encodeURIComponent(u)}`,
-    u => `https://yacdn.org/proxy/${encodeURIComponent(u)}`,
-    u => `https://api.allorigins.win/raw?url=${encodeURIComponent(u)}&cb=${Date.now()}`, // cache-bust
   ];
 
-  const strategies = [];
-
-  // Direct strategies (desktop/hosted — blocked on most mobile browsers by CORS)
+  // Build all strategies and race them in parallel — fastest valid response wins
+  const all = [];
   if (!isFile) {
-    strategies.push({ label: 'csv-direct',  fn: () => tryFetch(csvUrl,  12000) });
-    if (gvizUrl)
-      strategies.push({ label: 'gviz-direct', fn: () => tryFetch(gvizUrl, 12000) });
+    all.push({ label: 'direct-csv',  fn: () => tryFetch(csvUrl,  10000) });
+    if (gvizUrl) all.push({ label: 'direct-gviz', fn: () => tryFetch(gvizUrl, 10000) });
   }
+  proxies.forEach((pf, i) => {
+    all.push({ label: `proxy${i+1}-csv`,  fn: () => tryFetch(pf(csvUrl), 15000) });
+    if (gvizUrl) all.push({ label: `proxy${i+1}-gviz`, fn: () => tryFetch(pf(gvizUrl), 15000) });
+  });
 
-  // Proxy + CSV URL (essential for mobile)
-  for (const pf of proxyFns) {
-    const proxied = pf(csvUrl);
-    strategies.push({ label: `allorigins-csv`, fn: () => tryFetch(proxied, 20000) });
+  addLog(`Racing ${all.length} fetch strategies in parallel…`, 'info');
+  try {
+    const { text, label } = await raceFetches(all);
+    return { ok: true, text: () => Promise.resolve(text), status: 200 };
+  } catch(e) {
+    const hint = isFile
+      ? 'Local file:// — run: python3 -m http.server 8080'
+      : 'All fetch methods failed. ① Confirm sheet is published: File → Share → Publish to web → CSV. ② Check mobile internet. ③ Tap ↻ Retry.';
+    throw new Error(hint);
   }
-
-  // Proxy + gviz URL as secondary fallback
-  if (gvizUrl) {
-    for (const pf of proxyFns.slice(0, 3)) {
-      const proxied = pf(gvizUrl);
-      strategies.push({ label: `allorigins-gviz`, fn: () => tryFetch(proxied, 20000) });
-    }
-  }
-
-  let lastErr = '';
-  for (const s of strategies) {
-    try {
-      addLog(`Trying ${s.label}…`, 'info');
-      const text = await s.fn();
-      addLog(`✓ Data loaded via ${s.label}`, 'ok');
-      return { ok: true, text: () => Promise.resolve(text), status: 200 };
-    } catch(e) {
-      lastErr = (e.message || String(e)).slice(0, 100);
-      addLog(`✗ ${s.label}: ${lastErr}`, 'err');
-    }
-  }
-
-  const hint = isFile
-    ? 'Local file:// — run: python3 -m http.server 8080 then open http://localhost:8080'
-    : `All ${strategies.length} methods failed. Confirm sheet is published publicly (File→Share→Publish to web→CSV). Mobile: check internet. Last error: ${lastErr}`;
-  throw new Error(hint);
 }
 
 let _lastRawHeaders = []; // track raw headers from last successful parse for diagnostics
