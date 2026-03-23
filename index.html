@@ -2587,6 +2587,57 @@ function isFileOrigin() {
   return window.location.protocol === 'file:';
 }
 
+// ── JSONP / Script-tag fetch — bypasses CORS entirely ──
+// Works on ALL browsers including mobile, because <script> tags are not subject to CORS.
+// Google Sheets gviz/tq endpoint supports ?tqx=out:csv with callback for JSONP.
+// We use the JSON variant and parse it ourselves.
+function fetchViaScriptTag(sheetKey, gid, isPub, timeoutMs) {
+  return new Promise((resolve, reject) => {
+    const cbName = '_myl_cb_' + Date.now();
+    const url = isPub
+      ? `https://docs.google.com/spreadsheets/d/e/${sheetKey}/gviz/tq?tqx=out:json&callback=${cbName}&gid=${gid}`
+      : `https://docs.google.com/spreadsheets/d/${sheetKey}/gviz/tq?tqx=out:json&callback=${cbName}&gid=${gid}`;
+
+    const timer = setTimeout(() => {
+      delete window[cbName];
+      if (s.parentNode) s.parentNode.removeChild(s);
+      reject(new Error('Script-tag fetch timeout'));
+    }, timeoutMs);
+
+    window[cbName] = function(data) {
+      clearTimeout(timer);
+      delete window[cbName];
+      if (s.parentNode) s.parentNode.removeChild(s);
+      try {
+        // Convert gviz JSON table → CSV text
+        const cols = data.table.cols.map(c => c.label || c.id);
+        const rows = data.table.rows.map(r =>
+          r.c.map(cell => {
+            if (!cell || cell.v === null || cell.v === undefined) return '';
+            // Dates come as "Date(yyyy,m,d)" — convert to YYYY-MM-DD
+            if (typeof cell.v === 'string' && cell.v.startsWith('Date(')) {
+              const parts = cell.v.slice(5, -1).split(',').map(Number);
+              const d = new Date(parts[0], parts[1], parts[2]);
+              return d.toISOString().slice(0, 10);
+            }
+            const v = String(cell.f !== undefined && cell.f !== null ? cell.f : cell.v);
+            return v.includes(',') || v.includes('"') || v.includes('\n')
+              ? '"' + v.replace(/"/g, '""') + '"' : v;
+          }).join(',')
+        );
+        const csv = [cols.join(','), ...rows].join('\n');
+        if (!looksLikeCSV(csv)) throw new Error('Empty table');
+        resolve(csv);
+      } catch (e) { reject(e); }
+    };
+
+    const s = document.createElement('script');
+    s.src = url;
+    s.onerror = () => { clearTimeout(timer); delete window[cbName]; reject(new Error('Script load error')); };
+    document.head.appendChild(s);
+  });
+}
+
 function looksLikeCSV(text) {
   if (!text || text.trim().length < 10) return false;
   const t = text.trim();
@@ -2595,57 +2646,67 @@ function looksLikeCSV(text) {
   return true;
 }
 
-async function tryFetch(url, timeoutMs=14000) {
+// Fetch a single URL with timeout — NO custom headers to avoid CORS preflight
+async function tryFetch(url, timeoutMs = 15000) {
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), timeoutMs);
   try {
-    const r = await fetch(url, {
-      cache: 'no-store', mode: 'cors', signal: controller.signal,
-      headers: { 'Accept': 'text/csv,text/plain,*/*' }
-    });
+    // IMPORTANT: No custom headers — prevents browser from sending OPTIONS preflight
+    // which many proxy servers reject, causing CORS failures on mobile.
+    const r = await fetch(url, { cache: 'no-store', signal: controller.signal });
     clearTimeout(timer);
-    if (!r.ok) throw new Error('HTTP '+r.status);
+    if (!r.ok) throw new Error('HTTP ' + r.status);
     const text = await r.text();
-    if (!looksLikeCSV(text)) throw new Error('Response is not CSV');
+    if (!looksLikeCSV(text)) throw new Error('Not CSV (got HTML/JSON error page)');
     return text;
-  } catch(e) {
+  } catch (e) {
     clearTimeout(timer);
     throw e;
   }
 }
 
-// Race a group of fetch functions — first valid CSV wins
-async function raceFetches(fns) {
+// Race all fetch strategies — first valid CSV wins, others are abandoned
+async function raceFetches(strategies) {
   return new Promise((resolve, reject) => {
-    let failed = 0;
-    const total = fns.length;
-    if (!total) { reject(new Error('No fetch strategies')); return; }
-    fns.forEach(({ label, fn }) => {
-      fn().then(text => {
-        if (!looksLikeCSV(text)) throw new Error('Not CSV');
-        addLog(`✓ ${label}`, 'ok');
-        resolve({ text, label });
-      }).catch(e => {
-        addLog(`✗ ${label}: ${(e.message||'').slice(0,60)}`, 'err');
-        if (++failed === total) reject(new Error('All methods failed'));
-      });
+    if (!strategies.length) { reject(new Error('No strategies')); return; }
+    let settled = false;
+    let failCount = 0;
+    const total = strategies.length;
+
+    strategies.forEach(({ label, fn }) => {
+      fn()
+        .then(text => {
+          if (settled) return;
+          if (!looksLikeCSV(text)) throw new Error('Invalid CSV');
+          settled = true;
+          addLog(`✓ ${label}`, 'ok');
+          resolve({ text, label });
+        })
+        .catch(e => {
+          if (settled) return;
+          addLog(`✗ ${label}: ${(e.message || '').slice(0, 60)}`, 'err');
+          if (++failCount === total) {
+            settled = true;
+            reject(new Error('All ' + total + ' fetch methods failed'));
+          }
+        });
     });
   });
 }
 
 async function gsFetch(rawUrl) {
+  // Non-Google URL — fetch directly
   const isGoogle = /docs\.google\.com|drive\.google\.com/i.test(rawUrl);
   if (!isGoogle) {
-    const r = await fetch(rawUrl, { cache: 'no-store' });
-    const text = await r.text();
-    if (!looksLikeCSV(text)) throw new Error('Response is not CSV');
+    const text = await tryFetch(rawUrl, 15000);
     return { ok: true, text: () => Promise.resolve(text), status: 200 };
   }
 
-  const info = extractSheetKey(rawUrl);
-  const gid  = extractGid(rawUrl);
+  const info   = extractSheetKey(rawUrl);
+  const gid    = extractGid(rawUrl);
   const isFile = isFileOrigin();
 
+  // ── Build canonical Google Sheet URLs ──
   const csvUrl = info
     ? (info.type === 'pub'
         ? `https://docs.google.com/spreadsheets/d/e/${info.key}/pub?output=csv&gid=${gid}&single=true`
@@ -2658,33 +2719,55 @@ async function gsFetch(rawUrl) {
         : `https://docs.google.com/spreadsheets/d/${info.key}/gviz/tq?tqx=out:csv&gid=${gid}`)
     : null;
 
-  const proxies = [
-    u => `https://api.allorigins.win/raw?url=${encodeURIComponent(u)}`,
-    u => `https://corsproxy.io/?${encodeURIComponent(u)}`,
-    u => `https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(u)}`,
-    u => `https://api.allorigins.win/raw?url=${encodeURIComponent(u)}&_=${Date.now()}`,
-    u => `https://thingproxy.freeboard.io/fetch/${encodeURIComponent(u)}`,
+  // ── Proxy list — no custom headers, no preflight ──
+  const makeProxyUrls = (target) => [
+    `https://api.allorigins.win/raw?url=${encodeURIComponent(target)}`,
+    `https://corsproxy.io/?${encodeURIComponent(target)}`,
+    `https://api.allorigins.win/raw?url=${encodeURIComponent(target)}&_=${Date.now()}`,
+    `https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(target)}`,
+    `https://thingproxy.freeboard.io/fetch/${target}`,
   ];
 
-  // Build all strategies and race them in parallel — fastest valid response wins
-  const all = [];
-  if (!isFile) {
-    all.push({ label: 'direct-csv',  fn: () => tryFetch(csvUrl,  10000) });
-    if (gvizUrl) all.push({ label: 'direct-gviz', fn: () => tryFetch(gvizUrl, 10000) });
+  // ── Build all strategies ──
+  const strategies = [];
+
+  // 1. JSONP via script tag — CORS-free, works on all mobile browsers
+  if (info) {
+    strategies.push({
+      label: 'jsonp-scripttag',
+      fn: () => fetchViaScriptTag(info.key, gid, info.type === 'pub', 15000)
+    });
   }
-  proxies.forEach((pf, i) => {
-    all.push({ label: `proxy${i+1}-csv`,  fn: () => tryFetch(pf(csvUrl), 15000) });
-    if (gvizUrl) all.push({ label: `proxy${i+1}-gviz`, fn: () => tryFetch(pf(gvizUrl), 15000) });
+
+  // 2. Direct fetches (work on desktop/hosted; Google blocks on mobile CORS)
+  if (!isFile) {
+    strategies.push({ label: 'direct-csv',  fn: () => tryFetch(csvUrl,  12000) });
+    if (gvizUrl)
+      strategies.push({ label: 'direct-gviz', fn: () => tryFetch(gvizUrl, 12000) });
+  }
+
+  // 3. Proxy fetches for csvUrl — essential for mobile
+  makeProxyUrls(csvUrl).forEach((u, i) => {
+    strategies.push({ label: `proxy${i+1}-csv`, fn: () => tryFetch(u, 18000) });
   });
 
-  addLog(`Racing ${all.length} fetch strategies in parallel…`, 'info');
+  // 4. Proxy fetches for gvizUrl — backup endpoint
+  if (gvizUrl) {
+    makeProxyUrls(gvizUrl).forEach((u, i) => {
+      strategies.push({ label: `proxy${i+1}-gviz`, fn: () => tryFetch(u, 18000) });
+    });
+  }
+
+  addLog(`Racing ${strategies.length} methods (incl. JSONP) in parallel…`, 'info');
+
   try {
-    const { text, label } = await raceFetches(all);
+    const { text, label } = await raceFetches(strategies);
+    addLog(`✓ Data loaded via ${label}`, 'ok');
     return { ok: true, text: () => Promise.resolve(text), status: 200 };
-  } catch(e) {
+  } catch (e) {
     const hint = isFile
-      ? 'Local file:// — run: python3 -m http.server 8080'
-      : 'All fetch methods failed. ① Confirm sheet is published: File → Share → Publish to web → CSV. ② Check mobile internet. ③ Tap ↻ Retry.';
+      ? 'Running from local file — serve via: python3 -m http.server 8080'
+      : 'Could not fetch data. ① Make sure the sheet is published: File → Share → Publish to web → CSV. ② Check internet connection. ③ Tap ↻ to retry.';
     throw new Error(hint);
   }
 }
